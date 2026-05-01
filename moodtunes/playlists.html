@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="moodtunes" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="css/mobile.css" />
+  <title>moodtunes — playlists</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/playlists.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">mood<span>tunes</span></div>
+    <ul class="nav-links">
+      <li><a href="index.html">journal</a></li>
+      <li><a href="playlists.html" class="active">playlists</a></li>
+      <li><a href="history.html">history</a></li>
+      <li><a href="discover.html">discover</a></li>
+    </ul>
+    <button class="logout-btn" id="logout-btn">logout</button>
+  </nav>
+
+  <main class="container">
+    <section class="playlists-section">
+      <p class="section-label">your mood playlists</p>
+      <div id="playlists-list"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/playlists.js"></script>
+
+</body>
+</html>

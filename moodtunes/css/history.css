@@ -1,0 +1,408 @@
+/* === STATS === */
+.stats-section {
+  margin-bottom: 32px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  border: none;
+}
+
+/* each card has its own colour */
+.stat-card:nth-child(1) {
+  background: linear-gradient(135deg, #2d1f6e, #4a3ab5); /* purple — songs logged */
+}
+
+.stat-card:nth-child(2) {
+  background: linear-gradient(135deg, #4a2a0a, #c4762d); /* warm orange */
+}
+
+.stat-card:nth-child(3) {
+  background: linear-gradient(135deg, #1a4a2e, #1DB954); /* green — total plays */
+}
+
+.stat-num {
+  font-size: 32px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* === FLASHBACK === */
+.flashback-card {
+  background: #1a1a2e;
+  border: 1px solid #7f77dd44;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.flashback-icon {
+  font-size: 24px;
+  color: #7f77dd;
+  flex-shrink: 0;
+}
+
+.flashback-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7f77dd;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.flashback-sub {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.flashback-song {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flashback-song img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.flashback-song-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #f0f0f0;
+}
+
+.flashback-song-artist {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* === TIMELINE === */
+.timeline-section {
+  margin-top: 8px;
+}
+
+.timeline-group {
+  margin-bottom: 32px;
+}
+
+.timeline-date {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+
+/* === HISTORY TABS === */
+.history-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #222;
+}
+
+.history-tab {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+
+.history-tab.active {
+  color: #f0f0f0;
+  border-bottom-color: #7f77dd;
+}
+
+/* === SESSION CARDS IN HISTORY === */
+.session-history-card {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+.session-history-card:hover {
+  border-color: #333;
+}
+
+.session-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.session-history-mood {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f0f0f0;
+  text-transform: capitalize;
+}
+
+.session-history-meta {
+  font-size: 12px;
+  color: #555;
+}
+
+.session-history-songs {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.session-song-thumb {
+  flex-shrink: 0;
+  text-align: center;
+  width: 100px;
+  cursor: pointer;
+}
+
+.session-song-thumb .thumb-img-wrap {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+}
+
+.session-song-thumb .thumb-img-wrap img {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.2s;
+}
+
+.session-song-thumb .thumb-img-wrap:hover img {
+  filter: brightness(0.5);
+}
+
+.session-song-thumb .thumb-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 10px;
+}
+
+.session-song-thumb .thumb-img-wrap:hover .thumb-play-overlay {
+  opacity: 1;
+}
+
+.session-song-thumb .thumb-play-overlay .play-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.session-song-thumb p {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100px;
+}
+
+.session-song-thumb .thumb-artist {
+  font-size: 10px;
+  color: #555;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100px;
+}
+
+.session-song-thumb .thumb-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.session-empty {
+  font-size: 13px;
+  color: #555;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.hidden {
+  display: none;
+}
+
+/* delete session button */
+.session-delete-btn {
+    background: none;
+    border: 1px solid #e05c5c44;
+    color: #e05c5c;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.session-delete-btn:hover {
+    background: #e05c5c;
+    color: #fff;
+}
+
+/* delete song from session */
+.session-song-delete {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 2px;
+    display: block;
+    margin: 2px auto 0;
+    transition: color 0.15s;
+}
+
+.session-song-delete:hover {
+    color: #e05c5c;
+}
+/* === SONG SEARCH === */
+.song-search-section {
+  margin-bottom: 32px;
+}
+
+#song-history-search {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #f0f0f0;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+
+#song-history-search:focus {
+  border-color: #7f77dd;
+  box-shadow: 0 0 0 2px #7f77dd22;
+}
+
+#song-history-search::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+
+.song-history-card {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.song-history-card:hover {
+  border-color: #333;
+}
+
+.song-history-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.song-history-header img {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.song-history-info {
+  flex: 1;
+}
+
+.song-history-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #f0f0f0;
+}
+
+.song-history-artist {
+  font-size: 13px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.song-history-total {
+  font-size: 12px;
+  color: #7f77dd;
+  margin-top: 4px;
+}
+
+.song-history-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #222;
+  padding-top: 12px;
+}
+
+.song-history-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.song-history-date {
+  font-size: 13px;
+  color: #888;
+  flex: 1;
+}
+
+.song-history-plays {
+  font-size: 13px;
+  color: #555;
+  flex-shrink: 0;
+}

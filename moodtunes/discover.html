@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="moodtunes" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="css/mobile.css" />
+  <title>moodtunes — discover</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/discover.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">mood<span>tunes</span></div>
+    <ul class="nav-links">
+      <li><a href="index.html">journal</a></li>
+      <li><a href="playlists.html">playlists</a></li>
+      <li><a href="history.html">history</a></li>
+      <li><a href="discover.html" class="active">discover</a></li>
+    </ul>
+    <button class="logout-btn" id="logout-btn">logout</button>
+  </nav>
+
+  <main class="container">
+
+    <section class="mood-section">
+      <p class="section-label">what mood are you in?</p>
+      <p class="section-subtitle">we'll find songs that match based on what you've logged</p>
+      <div class="mood-chips">
+        <button class="chip" data-mood="happy">happy</button>
+        <button class="chip" data-mood="sad">sad</button>
+        <button class="chip" data-mood="hype">hype</button>
+        <button class="chip" data-mood="heartbreak">heartbreak</button>
+        <button class="chip" data-mood="nostalgic">nostalgic</button>
+        <button class="chip" data-mood="focused">focused</button>
+        <button class="chip" data-mood="chill">chill</button>
+      </div>
+    </section>
+
+    <section class="discover-section">
+      <div id="discover-content">
+        <p class="discover-prompt">pick a mood above to get recommendations</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/discover.js"></script>
+
+</body>
+</html>

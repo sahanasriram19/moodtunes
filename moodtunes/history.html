@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="moodtunes" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="css/mobile.css" />
+  <title>moodtunes — history</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/history.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">mood<span>tunes</span></div>
+    <ul class="nav-links">
+      <li><a href="index.html">journal</a></li>
+      <li><a href="playlists.html">playlists</a></li>
+      <li><a href="history.html" class="active">history</a></li>
+      <li><a href="discover.html">discover</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="session-btn" id="session-btn">▶ start session</button>
+      <button class="logout-btn" id="logout-btn">logout</button>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <section class="stats-section">
+      <p class="section-label">your stats</p>
+      <div class="stats-grid" id="stats-grid"></div>
+    </section>
+
+    <div id="flashback-container"></div>
+
+    <!-- SONG SEARCH -->
+    <section class="song-search-section">
+      <p class="section-label">find a song</p>
+      <input type="text" id="song-history-search" placeholder="search by song name..." />
+      <div id="song-search-results"></div>
+    </section>
+
+    <div class="history-tabs">
+      <button class="history-tab active" id="tab-timeline">timeline</button>
+      <button class="history-tab" id="tab-sessions">sessions</button>
+    </div>
+
+    <section class="timeline-section" id="timeline-section">
+      <div id="timeline"></div>
+    </section>
+
+    <section class="timeline-section hidden" id="sessions-section">
+      <div id="sessions-list"></div>
+    </section>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/history.js"></script>
+
+</body>
+</html>

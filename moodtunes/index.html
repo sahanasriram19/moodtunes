@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="moodtunes" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="css/mobile.css" />
+  <title>moodtunes</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">mood<span>tunes</span></div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">journal</a></li>
+      <li><a href="playlists.html">playlists</a></li>
+      <li><a href="history.html">history</a></li>
+      <li><a href="discover.html">discover</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="session-btn" id="session-btn">▶ start session</button>
+      <button class="logout-btn" id="logout-btn">logout</button>
+    </div>
+  </nav>
+
+  <!-- SESSION PANEL -->
+  <div id="session-panel" class="session-panel hidden">
+    <div class="session-panel-header">
+      <div class="session-panel-info">
+        <span class="session-live-dot"></span>
+        <span id="session-mood-label">session active</span>
+        <span id="session-start-time" class="session-time"></span>
+      </div>
+      <button class="session-end-btn" id="session-end-btn">■ end session</button>
+    </div>
+    <div class="session-recommendations" id="session-recommendations">
+      <p style="color:#666;font-size:13px;">loading recommendations...</p>
+    </div>
+  </div>
+
+  <main class="container">
+
+    <section class="mood-section">
+      <p class="section-label">how are you feeling right now?</p>
+      <div class="mood-chips">
+        <button class="chip" data-mood="happy">happy</button>
+        <button class="chip" data-mood="sad">sad</button>
+        <button class="chip" data-mood="hype">hype</button>
+        <button class="chip" data-mood="heartbreak">heartbreak</button>
+        <button class="chip" data-mood="nostalgic">nostalgic</button>
+        <button class="chip" data-mood="focused">focused</button>
+        <button class="chip" data-mood="chill">chill</button>
+      </div>
+    </section>
+
+    <section class="search-section">
+      <div class="search-row">
+        <input type="text" id="song-search" placeholder="search for a song..." />
+      </div>
+      <div id="search-results"></div>
+    </section>
+
+    <section class="logs-section">
+      <p class="section-label">recently played</p>
+      <div id="logs-list"></div>
+    </section>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

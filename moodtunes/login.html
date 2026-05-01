@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>moodtunes — login</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-logo">mood<span>tunes</span></div>
+      <p class="auth-tagline">your music. your mood. your story.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="login-tab">login</button>
+        <button class="auth-tab" id="register-tab">register</button>
+      </div>
+
+      <div id="login-form">
+        <div class="auth-field">
+          <label>username</label>
+          <input type="text" id="login-username" placeholder="your username" />
+        </div>
+        <div class="auth-field">
+          <label>password</label>
+          <input type="password" id="login-password" placeholder="your password" />
+        </div>
+        <button class="auth-btn" id="login-btn">login</button>
+        <p class="auth-error" id="login-error"></p>
+      </div>
+
+      <div id="register-form" style="display:none;">
+        <div class="auth-field">
+          <label>username</label>
+          <input type="text" id="reg-username" placeholder="choose a username" />
+        </div>
+        <div class="auth-field">
+          <label>email</label>
+          <input type="email" id="reg-email" placeholder="your email" />
+        </div>
+        <div class="auth-field">
+          <label>password</label>
+          <input type="password" id="reg-password" placeholder="choose a password" />
+        </div>
+        <button class="auth-btn" id="register-btn">create account</button>
+        <p class="auth-error" id="register-error"></p>
+      </div>
+    </div>
+  </div>
+  <script src="js/auth.js"></script>
+</body>
+</html>
