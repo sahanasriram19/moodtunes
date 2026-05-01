@@ -63,18 +63,20 @@ function renderGrid(grouped) {
 
     Object.keys(grouped).forEach(function(mood) {
         var songs = grouped[mood];
-        // sort by most played for initial order
-        var sorted = songs.slice().sort(function(a, b) { return b.play_count - a.play_count; });
+        // cover uses first 4 songs ever added — never changes
+        var coverSongs = songs.slice().sort(function(a, b) {
+            return new Date(a.first_logged) - new Date(b.first_logged);
+        });
         var card = document.createElement('div');
         card.classList.add('playlist-card');
         card.innerHTML =
-            buildCoverHTML(sorted, mood, 'small') +
+            buildCoverHTML(coverSongs, mood, 'small') +
             '<div class="playlist-card-title">' + mood + ' playlist</div>' +
             '<div class="playlist-card-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>';
 
         card.addEventListener('click', (function(m, s) {
             return function() { openPlaylist(m, s); };
-        })(mood, sorted));
+        })(mood, songs));
 
         grid.appendChild(card);
     });
@@ -86,8 +88,10 @@ function openPlaylist(mood, songs) {
     var view = document.getElementById('playlist-view');
     view.classList.add('active');
 
-    // cover: always top 4 by play count — never changes when new songs added
-    var coverSongs = songs.slice().sort(function(a, b) { return b.play_count - a.play_count; });
+    // cover: locked to the first 4 songs ever added to this mood (by first_logged)
+    var coverSongs = songs.slice().sort(function(a, b) {
+        return new Date(a.first_logged) - new Date(b.first_logged);
+    });
 
     // list order: high play count first, ties broken by oldest logged first (new songs go to bottom)
     var listSongs = songs.slice().sort(function(a, b) {
@@ -250,4 +254,4 @@ apiCall('/logs', 'GET', null, function(err, result) {
         return;
     }
     renderGrid(groupByMood(logs));
-});
+});vv
