@@ -1,6 +1,6 @@
 // auth.js
 
-var BACKEND_URL = 'http://localhost:3000/api';
+var BACKEND_URL = 'https://moodtunes-production.up.railway.app/api';
 
 // tab switching
 document.getElementById('login-tab').addEventListener('click', function() {
@@ -36,7 +36,7 @@ document.getElementById('login-btn').addEventListener('click', function() {
         if (result.status === 200) {
             localStorage.setItem('moodtunes_token', result.data.token);
             localStorage.setItem('moodtunes_username', username);
-            window.location.href = 'http://127.0.0.1:3000/api/spotify/login?token=' + result.data.token;
+            window.location.href = 'https://moodtunes-production.up.railway.app/api/spotify/login?token=' + result.data.token;
         } else {
             errorEl.textContent = result.data.message || 'login failed';
         }
@@ -64,7 +64,7 @@ document.getElementById('register-btn').addEventListener('click', function() {
         if (result.status === 200) {
             localStorage.setItem('moodtunes_token', result.data.token);
             localStorage.setItem('moodtunes_username', username);
-            window.location.href = 'http://127.0.0.1:3000/api/spotify/login?token=' + result.data.token;
+            window.location.href = 'https://moodtunes-production.up.railway.app/api/spotify/login?token=' + result.data.token;
         } else {
             errorEl.textContent = result.data.message || 'registration failed';
         }
