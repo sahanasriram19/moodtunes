@@ -5,7 +5,6 @@ requireAuth();
 var moodEmojis = { happy: '😊', sad: '😢', hype: '🔥', heartbreak: '💔', nostalgic: '🌙', focused: '🎯', chill: '😌' };
 var playlistsList = document.getElementById('playlists-list');
 
-// ── helpers ────────────────────────────────────────────
 function groupByMood(logs) {
     var grouped = {};
     logs.forEach(function(log) {
@@ -15,7 +14,6 @@ function groupByMood(logs) {
     return grouped;
 }
 
-// cover always uses first 4 songs in current order — never changes after that
 function buildCoverHTML(songs, mood, size) {
     var emoji = moodEmojis[mood] || '🎵';
     var html = '<div class="' + (size === 'large' ? 'playlist-header-cover' : 'playlist-cover') + '">';
@@ -27,28 +25,6 @@ function buildCoverHTML(songs, mood, size) {
         }
     }
     return html + '</div>';
-}
-
-// get current song order from the DOM
-function getCurrentOrder(mood) {
-    var cards = document.querySelectorAll('#playlist-block .log-card');
-    var order = [];
-    cards.forEach(function(card) {
-        order.push(card.dataset.songId);
-    });
-    return order;
-}
-
-// update cover based on current DOM order
-function updateCover(mood, allSongs) {
-    var order = getCurrentOrder(mood);
-    var sorted = order.map(function(id) {
-        return allSongs.find(function(s) { return s.song_id === id; });
-    }).filter(Boolean);
-    var coverEl = document.querySelector('.playlist-header-cover');
-    if (!coverEl) return;
-    var newCover = buildCoverHTML(sorted, mood, 'large');
-    coverEl.outerHTML = newCover;
 }
 
 // ── grid view ──────────────────────────────────────────
@@ -63,21 +39,16 @@ function renderGrid(grouped) {
 
     Object.keys(grouped).forEach(function(mood) {
         var songs = grouped[mood];
-        // cover uses first 4 songs ever added — never changes
-        var coverSongs = songs.slice().sort(function(a, b) {
-            return new Date(a.first_logged) - new Date(b.first_logged);
-        });
+        var sorted = songs.slice().sort(function(a, b) { return b.play_count - a.play_count; });
         var card = document.createElement('div');
         card.classList.add('playlist-card');
         card.innerHTML =
-            buildCoverHTML(coverSongs, mood, 'small') +
+            buildCoverHTML(sorted, mood, 'small') +
             '<div class="playlist-card-title">' + mood + ' playlist</div>' +
             '<div class="playlist-card-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>';
-
         card.addEventListener('click', (function(m, s) {
             return function() { openPlaylist(m, s); };
-        })(mood, songs));
-
+        })(mood, sorted));
         grid.appendChild(card);
     });
 }
@@ -88,12 +59,7 @@ function openPlaylist(mood, songs) {
     var view = document.getElementById('playlist-view');
     view.classList.add('active');
 
-    // cover: locked to the first 4 songs ever added to this mood (by first_logged)
-    var coverSongs = songs.slice().sort(function(a, b) {
-        return new Date(a.first_logged) - new Date(b.first_logged);
-    });
-
-    // list order: high play count first, ties broken by oldest logged first (new songs go to bottom)
+    // list: play count high to low, new songs at bottom
     var listSongs = songs.slice().sort(function(a, b) {
         if (b.play_count !== a.play_count) return b.play_count - a.play_count;
         return new Date(a.last_logged) - new Date(b.last_logged);
@@ -102,23 +68,26 @@ function openPlaylist(mood, songs) {
     view.innerHTML =
         '<button class="back-btn" id="back-btn">← back to playlists</button>' +
         '<div class="playlist-view-header">' +
-            buildCoverHTML(coverSongs, mood, 'large') +
+            '<div id="playlist-cover-wrap">' + buildCoverHTML(listSongs, mood, 'large') + '</div>' +
             '<div class="playlist-view-info">' +
                 '<div class="playlist-view-title">' + mood + ' playlist</div>' +
                 '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' · built from your journal</div>' +
-                '<div style="font-size:12px;color:#555;margin-top:4px;">drag songs to reorder</div>' +
+                '<div style="font-size:12px;color:#555;margin-top:4px;">drag to reorder · cover shows top 4</div>' +
             '</div>' +
             '<button class="playlist-play-btn" id="sync-btn" style="border:none;cursor:pointer;">▶</button>' +
         '</div>' +
         '<div class="playlist-block" id="playlist-block"></div>';
 
     var block = document.getElementById('playlist-block');
+    var songMap = {};
 
     listSongs.forEach(function(song) {
+        songMap[song.song_id] = song;
         var card = document.createElement('div');
         card.classList.add('log-card', 'draggable-card');
         card.id = 'log-' + song.song_id + '-' + mood;
         card.dataset.songId = song.song_id;
+        card.dataset.albumArt = song.album_art;
         card.draggable = true;
         card.innerHTML =
             '<div class="drag-handle" title="drag to reorder">⠿</div>' +
@@ -128,8 +97,7 @@ function openPlaylist(mood, songs) {
                 '<div class="song-artist">' + song.artist + '</div>' +
                 '<div class="log-note-area" id="pl-note-area-' + song.song_id + '-' + mood + '">' +
                     (song.note
-                        ? '<div class="log-note">"' + song.note + '"</div>' +
-                          '<button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + mood + '" data-note="' + song.note.replace(/"/g, '&quot;') + '" data-source="playlist">edit note</button>'
+                        ? '<div class="log-note">"' + song.note + '"</div><button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + mood + '" data-note="' + song.note.replace(/"/g, '&quot;') + '" data-source="playlist">edit note</button>'
                         : '<button class="add-note-btn" data-song-id="' + song.song_id + '" data-mood="' + mood + '" data-source="playlist">+ add note</button>') +
                 '</div>' +
                 '<div class="log-meta">' +
@@ -140,25 +108,10 @@ function openPlaylist(mood, songs) {
             '</div>' +
             '<button class="play-btn song-play-btn" data-url="' + song.spotify_url + '">▶</button>' +
             '<button class="delete-btn playlist-remove-btn" data-songid="' + song.song_id + '" data-mood="' + mood + '" title="remove from view">✕</button>';
-
         block.appendChild(card);
     });
 
-    // set up drag and drop
-    setupDragAndDrop(block, mood, coverSongs);
-
-    document.getElementById('back-btn').addEventListener('click', function() {
-        view.classList.remove('active');
-        document.getElementById('grid-view').classList.remove('hidden');
-    });
-
-    document.getElementById('sync-btn').addEventListener('click', function() {
-        if (songs.length > 0) openSpotify(songs[0].spotify_url);
-    });
-}
-
-// ── drag and drop ──────────────────────────────────────
-function setupDragAndDrop(block, mood, allSongs) {
+    // ── drag and drop ──────────────────────────────────
     var dragging = null;
 
     block.addEventListener('dragstart', function(e) {
@@ -168,29 +121,45 @@ function setupDragAndDrop(block, mood, allSongs) {
         e.dataTransfer.effectAllowed = 'move';
     });
 
-    block.addEventListener('dragend', function() {
-        if (dragging) dragging.classList.remove('dragging');
-        dragging = null;
-        document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
-        updateCover(mood, allSongs);
-    });
-
     block.addEventListener('dragover', function(e) {
         e.preventDefault();
         if (!dragging) return;
         var target = e.target.closest('.draggable-card');
         if (!target || target === dragging) return;
-
         document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
         target.classList.add('drag-over');
-
         var rect = target.getBoundingClientRect();
-        var midY = rect.top + rect.height / 2;
-        if (e.clientY < midY) {
+        if (e.clientY < rect.top + rect.height / 2) {
             block.insertBefore(dragging, target);
         } else {
             block.insertBefore(dragging, target.nextSibling);
         }
+    });
+
+    block.addEventListener('dragend', function() {
+        if (dragging) dragging.classList.remove('dragging');
+        dragging = null;
+        document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+
+        // update cover with current top 4 cards in DOM
+        var cards = block.querySelectorAll('.draggable-card');
+        var top4 = [];
+        for (var i = 0; i < Math.min(4, cards.length); i++) {
+            var art = cards[i].dataset.albumArt;
+            if (art) top4.push({ album_art: art });
+            else top4.push({});
+        }
+        document.getElementById('playlist-cover-wrap').innerHTML = buildCoverHTML(top4, mood, 'large');
+    });
+
+    document.getElementById('back-btn').addEventListener('click', function() {
+        view.classList.remove('active');
+        document.getElementById('grid-view').classList.remove('hidden');
+    });
+
+    document.getElementById('sync-btn').addEventListener('click', function() {
+        var first = block.querySelector('.draggable-card');
+        if (first) openSpotify(songMap[first.dataset.songId].spotify_url);
     });
 }
 
@@ -235,7 +204,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ── remove from playlist view (UI only) ───────────────
 document.addEventListener('click', function(e) {
     if (!e.target.classList.contains('playlist-remove-btn')) return;
     var card = document.getElementById('log-' + e.target.dataset.songid + '-' + e.target.dataset.mood);
@@ -254,4 +222,4 @@ apiCall('/logs', 'GET', null, function(err, result) {
         return;
     }
     renderGrid(groupByMood(logs));
-});vv
+});
