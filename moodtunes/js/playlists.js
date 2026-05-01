@@ -86,10 +86,19 @@ function openPlaylist(mood, songs) {
     var view = document.getElementById('playlist-view');
     view.classList.add('active');
 
+    // cover: always top 4 by play count — never changes when new songs added
+    var coverSongs = songs.slice().sort(function(a, b) { return b.play_count - a.play_count; });
+
+    // list order: high play count first, ties broken by oldest logged first (new songs go to bottom)
+    var listSongs = songs.slice().sort(function(a, b) {
+        if (b.play_count !== a.play_count) return b.play_count - a.play_count;
+        return new Date(a.last_logged) - new Date(b.last_logged);
+    });
+
     view.innerHTML =
         '<button class="back-btn" id="back-btn">← back to playlists</button>' +
         '<div class="playlist-view-header">' +
-            buildCoverHTML(songs, mood, 'large') +
+            buildCoverHTML(coverSongs, mood, 'large') +
             '<div class="playlist-view-info">' +
                 '<div class="playlist-view-title">' + mood + ' playlist</div>' +
                 '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' · built from your journal</div>' +
@@ -101,7 +110,7 @@ function openPlaylist(mood, songs) {
 
     var block = document.getElementById('playlist-block');
 
-    songs.forEach(function(song) {
+    listSongs.forEach(function(song) {
         var card = document.createElement('div');
         card.classList.add('log-card', 'draggable-card');
         card.id = 'log-' + song.song_id + '-' + mood;
@@ -132,7 +141,7 @@ function openPlaylist(mood, songs) {
     });
 
     // set up drag and drop
-    setupDragAndDrop(block, mood, songs);
+    setupDragAndDrop(block, mood, coverSongs);
 
     document.getElementById('back-btn').addEventListener('click', function() {
         view.classList.remove('active');
