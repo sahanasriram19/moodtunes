@@ -530,7 +530,7 @@ function syncSpotifyPlays() {
         apiCall('/logs/recent', 'GET', null, function(err2, logsResult) {
             if (err2 || !logsResult || !Array.isArray(logsResult.data)) return;
             var logs = logsResult.data;
-            var synced = false;
+            var pending = [];
 
             logs.forEach(function(log) {
                 var parts = log.spotify_url ? log.spotify_url.split('/track/') : [];
@@ -539,20 +539,35 @@ function syncSpotifyPlays() {
                 if (playCounts[trackId] <= log.play_count) return;
 
                 var diff = playCounts[trackId] - log.play_count;
-                for (var i = 0; i < diff; i++) {
-                    apiCall('/logs', 'POST', {
-                        song_id: log.song_id, title: log.title, artist: log.artist,
-                        album_art: log.album_art, spotify_url: log.spotify_url,
-                        mood: log.mood, note: log.note || ''
-                    }, function() {});
-                }
-                synced = true;
+                pending.push({ log: log, diff: diff });
             });
 
-            if (synced) setTimeout(loadLogs, 1500);
+            if (pending.length === 0) return;
+
+            // batch all increments then reload once
+            var done = 0;
+            var total = pending.reduce(function(sum, p) { return sum + p.diff; }, 0);
+
+            pending.forEach(function(p) {
+                for (var i = 0; i < p.diff; i++) {
+                    apiCall('/logs', 'POST', {
+                        song_id: p.log.song_id, title: p.log.title, artist: p.log.artist,
+                        album_art: p.log.album_art, spotify_url: p.log.spotify_url,
+                        mood: p.log.mood, note: p.log.note || ''
+                    }, function() {
+                        done++;
+                        if (done >= total) loadLogs();
+                    });
+                }
+            });
         });
     });
 }
+
+// sync when tab becomes visible again
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) syncSpotifyPlays();
+});
 
 // boot — sessions only start when you click the button
 // but if YOU started one this browser session, restore it across tab switches
