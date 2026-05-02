@@ -17,7 +17,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 60px;
+  padding: 16px 32px;
   border-bottom: 1px solid #222;
 }
 
@@ -34,7 +34,7 @@ body {
 .nav-links {
   list-style: none;
   display: flex;
-  gap: 36px;
+  gap: 24px;
 }
 
 .nav-links a {
@@ -440,7 +440,7 @@ body {
 }
 
 .log-note {
-  font-size: 13px;
+  font-size: 14px;
   color: #7f77dd;
   font-style: italic;
   margin-top: 4px;
