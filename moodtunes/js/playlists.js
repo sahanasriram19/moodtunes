@@ -3,6 +3,13 @@
 requireAuth();
 
 var moodEmojis = { happy: '😊', sad: '😢', hype: '🔥', heartbreak: '💔', nostalgic: '🌙', focused: '🎯', chill: '😌' };
+
+// merge custom mood emojis on load
+apiCall('/moods', 'GET', null, function(err, result) {
+    if (err || !result.data) return;
+    var customs = Array.isArray(result.data) ? result.data : [];
+    customs.forEach(function(m) { moodEmojis[m.name] = m.emoji; });
+});
 var playlistsList = document.getElementById('playlists-list');
 
 function groupByMood(logs) {
