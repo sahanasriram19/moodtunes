@@ -36,9 +36,9 @@
   .mood-chips { gap: 6px; flex-wrap: wrap; }
 
   .chip {
-    padding: 5px 10px !important;
-    font-size: 12px !important;
-    border-radius: 20px !important;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 20px;
   }
 
   /* === SEARCH === */
