@@ -152,6 +152,9 @@ function showAddMoodPanel() {
         '<input id="new-mood-input" type="text" maxlength="20" placeholder="e.g. melancholy, grind..." style="width:100%;padding:10px 12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:14px;box-sizing:border-box;margin-bottom:12px;" />' +
         '<div style="font-size:12px;color:#888;margin-bottom:8px;">pick an emoji <span id="chosen-emoji" style="font-size:16px;margin-left:6px;">🎵</span></div>' +
         '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">' + emojiGrid + '</div>' +
+        (hiddenMoods.length > 0
+            ? '<div style="font-size:12px;color:#7f77dd;margin-bottom:12px;cursor:pointer;" id="restore-moods-btn">↩ restore hidden moods (' + hiddenMoods.length + ')</div>'
+            : '') +
         '<div style="display:flex;gap:8px;">' +
             '<button id="cancel-mood" class="skip-note-btn" style="flex:1;">cancel</button>' +
             '<button id="save-mood" class="save-note-btn" style="flex:1;">+ add mood</button>' +
@@ -172,6 +175,16 @@ function showAddMoodPanel() {
     });
 
     document.getElementById('cancel-mood').addEventListener('click', function() { panel.remove(); });
+
+    if (document.getElementById('restore-moods-btn')) {
+        document.getElementById('restore-moods-btn').addEventListener('click', function() {
+            hiddenMoods = [];
+            localStorage.setItem('moodtunes_hidden_moods', '[]');
+            panel.remove();
+            chips.forEach(function(chip) { chip.style.display = ''; });
+        });
+    }
+
 
     document.getElementById('save-mood').addEventListener('click', function() {
         var name = document.getElementById('new-mood-input').value.trim().toLowerCase();
@@ -201,14 +214,64 @@ moodChipsContainer.appendChild(addMoodBtn);
 loadCustomMoods();
 
 // ── mood chips ─────────────────────────────────────────
+// load hidden moods from localStorage
+var hiddenMoods = JSON.parse(localStorage.getItem('moodtunes_hidden_moods') || '[]');
+
 chips.forEach(function(chip) {
-    chip.addEventListener('click', function() {
+    // hide if user previously hid this mood
+    if (hiddenMoods.includes(chip.dataset.mood)) {
+        chip.style.display = 'none';
+        return;
+    }
+
+    // add edit button to each default chip
+    var editBtn = document.createElement('button');
+    editBtn.style.cssText = 'background:none;border:none;color:#666;cursor:pointer;padding:0 0 0 4px;font-size:10px;vertical-align:middle;';
+    editBtn.textContent = '✎';
+    editBtn.title = 'hide this mood';
+    editBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showHideMoodPanel(chip);
+    });
+    chip.appendChild(editBtn);
+
+    chip.addEventListener('click', function(e) {
+        if (e.target === editBtn) return;
         chips.forEach(function(c) { c.classList.remove('selected'); });
+        document.querySelectorAll('.custom-chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = chip.dataset.mood;
         songSearch.focus();
     });
 });
+
+function showHideMoodPanel(chip) {
+    var existing = document.getElementById('add-mood-panel');
+    if (existing) existing.remove();
+
+    var mood = chip.dataset.mood;
+    var panel = document.createElement('div');
+    panel.id = 'add-mood-panel';
+    panel.style.cssText = 'background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-top:12px;';
+    panel.innerHTML =
+        '<div style="font-size:14px;color:#f0f0f0;margin-bottom:8px;">hide <strong>' + mood + '</strong>?</div>' +
+        '<div style="font-size:12px;color:#555;margin-bottom:16px;">it won\'t show in your chips anymore. you can restore it by refreshing and using the restore button.</div>' +
+        '<div style="display:flex;gap:8px;">' +
+            '<button id="cancel-hide" class="skip-note-btn" style="flex:1;">cancel</button>' +
+            '<button id="confirm-hide" class="skip-note-btn" style="flex:1;color:#e05c5c;border-color:#e05c5c;">hide mood</button>' +
+        '</div>';
+
+    document.querySelector('.mood-section').appendChild(panel);
+
+    document.getElementById('cancel-hide').addEventListener('click', function() { panel.remove(); });
+    document.getElementById('confirm-hide').addEventListener('click', function() {
+        hiddenMoods.push(mood);
+        localStorage.setItem('moodtunes_hidden_moods', JSON.stringify(hiddenMoods));
+        chip.style.display = 'none';
+        if (selectedMood === mood) selectedMood = null;
+        panel.remove();
+    });
+}
 
 // ── search ─────────────────────────────────────────────
 var searchTimer = null;
