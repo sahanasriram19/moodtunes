@@ -60,12 +60,13 @@
   }
 
   .mood-chips {
-    gap: 8px;
+    gap: 6px;
   }
 
   .chip {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 20px;
   }
 
   /* === SEARCH === */
@@ -95,8 +96,10 @@
 
   /* === LOG CARDS === */
   .log-card {
-    padding: 14px;
-    gap: 12px;
+    padding: 12px;
+    gap: 10px;
+    overflow: hidden;
+    position: relative;
   }
 
   .log-card .song-art {
@@ -331,3 +334,32 @@
     padding-bottom: 0;
   }
 }
+  /* keep delete button inside card */
+  .delete-btn {
+    padding: 2px 6px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* smaller song art on mobile */
+  .log-card .song-art,
+  .song-art {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  /* truncate long song titles */
+  .song-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+
+  .song-artist {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
