@@ -5,6 +5,7 @@ const app = express();
 
 app.use(cors({
     origin: [
+        'https://proactive-kindness-production.up.railway.app',
         'https://moodtunes-app.netlify.app',
         'https://zippy-douhua-deac4c.netlify.app',
         'http://127.0.0.1:5500',

@@ -122,7 +122,7 @@ module.exports.redirectToSpotify = (req, res, next) => {
 module.exports.handleCallback = (req, res, next) => {
     const code   = req.query.code;
     const userId = req.query.state;
-    if (!code) return res.redirect('https://moodtunes-app.netlify.app/index.html?spotify=error');
+    if (!code) return res.redirect('https://proactive-kindness-production.up.railway.app/index.html?spotify=error');
 
     const creds = Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64');
     axios.post('https://accounts.spotify.com/api/token',
@@ -135,13 +135,13 @@ module.exports.handleCallback = (req, res, next) => {
             spotify_access_token:  r.data.access_token,
             spotify_refresh_token: r.data.refresh_token
         }, function(err) {
-            if (err) return res.redirect('https://moodtunes-app.netlify.app/index.html?spotify=error');
-            res.redirect('https://moodtunes-app.netlify.app/index.html?spotify=connected');
+            if (err) return res.redirect('https://proactive-kindness-production.up.railway.app/index.html?spotify=error');
+            res.redirect('https://proactive-kindness-production.up.railway.app/index.html?spotify=connected');
         });
     })
     .catch(function(e) {
         console.error('Callback error:', e.response ? e.response.data : e.message);
-        res.redirect('https://moodtunes-app.netlify.app/index.html?spotify=error');
+        res.redirect('https://proactive-kindness-production.up.railway.app/index.html?spotify=error');
     });
 };
 
