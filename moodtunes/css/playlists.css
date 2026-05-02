@@ -25,6 +25,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
+  gap: 0;
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 10px;
@@ -111,6 +112,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
+  gap: 0;
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
@@ -165,33 +167,4 @@
 .playlist-block .log-card img.song-art {
   width: 40px;
   height: 40px;
-}
-/* === DRAG AND DROP === */
-.draggable-card {
-  cursor: default;
-  transition: opacity 0.15s, transform 0.15s;
-}
-
-.drag-handle {
-  font-size: 18px;
-  color: #444;
-  cursor: grab;
-  padding: 0 8px 0 0;
-  flex-shrink: 0;
-  user-select: none;
-  letter-spacing: -2px;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-.dragging {
-  opacity: 0.4;
-  transform: scale(0.98);
-}
-
-.drag-over {
-  border-color: #7f77dd !important;
-  background: #1a1a2e !important;
 }
