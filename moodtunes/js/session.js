@@ -162,7 +162,7 @@ function loadRecommendations(mood) {
 
             discoverContent.innerHTML = '';
             var grid = document.createElement('div');
-            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:start;width:100%;max-width:700px;';
+            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:start;width:100%;';
 
             tracks.forEach(function(track) {
                 var card = document.createElement('div');
