@@ -14,12 +14,12 @@
 <body>
   <nav class="navbar">
     <div class="logo">mood<span>tunes</span></div>
-        <ul class="nav-links">
+    <ul class="nav-links">
       <li><a href="index.html">journal</a></li>
       <li><a href="playlists.html">playlists</a></li>
       <li><a href="history.html">history</a></li>
-      <li><a href="stats.html" class="active">stats</a></li>
-      <li><a href="session.html">session</a></li>
+      <li><a href="stats.html">stats</a></li>
+      <li><a href="session.html" class="active">session</a></li>
     </ul>
     <div class="nav-right">
       <button class="logout-btn" id="logout-btn">logout</button>
@@ -27,9 +27,32 @@
   </nav>
 
   <main class="container">
-    <div id="stats-content">
-      <p style="color:#555;font-size:14px;">loading your stats...</p>
-    </div>
+
+    <section class="mood-section">
+      <p class="section-label">pick a mood to start your session</p>
+      <div class="mood-chips">
+        <button class="chip" data-mood="happy">happy</button>
+        <button class="chip" data-mood="sad">sad</button>
+        <button class="chip" data-mood="hype">hype</button>
+        <button class="chip" data-mood="heartbreak">heartbreak</button>
+        <button class="chip" data-mood="nostalgic">nostalgic</button>
+        <button class="chip" data-mood="focused">focused</button>
+        <button class="chip" data-mood="chill">chill</button>
+      </div>
+    </section>
+
+    <section id="session-controls" class="hidden" style="margin:24px 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div id="session-mood-label" style="font-size:18px;font-weight:600;color:#f0f0f0;"></div>
+      <div id="session-timer" style="font-size:16px;color:#888;font-variant-numeric:tabular-nums;">00:00</div>
+      <button id="session-start-btn" class="hidden" style="background:#1DB954;border:none;border-radius:20px;color:#fff;font-size:13px;padding:8px 20px;cursor:pointer;">▶ start</button>
+      <button id="session-end-btn" class="hidden" style="background:none;border:1px solid #555;border-radius:20px;color:#aaa;font-size:13px;padding:8px 20px;cursor:pointer;">■ end session</button>
+      <button id="session-refresh-btn" class="hidden" style="background:none;border:1px solid #333;border-radius:20px;color:#666;font-size:13px;padding:8px 16px;cursor:pointer;">↻ refresh</button>
+    </section>
+
+    <section>
+      <div id="discover-content"></div>
+    </section>
+
   </main>
 
   <script src="js/config.js"></script>
