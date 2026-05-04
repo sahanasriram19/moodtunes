@@ -190,14 +190,16 @@ module.exports.getRecommendations = (req, res, next) => {
         function doSearch(token) {
             const h = { 'Authorization': 'Bearer ' + token };
 
+            // search artist+title together for better similarity
+            // then search each extra seed artist+genre for diversity
             var queries = [
+                axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(artist + ' ' + title) + '&type=track&limit=8', { headers: h }),
                 axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(artist) + '&type=track&limit=8', { headers: h }),
-                axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(title) + '&type=track&limit=8', { headers: h }),
             ];
 
             seeds.slice(0, 4).forEach(function(s) {
                 if (s && s.trim()) {
-                    queries.push(axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(s.trim()) + '&type=track&limit=8', { headers: h }));
+                    queries.push(axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(s.trim() + ' ' + title) + '&type=track&limit=8', { headers: h }));
                 }
             });
 
