@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#0f0f0f" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
-  <title>moodtunes — discover</title>
+  <title>moodtunes — session</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/discover.css" />
   <link rel="stylesheet" href="css/mobile.css" />
@@ -23,7 +23,7 @@
       <li><a href="index.html">journal</a></li>
       <li><a href="playlists.html">playlists</a></li>
       <li><a href="history.html">history</a></li>
-      <li><a href="discover.html" class="active">discover</a></li>
+      <li><a href="session.html" class="active">session</a></li>
     </ul>
     <button class="logout-btn" id="logout-btn">logout</button>
   </nav>
@@ -32,7 +32,7 @@
 
     <section class="mood-section">
       <p class="section-label">what mood are you in?</p>
-      <p class="section-subtitle">we'll find songs that match based on what you've logged</p>
+      <p class="section-subtitle">pick a mood to get recommendations and start a listening session</p>
       <div class="mood-chips">
         <button class="chip" data-mood="happy">happy</button>
         <button class="chip" data-mood="sad">sad</button>
@@ -41,6 +41,18 @@
         <button class="chip" data-mood="nostalgic">nostalgic</button>
         <button class="chip" data-mood="focused">focused</button>
         <button class="chip" data-mood="chill">chill</button>
+      </div>
+    </section>
+
+    <!-- session controls -->
+    <section id="session-controls" class="hidden" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:#141414;border:1px solid #222;border-radius:12px;">
+        <div style="flex:1;">
+          <div id="session-mood-label" style="font-size:14px;font-weight:500;color:#f0f0f0;"></div>
+          <div id="session-start-time" style="font-size:12px;color:#555;margin-top:2px;"></div>
+        </div>
+        <button id="session-toggle-btn" class="session-btn" style="font-size:12px;padding:7px 14px;">▶ start session</button>
+        <button id="session-end-btn" class="hidden" style="background:none;border:1px solid #e05c5c;color:#e05c5c;border-radius:20px;padding:7px 14px;cursor:pointer;font-size:12px;">■ end session</button>
       </div>
     </section>
 
@@ -54,7 +66,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
-  <script src="js/discover.js"></script>
+  <script src="js/session.js"></script>
 
 </body>
 </html>
