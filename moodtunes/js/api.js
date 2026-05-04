@@ -1,6 +1,6 @@
 // api.js — shared helpers loaded on every page
 
-var BACKEND_URL = 'https://moodtunes-production.up.railway.app/api';
+var BACKEND_URL = 'https://zippy-douhua-deac4c.netlify.app/';
 
 function getToken() {
     return localStorage.getItem('moodtunes_token');
@@ -115,7 +115,7 @@ function formatDateOnly(isoString) {
 // ── service worker registration ────────────────────────
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').catch(function(e) {
+        navigator.serviceWorker.register('js/sw.js').catch(function(e) {
             console.log('SW registration failed:', e);
         });
     });

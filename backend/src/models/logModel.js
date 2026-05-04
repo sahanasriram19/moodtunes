@@ -40,7 +40,7 @@ module.exports.selectAllByUserPerDay = (data, callback) => {
 // ── today and yesterday only — for journal recently played ───────────────────
 module.exports.selectRecentTwoDays = (data, callback) => {
     pool.query(
-        'SELECT * FROM Log WHERE user_id = ? AND DATE(last_logged) >= DATE(NOW()) - INTERVAL 1 DAY ORDER BY last_logged DESC',
+        'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 48 HOUR ORDER BY last_logged DESC',
         [data.user_id], callback
     );
 };
@@ -49,7 +49,7 @@ module.exports.selectRecentTwoDays = (data, callback) => {
 
 module.exports.selectTodayLog = (data, callback) => {
     pool.query(
-        'SELECT * FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND DATE(last_logged) = CURDATE() LIMIT 1',
+        'SELECT * FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR LIMIT 1',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
@@ -68,7 +68,7 @@ module.exports.insertLog = (data, callback) => {
 
 module.exports.incrementPlayCount = (data, callback) => {
     pool.query(
-        'UPDATE Log SET play_count = play_count + 1, last_logged = CURRENT_TIMESTAMP WHERE user_id = ? AND song_id = ? AND mood = ? AND DATE(last_logged) = CURDATE()',
+        'UPDATE Log SET play_count = play_count + 1, last_logged = CURRENT_TIMESTAMP WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
