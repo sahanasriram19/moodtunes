@@ -162,10 +162,11 @@ function loadRecommendations(mood) {
 
             discoverContent.innerHTML = '';
             var grid = document.createElement('div');
-            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,1fr);gap:12px;';
+            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:start;';
 
             tracks.forEach(function(track) {
                 var card = document.createElement('div');
+                card.style.cssText = 'display:flex;flex-direction:column;';
                 card.innerHTML =
                     '<div style="position:relative;width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;margin-bottom:8px;background:#2a2a2a;">' +
                         (track.albumArt ? '<img src="' + track.albumArt + '" style="width:100%;height:100%;object-fit:cover;" />' : '') +
@@ -173,9 +174,9 @@ function loadRecommendations(mood) {
                             '<button class="session-play-btn" data-url="' + track.spotifyUrl + '" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" style="background:#1DB954;border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:13px;cursor:pointer;">▶</button>' +
                         '</div>' +
                     '</div>' +
-                    '<div style="font-size:12px;color:#f0f0f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + track.title + '</div>' +
-                    '<div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;">' + track.artist + '</div>' +
-                    '<button class="session-add-btn" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" data-url="' + track.spotifyUrl + '" data-mood="' + mood + '" style="background:none;border:1px solid #333;border-radius:14px;color:#888;font-size:11px;padding:3px 10px;cursor:pointer;width:100%;">+ add</button>';
+                    '<div style="font-size:12px;color:#f0f0f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">' + track.title + '</div>' +
+                    '<div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;width:100%;">' + track.artist + '</div>' +
+                    '<button class="session-add-btn" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" data-url="' + track.spotifyUrl + '" data-mood="' + mood + '" style="background:none;border:1px solid #333;border-radius:14px;color:#888;font-size:11px;padding:3px 10px;cursor:pointer;width:100%;margin-top:auto;">+ add</button>';
                 grid.appendChild(card);
             });
 
