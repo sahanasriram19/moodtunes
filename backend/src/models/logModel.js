@@ -86,7 +86,59 @@ module.exports.updateNote = (data, callback) => {
 
 module.exports.deleteLog = (data, callback) => {
     pool.query(
-        'DELETE FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND log_date = CURDATE()',
+        'DELETE FROM Log WHERE user_id = ? AND song_id = ? AND mood = ?',
         [data.user_id, data.song_id, data.mood], callback
     );
+};
+// ── stats queries ────────────────────────────────────────────────────────────
+module.exports.getStats = (data, callback) => {
+    pool.query(`
+        SELECT
+            COUNT(*) as total_logs,
+            SUM(play_count) as total_plays,
+            COUNT(DISTINCT song_id) as unique_songs,
+            COUNT(DISTINCT DATE(last_logged)) as days_active,
+            COUNT(DISTINCT mood) as moods_used
+        FROM Log WHERE user_id = ?
+    `, [data.user_id], callback);
+};
+
+module.exports.getMoodBreakdown = (data, callback) => {
+    pool.query(`
+        SELECT mood, SUM(play_count) as total_plays, COUNT(*) as song_count
+        FROM Log WHERE user_id = ?
+        GROUP BY mood ORDER BY total_plays DESC
+    `, [data.user_id], callback);
+};
+
+module.exports.getTopSongs = (data, callback) => {
+    pool.query(`
+        SELECT title, artist, album_art, spotify_url, SUM(play_count) as total_plays, mood
+        FROM Log WHERE user_id = ?
+        GROUP BY song_id, title, artist, album_art, spotify_url, mood
+        ORDER BY total_plays DESC LIMIT 5
+    `, [data.user_id], callback);
+};
+
+module.exports.getTimeOfDay = (data, callback) => {
+    pool.query(`
+        SELECT
+            SUM(CASE WHEN HOUR(last_logged) BETWEEN 5 AND 11 THEN play_count ELSE 0 END) as morning,
+            SUM(CASE WHEN HOUR(last_logged) BETWEEN 12 AND 17 THEN play_count ELSE 0 END) as afternoon,
+            SUM(CASE WHEN HOUR(last_logged) BETWEEN 18 AND 21 THEN play_count ELSE 0 END) as evening,
+            SUM(CASE WHEN HOUR(last_logged) >= 22 OR HOUR(last_logged) < 5 THEN play_count ELSE 0 END) as late_night
+        FROM Log WHERE user_id = ?
+    `, [data.user_id], callback);
+};
+
+module.exports.getFlashback = (data, callback) => {
+    pool.query(`
+        SELECT title, artist, album_art, spotify_url, mood, SUM(play_count) as total_plays,
+               MIN(last_logged) as played_at
+        FROM Log
+        WHERE user_id = ?
+          AND last_logged BETWEEN DATE_SUB(NOW(), INTERVAL 37 DAY) AND DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY song_id, title, artist, album_art, spotify_url, mood
+        ORDER BY total_plays DESC LIMIT 5
+    `, [data.user_id], callback);
 };

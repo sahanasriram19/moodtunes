@@ -88,3 +88,16 @@ module.exports.deleteLog = (req, res, next) => {
         res.status(200).json({ message: 'Log deleted successfully' });
     });
 };
+// ── stats endpoint ────────────────────────────────────────────────────────────
+module.exports.getStats = (req, res, next) => {
+    const userId = res.locals.userId;
+    Promise.all([
+        new Promise((resolve) => model.getStats({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getMoodBreakdown({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getTopSongs({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getTimeOfDay({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getFlashback({ user_id: userId }, (err, r) => resolve(err ? [] : r)))
+    ]).then(([stats, moods, topSongs, timeOfDay, flashback]) => {
+        res.status(200).json({ stats: stats[0] || {}, moods, topSongs, timeOfDay: timeOfDay[0] || {}, flashback });
+    }).catch(() => res.status(500).json({ message: 'Internal server error' }));
+};

@@ -3,6 +3,7 @@ const router  = express.Router();
 const log     = require('../controllers/logController');
 const jwt     = require('../middlewares/jwtMiddleware');
 
+router.get('/stats',           jwt.verifyToken, log.getStats);
 router.get('/',                  jwt.verifyToken, log.getAllLogs);
 router.get('/perday',            jwt.verifyToken, log.getAllLogsPerDay);
 router.get('/recent',            jwt.verifyToken, log.getRecentTwoDays);
