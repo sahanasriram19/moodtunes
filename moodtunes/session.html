@@ -75,6 +75,17 @@
       letter-spacing: 0.06em;
       margin-bottom: 10px;
     }
+    .recs-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) {
+      .recs-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+    }
   </style>
 </head>
 <body>
