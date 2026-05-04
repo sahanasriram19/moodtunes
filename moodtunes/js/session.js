@@ -162,16 +162,16 @@ function loadRecommendations(mood) {
 
             discoverContent.innerHTML = '';
             var grid = document.createElement('div');
-            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:start;width:100%;';
+            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:start;width:100%;max-width:700px;';
 
             tracks.forEach(function(track) {
                 var card = document.createElement('div');
                 card.style.cssText = 'display:flex;flex-direction:column;';
                 card.innerHTML =
-                    '<div style="position:relative;width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;margin-bottom:8px;background:#2a2a2a;">' +
+                    '<div style="position:relative;width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;margin-bottom:6px;background:#2a2a2a;">' +
                         (track.albumArt ? '<img src="' + track.albumArt + '" style="width:100%;height:100%;object-fit:cover;" />' : '') +
                         '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">' +
-                            '<button class="session-play-btn" data-url="' + track.spotifyUrl + '" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" style="background:#1DB954;border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:13px;cursor:pointer;">▶</button>' +
+                            '<button class="session-play-btn" data-url="' + track.spotifyUrl + '" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" style="background:#1DB954;border:none;width:28px;height:28px;border-radius:50%;color:#fff;font-size:11px;cursor:pointer;">▶</button>' +
                         '</div>' +
                     '</div>' +
                     '<div style="font-size:12px;color:#f0f0f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">' + track.title + '</div>' +
