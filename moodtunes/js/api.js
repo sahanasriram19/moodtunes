@@ -112,11 +112,4 @@ function formatDateOnly(isoString) {
     if (date.toDateString() === yesterday.toDateString()) return 'yesterday';
     return date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' });
 }
-// ── service worker registration ────────────────────────
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('js/sw.js').catch(function(e) {
-            console.log('SW registration failed:', e);
-        });
-    });
-}
+// service worker disabled
