@@ -12,8 +12,70 @@
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <title>moodtunes — session</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/discover.css" />
   <link rel="stylesheet" href="css/mobile.css" />
+  <style>
+    .session-timer-card {
+      background: #141414;
+      border: 1px solid #7f77dd33;
+      border-radius: 14px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .session-timer-label {
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .session-timer-display {
+      font-size: 44px;
+      font-weight: 600;
+      color: #f0f0f0;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 16px;
+    }
+    .session-timer-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .session-start-btn {
+      background: #7f77dd;
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      padding: 8px 20px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .session-refresh-btn {
+      background: none;
+      border: 1px solid #333;
+      color: #888;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .session-end-btn {
+      background: #e05c5c22;
+      border: 1px solid #e05c5c;
+      color: #e05c5c;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .recs-label {
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 
@@ -32,7 +94,6 @@
 
     <section class="mood-section">
       <p class="section-label">what mood are you in?</p>
-      <p class="section-subtitle">pick a mood to get recommendations and start a listening session</p>
       <div class="mood-chips">
         <button class="chip" data-mood="happy">happy</button>
         <button class="chip" data-mood="sad">sad</button>
@@ -44,23 +105,27 @@
       </div>
     </section>
 
-    <!-- session controls -->
-    <section id="session-controls" class="hidden" style="margin-bottom:24px;">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:#141414;border:1px solid #222;border-radius:12px;">
-        <div style="flex:1;">
-          <div id="session-mood-label" style="font-size:14px;font-weight:500;color:#f0f0f0;"></div>
-          <div id="session-start-time" style="font-size:12px;color:#555;margin-top:2px;"></div>
+    <!-- session timer card -->
+    <div id="session-controls" class="hidden">
+      <div class="session-timer-card">
+        <div class="session-timer-label" id="session-mood-label">session</div>
+        <div class="session-timer-display" id="session-timer">00:00</div>
+        <div class="session-timer-btns">
+          <button class="session-start-btn" id="session-start-btn">▶ start session</button>
+          <button class="session-refresh-btn hidden" id="session-refresh-btn">↻ refresh</button>
+          <button class="session-end-btn hidden" id="session-end-btn">■ end session</button>
         </div>
-        <button id="session-toggle-btn" class="session-btn" style="font-size:12px;padding:7px 14px;">▶ start session</button>
-        <button id="session-end-btn" class="hidden" style="background:none;border:1px solid #e05c5c;color:#e05c5c;border-radius:20px;padding:7px 14px;cursor:pointer;font-size:12px;">■ end session</button>
       </div>
-    </section>
 
-    <section class="discover-section">
+      <div class="recs-label">RECOMMENDED</div>
       <div id="discover-content">
-        <p class="discover-prompt">pick a mood above to get recommendations</p>
+        <p style="color:#555;font-size:13px;">pick a mood above to get recommendations</p>
       </div>
-    </section>
+    </div>
+
+    <div id="no-session-prompt" style="color:#555;font-size:14px;margin-top:20px;">
+      pick a mood above to get started
+    </div>
 
   </main>
 
