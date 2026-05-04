@@ -120,10 +120,23 @@ function loadRecommendations(mood) {
             }
 
             var loggedKeys = {};
-            logs.forEach(function(l) { loggedKeys[l.title.toLowerCase() + '||' + l.artist.toLowerCase()] = true; });
+            var loggedArtists = {};
+            logs.forEach(function(l) {
+                loggedKeys[l.title.toLowerCase() + '||' + l.artist.toLowerCase()] = true;
+                // track all artists already in this mood
+                l.artist.split(',').forEach(function(a) {
+                    loggedArtists[a.trim().toLowerCase()] = true;
+                });
+            });
 
             var tracks = rec.data.tracks
-                .filter(function(t) { return !loggedKeys[t.title.toLowerCase() + '||' + t.artist.toLowerCase()]; })
+                .filter(function(t) {
+                    // exclude songs already logged
+                    if (loggedKeys[t.title.toLowerCase() + '||' + t.artist.toLowerCase()]) return false;
+                    // exclude songs by artists already in mood playlist (show new artists only)
+                    var trackArtists = t.artist.split(',').map(function(a) { return a.trim().toLowerCase(); });
+                    return !trackArtists.every(function(a) { return loggedArtists[a]; });
+                })
                 .slice(0, 10);
 
             if (tracks.length === 0) {
