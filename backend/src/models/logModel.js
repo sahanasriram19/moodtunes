@@ -49,7 +49,7 @@ module.exports.selectRecentTwoDays = (data, callback) => {
 
 module.exports.selectTodayLog = (data, callback) => {
     pool.query(
-        'SELECT * FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR ORDER BY last_logged DESC LIMIT 1',
+        'SELECT * FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR LIMIT 1',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
@@ -58,7 +58,7 @@ module.exports.selectTodayLog = (data, callback) => {
 
 module.exports.insertLog = (data, callback) => {
     pool.query(
-        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?) ON DUPLICATE KEY UPDATE play_count = play_count + 1, last_logged = CURRENT_TIMESTAMP',
+        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
         [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood, data.note || ''],
         callback
     );
@@ -68,7 +68,7 @@ module.exports.insertLog = (data, callback) => {
 
 module.exports.incrementPlayCount = (data, callback) => {
     pool.query(
-        'UPDATE Log SET play_count = play_count + 1, last_logged = CURRENT_TIMESTAMP WHERE user_id = ? AND song_id = ? AND mood = ? ORDER BY last_logged DESC LIMIT 1',
+        'UPDATE Log SET play_count = play_count + 1, last_logged = CURRENT_TIMESTAMP WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
@@ -86,7 +86,7 @@ module.exports.updateNote = (data, callback) => {
 
 module.exports.deleteLog = (data, callback) => {
     pool.query(
-        'DELETE FROM Log WHERE user_id = ? AND song_id = ? AND mood = ?',
+        'DELETE FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND log_date = CURDATE()',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
