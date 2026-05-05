@@ -363,9 +363,25 @@ addMoodSection.querySelectorAll('.emoji-opt').forEach(function(btn) {
 document.getElementById('save-new-mood').addEventListener('click', function() {
     var name = document.getElementById('new-mood-input').value.trim().toLowerCase();
     if (!name) return;
+    var errorEl = document.getElementById('mood-error-msg');
+    if (errorEl) errorEl.remove();
     apiCall('/moods', 'POST', { name: name, emoji: chosenEmoji }, function(err, result) {
         if (err || result.status >= 400) {
-            alert(result && result.data && result.data.message ? result.data.message : 'could not create mood');
+            if (result && result.status === 409) {
+                document.querySelectorAll('.chip.custom-chip').forEach(function(c) { c.closest('.chip-wrap').remove(); });
+                apiCall('/moods', 'GET', null, function(e2, r2) {
+                    if (e2 || !r2.data) return;
+                    (Array.isArray(r2.data) ? r2.data : []).forEach(function(m) {
+                        var chip = addChip(m.name, m.emoji, m.id);
+                        if (managingMoods) chip.parentNode.querySelector('.chip-delete-btn').style.display = 'block';
+                    });
+                });
+            }
+            var msg = document.createElement('p');
+            msg.id = 'mood-error-msg';
+            msg.style.cssText = 'color:#e05c5c;font-size:12px;margin:8px 0 0;';
+            msg.textContent = result && result.data && result.data.message ? result.data.message : 'could not create mood';
+            document.getElementById('save-new-mood').insertAdjacentElement('afterend', msg);
             return;
         }
         var chip = addChip(result.data.name, result.data.emoji, result.data.id);
