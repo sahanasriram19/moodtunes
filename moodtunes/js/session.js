@@ -10,6 +10,11 @@ var sessionStartBtn = document.getElementById('session-start-btn');
 var sessionEndBtn   = document.getElementById('session-end-btn');
 var sessionRefreshBtn = document.getElementById('session-refresh-btn');
 
+// initialise hero with prompt
+sessionMoodLabel.textContent = 'pick a mood to begin';
+sessionTimerEl.textContent = '—';
+sessionTimerEl.style.opacity = '0.3';
+
 var selectedMood  = null;
 var activeSession = null;
 var timerInterval = null;
@@ -20,8 +25,8 @@ chips.forEach(function(chip) {
         document.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = chip.dataset.mood;
-        sessionControls.classList.remove('hidden');
         sessionMoodLabel.textContent = chip.dataset.mood + ' session';
+        sessionTimerEl.style.opacity = '1';
         if (!activeSession) {
             sessionStartBtn.classList.remove('hidden');
             sessionEndBtn.classList.add('hidden');
@@ -222,8 +227,7 @@ if (savedSession) {
             activeSession = { id: s.id, mood: s.mood, startTime: new Date(s.startTime) };
             selectedMood = s.mood;
             document.querySelectorAll('.chip').forEach(function(c) { if (c.dataset.mood === s.mood) c.classList.add('selected'); });
-            sessionControls.classList.remove('hidden');
-            sessionMoodLabel.textContent = s.mood + ' session';
+                sessionMoodLabel.textContent = s.mood + ' session';
             sessionStartBtn.classList.add('hidden');
             sessionEndBtn.classList.remove('hidden');
             sessionRefreshBtn.classList.remove('hidden');
@@ -254,7 +258,6 @@ function addChip(name, emoji, id) {
         document.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = name;
-        sessionControls.classList.remove('hidden');
         sessionMoodLabel.textContent = name + ' session';
         if (!activeSession) {
             sessionStartBtn.classList.remove('hidden');
@@ -385,11 +388,20 @@ document.getElementById('save-new-mood').addEventListener('click', function() {
             return;
         }
         var chip = addChip(result.data.name, result.data.emoji, result.data.id);
-        chip.parentNode.querySelector('.chip-delete-btn').style.display = 'block';
         document.getElementById('new-mood-input').value = '';
         chosenEmoji = '🎵';
         document.getElementById('chosen-emoji').textContent = '🎵';
         addMoodSection.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
+        // close manage mode after adding
+        managingMoods = false;
+        manageMoodsBtn.textContent = 'manage moods';
+        manageMoodsBtn.style.border = 'none';
+        manageMoodsBtn.style.borderBottom = '1px solid #333';
+        manageMoodsBtn.style.padding = '2px 0';
+        manageMoodsBtn.style.borderRadius = '0';
+        manageMoodsBtn.style.color = '#555';
+        document.querySelectorAll('.chip-delete-btn').forEach(function(b) { b.style.display = 'none'; });
+        addMoodSection.style.display = 'none';
     });
 });
 

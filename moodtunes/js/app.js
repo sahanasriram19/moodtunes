@@ -192,6 +192,16 @@ document.getElementById('save-new-mood').addEventListener('click', function() {
         chosenEmoji = '🎵';
         document.getElementById('chosen-emoji').textContent = '🎵';
         addMoodSection.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
+        // close manage mode after adding
+        managingMoods = false;
+        manageMoodsBtn.textContent = 'manage moods';
+        manageMoodsBtn.style.border = 'none';
+        manageMoodsBtn.style.borderBottom = '1px solid #333';
+        manageMoodsBtn.style.padding = '2px 0';
+        manageMoodsBtn.style.borderRadius = '0';
+        manageMoodsBtn.style.color = '#555';
+        document.querySelectorAll('.chip-delete-btn').forEach(function(b) { b.style.display = 'none'; });
+        addMoodSection.style.display = 'none';
     });
 });
 
