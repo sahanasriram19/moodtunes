@@ -123,7 +123,6 @@ style.textContent = [
     '.save-note-btn { background: var(--accent) !important; }',
     '.add-note-btn, .edit-note-btn, .log-note { color: var(--accent) !important; }',
     '.logo span { color: var(--accent) !important; }',
-    '.session-hero { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.session-hero-label { color: var(--text-muted) !important; }',
 ].join('\n');
 document.head.appendChild(style);

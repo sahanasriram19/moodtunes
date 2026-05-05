@@ -53,6 +53,7 @@ function searchSongHistory(query) {
                 '<span class="mood-badge">' + e.mood + '</span>' +
                 '<span class="song-history-date">' + dateStr + '</span>' +
                 '<span class="song-history-plays">' + e.play_count + ' play' + (e.play_count !== 1 ? 's' : '') + '</span>' +
+                (e.note ? '<span class="log-note" style="display:block;margin-top:4px;margin-left:0;">"' + e.note + '"</span>' : '') +
             '</div>';
         }).join('');
 
