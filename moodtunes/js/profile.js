@@ -132,13 +132,13 @@ document.head.appendChild(style);
 // ── build profile button ───────────────────────────────
 var username = localStorage.getItem('moodtunes_username') || 'you';
 
-// remove existing logout btn and replace with profile btn
+// remove logout btn if it still exists in the HTML
 var logoutBtn = document.getElementById('logout-btn');
-var helpBtn = document.getElementById('help-btn');
-if (!logoutBtn) return;
+if (logoutBtn) logoutBtn.remove();
 
-var navRight = logoutBtn.parentNode;
-logoutBtn.remove();
+// find nav-right — works regardless of whether logout-btn was present
+var navRight = document.querySelector('.nav-right');
+if (!navRight) return;
 
 var profileBtn = document.createElement('button');
 profileBtn.id = 'profile-btn';
