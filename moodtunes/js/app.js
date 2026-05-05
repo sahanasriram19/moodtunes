@@ -367,15 +367,7 @@ function loadLogs() {
 // ── click handlers ─────────────────────────────────────
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('log-play-btn')) {
-        var url = e.target.dataset.url;
-        var sid = e.target.dataset.songId;
-        var moo = e.target.dataset.mood;
-        openSpotify(url);
-        // increment play count then reload so song moves to top
-        apiCall('/logs', 'POST', {
-            song_id: sid, title: e.target.dataset.title, artist: e.target.dataset.artist,
-            album_art: e.target.dataset.art, spotify_url: url, mood: moo, note: ''
-        }, function() { loadLogs(); });
+        openSpotify(e.target.dataset.url);
     }
     if (e.target.classList.contains('journal-delete-btn')) {
         if (!confirm('remove this song from your journal?')) return;
@@ -501,19 +493,28 @@ document.getElementById('logout-btn').addEventListener('click', logout);
 
 // ── sync play counts from spotify recently played ──────
 function syncSpotifyPlays() {
+    var lastSync = parseInt(localStorage.getItem('moodtunes_last_sync') || '0', 10);
+    var now = Date.now();
+
     apiCall('/spotify/recently-played', 'GET', null, function(err, result) {
         if (err || !result || !result.data || !Array.isArray(result.data)) return;
 
-        var items = result.data;
-        var todayStr = new Date().toDateString();
+        // only count plays that happened after the last sync point
+        var newPlays = result.data.filter(function(item) {
+            return new Date(item.played_at).getTime() > lastSync;
+        });
+
+        // stamp immediately so a rapid re-sync doesn't recount the same plays
+        localStorage.setItem('moodtunes_last_sync', now.toString());
+
+        if (newPlays.length === 0) return;
+
+        // count how many times each track was played since last sync
         var playCounts = {};
-        items.forEach(function(item) {
-            if (new Date(item.played_at).toDateString() !== todayStr) return;
+        newPlays.forEach(function(item) {
             var tid = item.track.id;
             playCounts[tid] = (playCounts[tid] || 0) + 1;
         });
-
-        if (Object.keys(playCounts).length === 0) return;
 
         apiCall('/logs/recent', 'GET', null, function(err2, logsResult) {
             if (err2 || !logsResult || !Array.isArray(logsResult.data)) return;
@@ -524,20 +525,16 @@ function syncSpotifyPlays() {
                 var parts = log.spotify_url ? log.spotify_url.split('/track/') : [];
                 var trackId = parts[1] ? parts[1].split('?')[0] : null;
                 if (!trackId || !playCounts[trackId]) return;
-                if (playCounts[trackId] <= log.play_count) return;
-
-                var diff = playCounts[trackId] - log.play_count;
-                pending.push({ log: log, diff: diff });
+                pending.push({ log: log, count: playCounts[trackId] });
             });
 
             if (pending.length === 0) return;
 
-            // batch all increments then reload once
             var done = 0;
-            var total = pending.reduce(function(sum, p) { return sum + p.diff; }, 0);
+            var total = pending.reduce(function(sum, p) { return sum + p.count; }, 0);
 
             pending.forEach(function(p) {
-                for (var i = 0; i < p.diff; i++) {
+                for (var i = 0; i < p.count; i++) {
                     apiCall('/logs', 'POST', {
                         song_id: p.log.song_id, title: p.log.title, artist: p.log.artist,
                         album_art: p.log.album_art, spotify_url: p.log.spotify_url,
