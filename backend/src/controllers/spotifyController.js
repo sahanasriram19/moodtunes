@@ -164,16 +164,32 @@ module.exports.getRecentlyPlayed = (req, res, next) => {
     });
 };
 
-// ── recommendations — refreshes token first, then searches ─────────────────
+// ── mood audio feature targets ─────────────────────────────────────────────
+// valence: happiness (0-1), energy: intensity (0-1),
+// danceability: rhythm (0-1), acousticness (0-1), tempo: BPM
 
+const MOOD_FEATURES = {
+    happy:      { valence: 0.8,  energy: 0.7,  danceability: 0.7, acousticness: 0.2, tempo: 120 },
+    sad:        { valence: 0.2,  energy: 0.3,  danceability: 0.3, acousticness: 0.6, tempo: 75  },
+    hype:       { valence: 0.7,  energy: 0.9,  danceability: 0.8, acousticness: 0.1, tempo: 140 },
+    heartbreak: { valence: 0.15, energy: 0.35, danceability: 0.3, acousticness: 0.5, tempo: 80  },
+    nostalgic:  { valence: 0.45, energy: 0.4,  danceability: 0.4, acousticness: 0.5, tempo: 95  },
+    focused:    { valence: 0.5,  energy: 0.55, danceability: 0.4, acousticness: 0.3, tempo: 110 },
+    chill:      { valence: 0.55, energy: 0.35, danceability: 0.45,acousticness: 0.5, tempo: 90  },
+};
+
+// ── recommendations — uses Spotify Recommendations API with mood audio features
 module.exports.getRecommendations = (req, res, next) => {
     const userId = res.locals.userId;
     const artist = req.query.artist;
     const title  = req.query.title;
     const seeds  = req.query.seeds ? req.query.seeds.split('||') : [];
+    const mood   = req.query.mood || null;
     const self   = module.exports;
 
     if (!artist || !title) return res.status(400).json({ message: 'artist and title required' });
+
+    const features = (mood && MOOD_FEATURES[mood.toLowerCase()]) ? MOOD_FEATURES[mood.toLowerCase()] : null;
 
     self.refreshToken(userId, function(refreshErr, freshToken) {
         const useToken = (!refreshErr && freshToken) ? freshToken : null;
@@ -181,43 +197,62 @@ module.exports.getRecommendations = (req, res, next) => {
         if (!useToken) {
             self.getUserToken(userId, function(err, storedToken) {
                 if (err) return res.status(401).json({ message: 'Spotify not connected' });
-                doSearch(storedToken);
+                doRecs(storedToken);
             });
         } else {
-            doSearch(useToken);
+            doRecs(useToken);
         }
 
-        function doSearch(token) {
+        function doRecs(token) {
             const h = { 'Authorization': 'Bearer ' + token };
 
-            // search artist+title together for better similarity
-            // then search each extra seed artist+genre for diversity
-            var queries = [
-                axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(artist + ' ' + title) + '&type=track&limit=8', { headers: h }),
-                axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(artist) + '&type=track&limit=8', { headers: h }),
-            ];
-
-            seeds.slice(0, 4).forEach(function(s) {
-                if (s && s.trim()) {
-                    queries.push(axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(s.trim() + ' ' + title) + '&type=track&limit=8', { headers: h }));
-                }
+            // Step 1: resolve seed track + up to 4 seed artists to Spotify IDs
+            var artistsToResolve = [artist].concat(seeds.slice(0, 4)).slice(0, 5);
+            var searchPromises = artistsToResolve.map(function(a) {
+                return axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(a) + '&type=artist&limit=1', { headers: h })
+                    .then(function(r) {
+                        return r.data.artists.items.length > 0 ? r.data.artists.items[0].id : null;
+                    }).catch(function() { return null; });
             });
 
-            axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(title + ' ' + artist) + '&type=track&limit=1', { headers: h })
-            .then(function(r) {
-                const seedId = r.data.tracks.items.length > 0 ? r.data.tracks.items[0].id : null;
-                return Promise.all(queries).then(function(responses) { return { responses, seedId }; });
+            // Also resolve the seed track ID
+            var trackPromise = axios.get('https://api.spotify.com/v1/search?q=' + encodeURIComponent(title + ' ' + artist) + '&type=track&limit=1', { headers: h })
+                .then(function(r) {
+                    return r.data.tracks.items.length > 0 ? r.data.tracks.items[0].id : null;
+                }).catch(function() { return null; });
+
+            Promise.all([trackPromise, Promise.all(searchPromises)])
+            .then(function(results) {
+                var seedTrackId = results[0];
+                var seedArtistIds = results[1].filter(Boolean);
+
+                // Build seed params — Spotify allows max 5 seeds total (tracks + artists combined)
+                var seedTracks  = seedTrackId ? [seedTrackId] : [];
+                var seedArtists = seedArtistIds.slice(0, 5 - seedTracks.length);
+
+                if (seedTracks.length === 0 && seedArtists.length === 0) {
+                    return res.status(500).json({ message: 'Could not resolve any seed tracks or artists' });
+                }
+
+                // Step 2: call Spotify Recommendations API with mood audio targets
+                var params = 'limit=30&market=SG';
+                if (seedTracks.length > 0)  params += '&seed_tracks='  + seedTracks.join(',');
+                if (seedArtists.length > 0) params += '&seed_artists=' + seedArtists.join(',');
+
+                if (features) {
+                    params += '&target_valence='      + features.valence;
+                    params += '&target_energy='       + features.energy;
+                    params += '&target_danceability=' + features.danceability;
+                    params += '&target_acousticness=' + features.acousticness;
+                    params += '&target_tempo='        + features.tempo;
+                }
+
+                return axios.get('https://api.spotify.com/v1/recommendations?' + params, { headers: h });
             })
-            .then(function(payload) {
-                const seen = {};
-                if (payload.seedId) seen[payload.seedId] = true;
-                const tracks = [];
-                payload.responses.forEach(function(r) {
-                    r.data.tracks.items.forEach(function(track) {
-                        if (!seen[track.id]) { seen[track.id] = true; tracks.push(trackToObj(track)); }
-                    });
-                });
-                res.status(200).json({ tracks: shuffle(tracks).slice(0, 22) });
+            .then(function(r) {
+                if (!r || !r.data || !r.data.tracks) return res.status(500).json({ message: 'No recommendations returned' });
+                var tracks = r.data.tracks.map(trackToObj);
+                res.status(200).json({ tracks: shuffle(tracks) });
             })
             .catch(function(e) {
                 console.error('Recommendations error:', e.response ? e.response.data : e.message);

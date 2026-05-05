@@ -427,7 +427,7 @@ function loadSessionRecs(mood) {
             if (a !== seed.artist && !seen[a]) { seen[a] = true; extraArtists.push(a); }
         });
 
-        var url = '/spotify/recommendations?artist=' + encodeURIComponent(seed.artist) + '&title=' + encodeURIComponent(seed.title);
+        var url = '/spotify/recommendations?artist=' + encodeURIComponent(seed.artist) + '&title=' + encodeURIComponent(seed.title) + '&mood=' + encodeURIComponent(mood);
         if (extraArtists.length > 0) url += '&seeds=' + encodeURIComponent(extraArtists.slice(0, 4).join('||'));
 
         apiCall(url, 'GET', null, function(err2, rec) {
