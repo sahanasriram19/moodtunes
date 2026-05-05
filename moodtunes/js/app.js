@@ -66,7 +66,7 @@ function addChip(name, emoji, id) {
 
     wrap.appendChild(chip);
     wrap.appendChild(delBtn);
-    moodChipsContainer.insertBefore(wrap, document.getElementById('manage-moods-btn'));
+    moodChipsContainer.appendChild(wrap);
     return chip;
 }
 
