@@ -150,7 +150,6 @@ style.textContent = [
     '.session-summary-meta { color: var(--text-muted) !important; }',
     '.stat-box { border-radius: 12px !important; }',
     '.timeline-date { color: var(--text-primary) !important; }',
-    '.mood-badge { background: var(--accent-bg) !important; color: var(--accent) !important; }',
     '.playlist-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.playlist-card-title { color: var(--text-primary) !important; }',
     '.playlist-card-count { color: var(--text-muted) !important; }',
