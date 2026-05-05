@@ -54,10 +54,10 @@ function addChip(name, emoji, id) {
 
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
-    delBtn.textContent = 'delete';
+    delBtn.innerHTML = '🗑';
     delBtn.style.cssText = 'display:none;background:none;border:1px solid #3a2020;border-radius:6px;color:#e05c5c;font-size:11px;padding:2px 10px;cursor:pointer;white-space:nowrap;';
     delBtn.addEventListener('click', function() {
-        delBtn.textContent = '...'; delBtn.disabled = true;
+        delBtn.innerHTML = '...'; delBtn.disabled = true;
         apiCall('/moods/' + id, 'DELETE', null, function() {
             if (selectedMood === name) selectedMood = null;
             wrap.remove();
@@ -81,7 +81,7 @@ chips.forEach(function(chip) {
 
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
-    delBtn.textContent = 'delete';
+    delBtn.innerHTML = '🗑';
     delBtn.style.cssText = 'display:none;background:none;border:1px solid #3a2020;border-radius:6px;color:#e05c5c;font-size:11px;padding:2px 10px;cursor:pointer;white-space:nowrap;';
     delBtn.addEventListener('click', function() {
         wrap.remove();
@@ -104,7 +104,7 @@ var manageMoodsBtn = document.createElement('button');
 manageMoodsBtn.id = 'manage-moods-btn';
 manageMoodsBtn.textContent = 'manage moods';
 manageMoodsBtn.style.cssText = 'background:none;border:none;border-bottom:1px solid #333;color:#555;font-size:12px;padding:2px 0;cursor:pointer;margin-top:14px;display:block;letter-spacing:0.04em;transition:color 0.15s,border-color 0.15s;';
-manageMoodsBtn.addEventListener('mouseover', function() { this.style.color = '#aaa'; this.style.borderColor = '#666'; });
+manageMoodsBtn.addEventListener('mouseover', function() { this.style.color = '#aaa'; });
 manageMoodsBtn.addEventListener('mouseout', function() {
     this.style.color = managingMoods ? '#7f77dd' : '#555';
     this.style.borderColor = managingMoods ? '#7f77dd' : '#333';
@@ -112,8 +112,12 @@ manageMoodsBtn.addEventListener('mouseout', function() {
 manageMoodsBtn.addEventListener('click', function() {
     managingMoods = !managingMoods;
     manageMoodsBtn.textContent = managingMoods ? 'done' : 'manage moods';
+    manageMoodsBtn.style.border = managingMoods ? '1px solid #7f77dd' : 'none';
+    manageMoodsBtn.style.borderBottom = managingMoods ? '1px solid #7f77dd' : '1px solid #333';
+    manageMoodsBtn.style.padding = managingMoods ? '4px 14px' : '2px 0';
+    manageMoodsBtn.style.borderRadius = managingMoods ? '20px' : '0';
     manageMoodsBtn.style.color = managingMoods ? '#7f77dd' : '#555';
-    manageMoodsBtn.style.borderColor = managingMoods ? '#7f77dd' : '#333';
+    
     document.querySelectorAll('.chip-delete-btn').forEach(function(btn) {
         btn.style.display = managingMoods ? 'block' : 'none';
     });
