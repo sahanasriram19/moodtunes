@@ -305,7 +305,7 @@ document.addEventListener('click', function(e) {
     if (card) card.remove();
 });
 
-document.getElementById('logout-btn').addEventListener('click', logout);
+var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── boot ───────────────────────────────────────────────
 playlistsList.innerHTML = '<p style="color:#555;font-size:14px;">loading...</p>';

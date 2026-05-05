@@ -181,7 +181,7 @@ function buildLineGraph(logs) {
     if (container) container.innerHTML = svg + legend;
 }
 
-document.getElementById('logout-btn').addEventListener('click', logout);
+var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 apiCall('/logs/stats', 'GET', null, function(err, result) {
     if (err || !result.data) {

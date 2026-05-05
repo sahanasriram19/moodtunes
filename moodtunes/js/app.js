@@ -499,7 +499,7 @@ sessionBtn.addEventListener('click', function() {
     else { if (!selectedMood) { alert('pick a mood first!'); return; } startSession(selectedMood); }
 });
 sessionEndBtn.addEventListener('click', endSession);
-document.getElementById('logout-btn').addEventListener('click', logout);
+var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── sync play counts from spotify recently played ──────
 function syncSpotifyPlays() {

@@ -213,7 +213,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-document.getElementById('logout-btn').addEventListener('click', logout);
+var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── restore active session ─────────────────────────────
 var savedSession = localStorage.getItem('moodtunes_session');

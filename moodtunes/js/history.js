@@ -312,7 +312,7 @@ document.addEventListener('click', function(e) {
 var sessionBtn = document.getElementById('session-btn');
 if (sessionBtn) sessionBtn.addEventListener('click', function() { window.location.href = 'index.html'; });
 
-document.getElementById('logout-btn').addEventListener('click', logout);
+var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── boot ───────────────────────────────────────────────
 apiCall('/logs/perday', 'GET', null, function(err, result) {
