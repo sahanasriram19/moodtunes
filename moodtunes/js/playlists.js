@@ -143,6 +143,31 @@ function openPlaylist(mood, songs) {
     // ── drag and drop ──────────────────────────────────
     var dragging = null;
 
+    function finishReorder() {
+        if (dragging) dragging.classList.remove('dragging');
+        dragging = null;
+        document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+        var cards = block.querySelectorAll('.draggable-card');
+        var orderedIds = [];
+        var top4 = [];
+        cards.forEach(function(c, i) {
+            orderedIds.push(c.dataset.songId);
+            if (i < 4) top4.push({ album_art: c.dataset.albumArt || '' });
+        });
+        saveOrder(mood, orderedIds);
+        document.getElementById('playlist-cover-wrap').innerHTML = buildCoverHTML(top4, mood, 'large');
+        var gridCard = document.querySelector('.playlist-card[data-mood="' + mood + '"]');
+        if (gridCard) {
+            var oldCover = gridCard.querySelector('.playlist-cover');
+            if (oldCover) {
+                var tmp = document.createElement('div');
+                tmp.innerHTML = buildCoverHTML(top4, mood, 'small');
+                gridCard.replaceChild(tmp.firstChild, oldCover);
+            }
+        }
+    }
+
+    // ── mouse / desktop drag ───────────────────────────
     block.addEventListener('dragstart', function(e) {
         dragging = e.target.closest('.draggable-card');
         if (!dragging) return;
@@ -165,31 +190,61 @@ function openPlaylist(mood, songs) {
         }
     });
 
-    block.addEventListener('dragend', function() {
-        if (dragging) dragging.classList.remove('dragging');
-        dragging = null;
-        document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+    block.addEventListener('dragend', finishReorder);
 
-        // save new order and update cover
-        var cards = block.querySelectorAll('.draggable-card');
-        var orderedIds = [];
-        var top4 = [];
-        cards.forEach(function(c, i) {
-            orderedIds.push(c.dataset.songId);
-            if (i < 4) top4.push({ album_art: c.dataset.albumArt || '' });
-        });
-        saveOrder(mood, orderedIds);
-        document.getElementById('playlist-cover-wrap').innerHTML = buildCoverHTML(top4, mood, 'large');
-        // update grid card cover if visible
-        var gridCard = document.querySelector('.playlist-card[data-mood="' + mood + '"]');
-        if (gridCard) {
-            var oldCover = gridCard.querySelector('.playlist-cover');
-            if (oldCover) {
-                var tmp = document.createElement('div');
-                tmp.innerHTML = buildCoverHTML(top4, mood, 'small');
-                gridCard.replaceChild(tmp.firstChild, oldCover);
-            }
+    // ── touch / mobile drag ────────────────────────────
+    var touchClone = null;
+    var touchOffsetX = 0;
+    var touchOffsetY = 0;
+
+    block.addEventListener('touchstart', function(e) {
+        var handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+        dragging = handle.closest('.draggable-card');
+        if (!dragging) return;
+        e.preventDefault();
+        dragging.classList.add('dragging');
+
+        var touch = e.touches[0];
+        var rect = dragging.getBoundingClientRect();
+        touchOffsetX = touch.clientX - rect.left;
+        touchOffsetY = touch.clientY - rect.top;
+
+        touchClone = dragging.cloneNode(true);
+        touchClone.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:0.85;width:' + rect.width + 'px;box-shadow:0 8px 24px rgba(0,0,0,0.5);border-radius:10px;';
+        touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+        touchClone.style.top  = (touch.clientY - touchOffsetY) + 'px';
+        document.body.appendChild(touchClone);
+    }, { passive: false });
+
+    block.addEventListener('touchmove', function(e) {
+        if (!dragging || !touchClone) return;
+        e.preventDefault();
+        var touch = e.touches[0];
+        touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+        touchClone.style.top  = (touch.clientY - touchOffsetY) + 'px';
+
+        // find card under finger
+        touchClone.style.display = 'none';
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        touchClone.style.display = '';
+        var target = el ? el.closest('.draggable-card') : null;
+        if (!target || target === dragging) return;
+
+        document.querySelectorAll('.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+        target.classList.add('drag-over');
+        var rect = target.getBoundingClientRect();
+        if (touch.clientY < rect.top + rect.height / 2) {
+            block.insertBefore(dragging, target);
+        } else {
+            block.insertBefore(dragging, target.nextSibling);
         }
+    }, { passive: false });
+
+    block.addEventListener('touchend', function(e) {
+        if (!dragging) return;
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        finishReorder();
     });
 
     document.getElementById('back-btn').addEventListener('click', function() {
