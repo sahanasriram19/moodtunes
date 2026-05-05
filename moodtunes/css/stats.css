@@ -8,21 +8,41 @@
 }
 
 .stat-box {
-  background: #141414;
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  border: none;
+}
+
+.stat-box:nth-child(1) {
+  background: linear-gradient(135deg, #2d1f6e, #4a3ab5);
+}
+
+.stat-box:nth-child(2) {
+  background: linear-gradient(135deg, #4a2a0a, #c4762d);
+}
+
+.stat-box:nth-child(3) {
+  background: linear-gradient(135deg, #1a2a1a, #2d6e3a);
+}
+
+.stat-box:nth-child(4) {
+  background: linear-gradient(135deg, #1a4a2e, #1DB954);
 }
 
 .stat-box-num {
-  font-size: 24px;
-  font-weight: 500;
-  color: #f0f0f0;
+  font-size: 32px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
 }
 
 .stat-box-label {
-  font-size: 11px;
-  color: #555;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* === STATS GRID === */
