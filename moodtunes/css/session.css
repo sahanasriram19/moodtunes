@@ -9,7 +9,7 @@
 }
 
 .session-hero-label {
-  font-size: 11px;
+  font-size: 20px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #555;
@@ -17,8 +17,8 @@
 }
 
 .session-timer-circle {
-  width: 280px;
-  height: 280px;
+  width: 250px;
+  height: 250px;
   border-radius: 50%;
   background: #1e1a3a;
   display: flex;
