@@ -191,7 +191,7 @@ function showInlineNotePlaylist(songId, mood, existingNote) {
 
     document.getElementById('pl-save-' + songId).addEventListener('click', function() {
         var note = document.getElementById('pl-inline-note-' + songId).value.trim();
-        apiCall('/logs/' + songId + '/' + mood, 'PUT', { note: note }, function() {
+        apiCall('/logs/latest/' + songId + '/' + mood, 'PUT', { note: note }, function() {
             area.innerHTML = note
                 ? '<div class="log-note">"' + note + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + mood + '" data-note="' + note.replace(/"/g, '&quot;') + '" data-source="playlist">edit note</button>'
                 : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + mood + '" data-source="playlist">+ add note</button>';

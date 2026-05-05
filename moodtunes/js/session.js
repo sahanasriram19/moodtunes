@@ -268,7 +268,7 @@ function addChip(name, emoji, id) {
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
     delBtn.innerHTML = '🗑';
-    delBtn.style.cssText = 'display:none;background:none;border:1px solid #3a2020;border-radius:6px;color:#e05c5c;font-size:11px;padding:2px 10px;cursor:pointer;white-space:nowrap;';
+    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
         delBtn.innerHTML = '...'; delBtn.disabled = true;
         apiCall('/moods/' + id, 'DELETE', null, function() {
@@ -295,7 +295,7 @@ chips.forEach(function(chip) {
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
     delBtn.innerHTML = '🗑';
-    delBtn.style.cssText = 'display:none;background:none;border:1px solid #3a2020;border-radius:6px;color:#e05c5c;font-size:11px;padding:2px 10px;cursor:pointer;white-space:nowrap;';
+    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
         wrap.remove();
         if (selectedMood === chip.dataset.mood) selectedMood = null;

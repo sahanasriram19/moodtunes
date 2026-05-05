@@ -77,7 +77,15 @@ module.exports.incrementPlayCount = (data, callback) => {
 
 module.exports.updateNote = (data, callback) => {
     pool.query(
-        'UPDATE Log SET note = ? WHERE user_id = ? AND song_id = ? AND mood = ?',
+        'UPDATE Log SET note = ? WHERE id = ? AND user_id = ?',
+        [data.note, data.id, data.user_id], callback
+    );
+};
+
+// updates the most recent row for a song+mood — used by playlists
+module.exports.updateNoteLatest = (data, callback) => {
+    pool.query(
+        'UPDATE Log SET note = ? WHERE user_id = ? AND song_id = ? AND mood = ? ORDER BY last_logged DESC LIMIT 1',
         [data.note, data.user_id, data.song_id, data.mood], callback
     );
 };
@@ -86,8 +94,8 @@ module.exports.updateNote = (data, callback) => {
 
 module.exports.deleteLog = (data, callback) => {
     pool.query(
-        'DELETE FROM Log WHERE user_id = ? AND song_id = ? AND mood = ?',
-        [data.user_id, data.song_id, data.mood], callback
+        'DELETE FROM Log WHERE id = ? AND user_id = ?',
+        [data.id, data.user_id], callback
     );
 };
 // ── stats queries ────────────────────────────────────────────────────────────

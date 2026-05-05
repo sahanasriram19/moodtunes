@@ -55,7 +55,7 @@ function addChip(name, emoji, id) {
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
     delBtn.innerHTML = '🗑';
-    delBtn.style.cssText = 'display:none;background:none;border:1px solid #3a2020;border-radius:6px;color:#e05c5c;font-size:11px;padding:2px 10px;cursor:pointer;white-space:nowrap;';
+    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
         delBtn.innerHTML = '...'; delBtn.disabled = true;
         apiCall('/moods/' + id, 'DELETE', null, function() {
@@ -82,7 +82,7 @@ chips.forEach(function(chip) {
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
     delBtn.innerHTML = '🗑';
-    delBtn.style.cssText = 'display:none;background:none;border:1px solid #3a2020;border-radius:6px;color:#e05c5c;font-size:11px;padding:2px 10px;cursor:pointer;white-space:nowrap;';
+    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
         wrap.remove();
         if (selectedMood === chip.dataset.mood) selectedMood = null;
@@ -294,11 +294,7 @@ function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
         if (err) { console.error('log error:', err); return; }
         searchResults.innerHTML = '';
         songSearch.value = '';
-        if (note) {
-            apiCall('/logs/' + songId + '/' + mood, 'PUT', { note: note }, function() { loadLogs(); });
-        } else {
-            loadLogs();
-        }
+        loadLogs();
     });
 }
 
@@ -332,7 +328,7 @@ function loadLogs() {
                 grouped[key].forEach(function(log) {
                     var card = document.createElement('div');
                     card.classList.add('log-card');
-                    card.id = 'log-' + log.song_id + '-' + log.mood;
+                    card.id = 'log-' + log.id;
                     card.innerHTML =
                         '<img class="song-art" src="' + log.album_art + '" alt="album art" />' +
                         '<div class="song-info">' +
@@ -345,7 +341,7 @@ function loadLogs() {
                                 '<span class="date-text">' + formatTimestamp(log.last_logged) + '</span>' +
                             '</div>' +
                         '</div>' +
-                        '<button class="play-btn log-play-btn" data-song-id="' + log.song_id + '" data-mood="' + log.mood + '" data-title="' + log.title.replace(/"/g, '&quot;') + '" data-artist="' + log.artist.replace(/"/g, '&quot;') + '" data-art="' + log.album_art + '" data-url="' + log.spotify_url + '">▶</button>';
+                        '<button class="play-btn log-play-btn" data-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + log.mood + '" data-title="' + log.title.replace(/"/g, '&quot;') + '" data-artist="' + log.artist.replace(/"/g, '&quot;') + '" data-art="' + log.album_art + '" data-url="' + log.spotify_url + '">▶</button>';
                     logsList.appendChild(card);
                 });
             });
@@ -367,8 +363,8 @@ document.addEventListener('click', function(e) {
     }
     if (e.target.classList.contains('journal-delete-btn')) {
         if (!confirm('remove this song from your journal?')) return;
-        apiCall('/logs/' + e.target.dataset.songId + '/' + e.target.dataset.mood, 'DELETE', null, function(err) {
-            if (!err) { var c = document.getElementById('log-' + e.target.dataset.songId + '-' + e.target.dataset.mood); if (c) c.remove(); }
+        apiCall('/logs/' + e.target.dataset.id, 'DELETE', null, function(err) {
+            if (!err) { var c = document.getElementById('log-' + e.target.dataset.id); if (c) c.remove(); }
         });
     }
 });

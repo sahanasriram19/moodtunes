@@ -181,7 +181,7 @@ function showInlineNoteHistory(logId, songId, mood, existingNote) {
 
     document.getElementById('save-note-' + logId).addEventListener('click', function() {
         var note = document.getElementById('inline-note-' + logId).value.trim();
-        apiCall('/logs/' + songId + '/' + mood, 'PUT', { note: note }, function() {
+        apiCall('/logs/' + logId, 'PUT', { note: note }, function() {
             area.innerHTML = note
                 ? '<div class="log-note">"' + note + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + mood + '" data-note="' + note.replace(/"/g, '&quot;') + '">edit note</button>'
                 : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + mood + '">+ add note</button>';
@@ -289,7 +289,7 @@ document.addEventListener('click', function(e) {
         var mood   = e.target.dataset.mood;
         var logId  = e.target.dataset.logId;
         if (!confirm('delete this entry from your history?')) return;
-        apiCall('/logs/' + songId + '/' + mood, 'DELETE', null, function(err) {
+        apiCall('/logs/' + logId, 'DELETE', null, function(err) {
             if (!err) { var card = document.getElementById('history-log-' + logId); if (card) card.remove(); }
         });
     }

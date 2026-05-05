@@ -9,7 +9,8 @@ router.get('/perday',            jwt.verifyToken, log.getAllLogsPerDay);
 router.get('/recent',            jwt.verifyToken, log.getRecentTwoDays);
 router.get('/mood/:mood',        jwt.verifyToken, log.getLogsByMood);
 router.post('/',                 jwt.verifyToken, log.logSong);
-router.put('/:song_id/:mood',    jwt.verifyToken, log.updateNote);
-router.delete('/:song_id/:mood', jwt.verifyToken, log.deleteLog);
+router.put('/:id',               jwt.verifyToken, log.updateNote);
+router.put('/latest/:song_id/:mood', jwt.verifyToken, log.updateNoteLatest);
+router.delete('/:id',            jwt.verifyToken, log.deleteLog);
 
 module.exports = router;
