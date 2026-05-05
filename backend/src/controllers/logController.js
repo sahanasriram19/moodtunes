@@ -65,6 +65,17 @@ module.exports.logSong = (req, res, next) => {
     });
 };
 
+module.exports.updateNote = (req, res, next) => {
+    model.updateNote({
+        user_id: res.locals.userId,
+        id:      req.params.id,
+        note:    req.body.note
+    }, (err) => {
+        if (err) return res.status(500).json({ message: 'Internal server error' });
+        res.status(200).json({ message: 'Note updated successfully' });
+    });
+};
+
 module.exports.updateNoteLatest = (req, res, next) => {
     model.updateNoteLatest({
         user_id: res.locals.userId,
@@ -76,14 +87,6 @@ module.exports.updateNoteLatest = (req, res, next) => {
         res.status(200).json({ message: 'Note updated successfully' });
     });
 };
-    model.updateNote({
-        user_id: res.locals.userId,
-        id:      req.params.id,
-        note:    req.body.note
-    }, (err) => {
-        if (err) return res.status(500).json({ message: 'Internal server error' });
-        res.status(200).json({ message: 'Note updated successfully' });
-    });
 
 module.exports.deleteLog = (req, res, next) => {
     model.deleteLog({
