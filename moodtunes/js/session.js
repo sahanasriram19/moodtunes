@@ -12,7 +12,7 @@ var sessionRefreshBtn = document.getElementById('session-refresh-btn');
 
 // initialise hero with prompt
 sessionMoodLabel.textContent = 'pick a mood to begin';
-sessionTimerEl.textContent = '—';
+sessionTimerEl.textContent = '00:00';
 sessionTimerEl.style.opacity = '0.3';
 
 var selectedMood  = null;
@@ -33,7 +33,6 @@ chips.forEach(function(chip) {
             sessionRefreshBtn.classList.add('hidden');
             sessionTimerEl.textContent = '00:00';
         }
-        loadRecommendations(chip.dataset.mood);
     });
 });
 
@@ -60,6 +59,7 @@ sessionStartBtn.addEventListener('click', function() {
         sessionEndBtn.classList.remove('hidden');
         sessionRefreshBtn.classList.remove('hidden');
         startTimer(startTime);
+        loadRecommendations(selectedMood);
     });
 });
 
@@ -265,7 +265,6 @@ function addChip(name, emoji, id) {
             sessionRefreshBtn.classList.add('hidden');
             sessionTimerEl.textContent = '00:00';
         }
-        loadRecommendations(name);
     });
 
     var delBtn = document.createElement('button');
