@@ -3,9 +3,6 @@
 .hidden { display: none !important; }
 
 .session-hero {
-  background: #141414;
-  border: 1px solid #222;
-  border-radius: 16px;
   padding: 40px 32px;
   text-align: center;
   margin: 24px 0 32px;
@@ -23,8 +20,7 @@
   width: 280px;
   height: 280px;
   border-radius: 50%;
-  border: 3px solid #7f77dd;
-  background: #0f0f0f;
+  background: #1e1a3a;
   display: flex;
   align-items: center;
   justify-content: center;
