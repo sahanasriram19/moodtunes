@@ -41,3 +41,13 @@
   .stats-summary { grid-template-columns:repeat(2,1fr); }
   .stats-grid { grid-template-columns:1fr; }
 }
+/* mood graph */
+#mood-graph-container {
+  margin-bottom: 16px;
+}
+
+@media(max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
