@@ -23,6 +23,8 @@ var THEMES = {
         '--search-border':  '#4a3ab5',
         '--nav-bg':         '#0f0f0f',
         '--nav-border':     '#222',
+        '--circle-bg':      '#2d1f6e',
+        '--circle-border':  '#7f77dd',
     },
     warm: {
         label: 'warm editorial',
@@ -43,6 +45,8 @@ var THEMES = {
         '--search-border':  '#c4762d44',
         '--nav-bg':         '#0a0a0a',
         '--nav-border':     '#2a2a2a',
+        '--circle-bg':      '#2a1200',
+        '--circle-border':  '#c4762d',
     },
     purple: {
         label: 'deep purple',
@@ -63,6 +67,8 @@ var THEMES = {
         '--search-border':  'rgba(127,119,221,0.2)',
         '--nav-bg':         'rgba(127,119,221,0.06)',
         '--nav-border':     'rgba(127,119,221,0.15)',
+        '--circle-bg':      'rgba(127,119,221,0.2)',
+        '--circle-border':  '#a09af5',
     },
     light: {
         label: 'clean light',
@@ -83,6 +89,8 @@ var THEMES = {
         '--search-border':  '#e0e0da',
         '--nav-bg':         '#fff',
         '--nav-border':     '#e8e8e4',
+        '--circle-bg':      '#f0eff9',
+        '--circle-border':  '#7f77dd',
     }
 };
 
@@ -123,7 +131,7 @@ style.textContent = [
     '.save-note-btn { background: var(--accent) !important; }',
     '.add-note-btn, .edit-note-btn, .log-note { color: var(--accent) !important; }',
     '.logo span { color: var(--accent) !important; }',
-    '.session-hero-label { color: var(--text-muted) !important; }',
+    '.session-timer-circle { background: var(--circle-bg, #2d1f6e) !important; border-color: var(--circle-border, #7f77dd) !important; }',
 ].join('\n');
 document.head.appendChild(style);
 
