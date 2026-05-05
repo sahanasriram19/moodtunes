@@ -1,52 +1,236 @@
 /* === STATS PAGE === */
 
-.stats-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:28px; }
-.stat-box { background:#141414; border-radius:10px; padding:16px; }
-.stat-box-num { font-size:24px; font-weight:500; color:#f0f0f0; }
-.stat-box-label { font-size:11px; color:#555; margin-top:4px; }
-
-.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
-.stats-card { background:#141414; border:1px solid #222; border-radius:12px; padding:16px; }
-.stats-card-title { font-size:11px; color:#555; letter-spacing:0.06em; margin-bottom:14px; }
-
-.mood-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.mood-bar-name { font-size:12px; color:#aaa; width:80px; flex-shrink:0; }
-.mood-bar-track { flex:1; background:#222; border-radius:4px; height:7px; }
-.mood-bar-fill { height:7px; border-radius:4px; }
-.mood-bar-count { font-size:11px; color:#555; width:28px; text-align:right; flex-shrink:0; }
-
-.time-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.time-bar-label { font-size:12px; color:#aaa; width:72px; flex-shrink:0; }
-.time-bar-track { flex:1; background:#222; border-radius:3px; height:6px; }
-.time-bar-fill { height:6px; border-radius:3px; background:#5dcaa5; }
-
-.top-song-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.top-song-num { font-size:12px; color:#555; width:14px; flex-shrink:0; }
-.top-song-art { width:38px; height:38px; border-radius:6px; object-fit:cover; background:#2a2a2a; flex-shrink:0; }
-.top-song-info { flex:1; min-width:0; }
-.top-song-title { font-size:13px; color:#f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.top-song-artist { font-size:11px; color:#888; }
-.top-song-plays { font-size:11px; color:#555; flex-shrink:0; }
-
-.flashback-card { background:#141414; border:1px solid #7f77dd33; border-radius:12px; padding:18px; margin-bottom:16px; }
-.flashback-label { font-size:10px; color:#7f77dd; letter-spacing:0.08em; margin-bottom:6px; }
-.flashback-subtitle { font-size:13px; color:#666; margin-bottom:14px; }
-.flashback-songs { display:flex; gap:14px; flex-wrap:wrap; }
-.flashback-song { text-align:center; }
-.flashback-art { width:64px; height:64px; border-radius:8px; object-fit:cover; background:#2a2a2a; margin-bottom:6px; }
-.flashback-title { font-size:11px; color:#f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:64px; }
-.flashback-plays { font-size:10px; color:#555; }
-
-@media(max-width:768px) {
-  .stats-summary { grid-template-columns:repeat(2,1fr); }
-  .stats-grid { grid-template-columns:1fr; }
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
 }
-/* mood graph */
+
+.stat-box {
+  background: #141414;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.stat-box-num {
+  font-size: 24px;
+  font-weight: 500;
+  color: #f0f0f0;
+}
+
+.stat-box-label {
+  font-size: 11px;
+  color: #555;
+  margin-top: 4px;
+}
+
+/* === STATS GRID === */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stats-card {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stats-card-title {
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+/* === MOOD BREAKDOWN === */
+
+.mood-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mood-bar-name {
+  font-size: 12px;
+  color: #aaa;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.mood-bar-track {
+  flex: 1;
+  background: #222;
+  border-radius: 4px;
+  height: 7px;
+}
+
+.mood-bar-fill {
+  height: 7px;
+  border-radius: 4px;
+}
+
+.mood-bar-count {
+  font-size: 11px;
+  color: #555;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* === WHEN YOU LISTEN === */
+
+.time-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.time-bar-label {
+  font-size: 12px;
+  color: #aaa;
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.time-bar-track {
+  flex: 1;
+  background: #222;
+  border-radius: 3px;
+  height: 6px;
+}
+
+.time-bar-fill {
+  height: 6px;
+  border-radius: 3px;
+  background: #7f77dd;
+}
+
+/* === TOP SONGS === */
+
+.top-song-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.top-song-num {
+  font-size: 12px;
+  color: #555;
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.top-song-art {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #2a2a2a;
+  flex-shrink: 0;
+}
+
+.top-song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.top-song-title {
+  font-size: 13px;
+  color: #f0f0f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-song-artist {
+  font-size: 11px;
+  color: #888;
+}
+
+.top-song-plays {
+  font-size: 11px;
+  color: #555;
+  flex-shrink: 0;
+}
+
+/* === FLASHBACK === */
+
+.flashback-card {
+  background: #141414;
+  border: 1px solid #7f77dd33;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.flashback-label {
+  font-size: 10px;
+  color: #7f77dd;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.flashback-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.flashback-songs {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.flashback-song {
+  text-align: center;
+}
+
+.flashback-art {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #2a2a2a;
+  margin-bottom: 6px;
+}
+
+.flashback-title {
+  font-size: 11px;
+  color: #f0f0f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 64px;
+}
+
+.flashback-plays {
+  font-size: 10px;
+  color: #555;
+}
+
+/* === MOOD GRAPH === */
+
 #mood-graph-container {
   margin-bottom: 16px;
 }
 
-@media(max-width: 768px) {
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .stats-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
