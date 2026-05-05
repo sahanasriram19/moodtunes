@@ -125,7 +125,6 @@ style.textContent = [
     '.logo span { color: var(--accent) !important; }',
     '.session-hero { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.session-hero-label { color: var(--text-muted) !important; }',
-    '.session-timer-circle { background: var(--bg-input) !important; border-color: var(--accent) !important; }',
 ].join('\n');
 document.head.appendChild(style);
 
