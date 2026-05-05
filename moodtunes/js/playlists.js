@@ -10,6 +10,27 @@ apiCall('/moods', 'GET', null, function(err, result) {
     var customs = Array.isArray(result.data) ? result.data : [];
     customs.forEach(function(m) { moodEmojis[m.name] = m.emoji; });
 });
+
+// ── playlist order persistence ─────────────────────────
+function saveOrder(mood, songIds) {
+    localStorage.setItem('moodtunes_order_' + mood, JSON.stringify(songIds));
+}
+
+function applyOrder(mood, songs) {
+    var saved = localStorage.getItem('moodtunes_order_' + mood);
+    if (!saved) return songs;
+    try {
+        var ids = JSON.parse(saved);
+        var map = {};
+        songs.forEach(function(s) { map[s.song_id] = s; });
+        var ordered = [];
+        ids.forEach(function(id) { if (map[id]) ordered.push(map[id]); });
+        // append any new songs not in saved order
+        songs.forEach(function(s) { if (ids.indexOf(s.song_id) === -1) ordered.push(s); });
+        return ordered;
+    } catch(e) { return songs; }
+}
+
 var playlistsList = document.getElementById('playlists-list');
 
 function groupByMood(logs) {
@@ -46,9 +67,10 @@ function renderGrid(grouped) {
 
     Object.keys(grouped).forEach(function(mood) {
         var songs = grouped[mood];
-        var sorted = songs.slice().sort(function(a, b) { return b.play_count - a.play_count; });
+        var sorted = applyOrder(mood, songs.slice().sort(function(a, b) { return b.play_count - a.play_count; }));
         var card = document.createElement('div');
         card.classList.add('playlist-card');
+        card.dataset.mood = mood;
         card.innerHTML =
             buildCoverHTML(sorted, mood, 'small') +
             '<div class="playlist-card-title">' + mood + ' playlist</div>' +
@@ -66,11 +88,11 @@ function openPlaylist(mood, songs) {
     var view = document.getElementById('playlist-view');
     view.classList.add('active');
 
-    // list: play count high to low, new songs at bottom
-    var listSongs = songs.slice().sort(function(a, b) {
+    // list: apply saved order, fallback to play count
+    var listSongs = applyOrder(mood, songs.slice().sort(function(a, b) {
         if (b.play_count !== a.play_count) return b.play_count - a.play_count;
         return new Date(a.last_logged) - new Date(b.last_logged);
-    });
+    }));
 
     view.innerHTML =
         '<button class="back-btn" id="back-btn">← back to playlists</button>' +
@@ -148,15 +170,26 @@ function openPlaylist(mood, songs) {
         dragging = null;
         document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
 
-        // update cover with current top 4 cards in DOM
+        // save new order and update cover
         var cards = block.querySelectorAll('.draggable-card');
+        var orderedIds = [];
         var top4 = [];
-        for (var i = 0; i < Math.min(4, cards.length); i++) {
-            var art = cards[i].dataset.albumArt;
-            if (art) top4.push({ album_art: art });
-            else top4.push({});
-        }
+        cards.forEach(function(c, i) {
+            orderedIds.push(c.dataset.songId);
+            if (i < 4) top4.push({ album_art: c.dataset.albumArt || '' });
+        });
+        saveOrder(mood, orderedIds);
         document.getElementById('playlist-cover-wrap').innerHTML = buildCoverHTML(top4, mood, 'large');
+        // update grid card cover if visible
+        var gridCard = document.querySelector('.playlist-card[data-mood="' + mood + '"]');
+        if (gridCard) {
+            var oldCover = gridCard.querySelector('.playlist-cover');
+            if (oldCover) {
+                var tmp = document.createElement('div');
+                tmp.innerHTML = buildCoverHTML(top4, mood, 'small');
+                gridCard.replaceChild(tmp.firstChild, oldCover);
+            }
+        }
     });
 
     document.getElementById('back-btn').addEventListener('click', function() {
