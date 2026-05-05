@@ -17,7 +17,7 @@ var timerInterval = null;
 // ── mood chips ─────────────────────────────────────────
 chips.forEach(function(chip) {
     chip.addEventListener('click', function() {
-        chips.forEach(function(c) { c.classList.remove('selected'); });
+        document.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = chip.dataset.mood;
         sessionControls.classList.remove('hidden');
@@ -221,7 +221,7 @@ if (savedSession) {
             }
             activeSession = { id: s.id, mood: s.mood, startTime: new Date(s.startTime) };
             selectedMood = s.mood;
-            chips.forEach(function(c) { if (c.dataset.mood === s.mood) c.classList.add('selected'); });
+            document.querySelectorAll('.chip').forEach(function(c) { if (c.dataset.mood === s.mood) c.classList.add('selected'); });
             sessionControls.classList.remove('hidden');
             sessionMoodLabel.textContent = s.mood + ' session';
             sessionStartBtn.classList.add('hidden');
