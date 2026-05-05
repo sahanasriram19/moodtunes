@@ -236,39 +236,14 @@ if (savedSession) {
 // ── custom moods ───────────────────────────────────────
 var EMOJIS = ['🎵','🌟','💫','🔥','❤️','💜','💙','🌙','⚡','🌈','🎶','🎸','🎹','🥺','😤','🤩','😴','🌊','🍃','✨','🎯','💪','🧠','👻','🦋','🌸','🌺','🎪','🏆','💎'];
 var moodChipsContainer = document.querySelector('.mood-chips');
-var hiddenMoods = JSON.parse(localStorage.getItem('moodtunes_hidden_moods') || '[]');
-
-// wire up edit pencil + hidden-mood support on default chips
-chips.forEach(function(chip) {
-    if (hiddenMoods.includes(chip.dataset.mood)) {
-        chip.style.display = 'none';
-        return;
-    }
-    var editBtn = document.createElement('button');
-    editBtn.style.cssText = 'background:none;border:none;color:#666;cursor:pointer;padding:0 0 0 4px;font-size:10px;vertical-align:middle;';
-    editBtn.textContent = '✎';
-    editBtn.title = 'hide mood';
-    editBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        hiddenMoods.push(chip.dataset.mood);
-        localStorage.setItem('moodtunes_hidden_moods', JSON.stringify(hiddenMoods));
-        chip.style.display = 'none';
-        if (selectedMood === chip.dataset.mood) selectedMood = null;
-    });
-    chip.appendChild(editBtn);
-});
 
 function addChip(name, emoji, id) {
-    var chip = document.createElement('span');
+    var chip = document.createElement('button');
     chip.classList.add('chip', 'custom-chip');
     chip.dataset.mood = name;
     chip.dataset.customId = id || '';
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;cursor:pointer;';
-
-    var label = document.createElement('button');
-    label.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0;font:inherit;';
-    label.textContent = (emoji ? emoji + ' ' : '') + name;
-    label.addEventListener('click', function() {
+    chip.textContent = name;
+    chip.addEventListener('click', function() {
         document.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = name;
@@ -282,155 +257,117 @@ function addChip(name, emoji, id) {
         }
         loadRecommendations(name);
     });
-
-    var editBtn = document.createElement('button');
-    editBtn.style.cssText = 'background:none;border:none;color:#666;cursor:pointer;padding:0 0 0 2px;font-size:10px;';
-    editBtn.textContent = '✎';
-    editBtn.title = 'edit mood';
-    editBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        showEditMoodPanel(name, emoji, id, chip, label);
-    });
-
-    chip.appendChild(label);
-    chip.appendChild(editBtn);
-    var addBtn = moodChipsContainer.querySelector('.add-mood-btn');
-    moodChipsContainer.insertBefore(chip, addBtn);
+    moodChipsContainer.appendChild(chip);
     return chip;
 }
 
-function showEditMoodPanel(name, emoji, id, chip, label) {
-    var existing = document.getElementById('add-mood-panel');
-    if (existing) existing.remove();
-
-    var emojiGrid = EMOJIS.map(function(e) {
-        return '<button class="emoji-opt" data-emoji="' + e + '" style="background:' + (e === emoji ? '#1a1a2e' : 'none') + ';border:2px solid ' + (e === emoji ? '#7f77dd' : 'transparent') + ';border-radius:6px;font-size:20px;cursor:pointer;padding:3px;">' + e + '</button>';
-    }).join('');
-
-    var panel = document.createElement('div');
-    panel.id = 'add-mood-panel';
-    panel.style.cssText = 'background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-top:12px;';
-    panel.innerHTML =
-        '<div style="font-size:12px;color:#888;margin-bottom:8px;">mood name <span style="color:#555;">(leave blank to delete)</span></div>' +
-        '<input id="new-mood-input" type="text" maxlength="20" value="' + name + '" style="width:100%;padding:10px 12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:14px;box-sizing:border-box;margin-bottom:12px;" />' +
-        '<div style="font-size:12px;color:#888;margin-bottom:8px;">pick an emoji <span id="chosen-emoji" style="font-size:16px;margin-left:6px;">' + (emoji || '🎵') + '</span></div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">' + emojiGrid + '</div>' +
-        '<div style="display:flex;gap:8px;">' +
-            '<button id="cancel-mood" class="skip-note-btn" style="flex:1;">cancel</button>' +
-            '<button id="delete-mood" class="skip-note-btn" style="flex:1;color:#e05c5c;border-color:#e05c5c;">delete</button>' +
-            '<button id="save-mood" class="save-note-btn" style="flex:1;">save</button>' +
-        '</div>';
-
-    document.querySelector('.mood-section').appendChild(panel);
-
-    var chosenEmoji = emoji || '🎵';
-    panel.querySelectorAll('.emoji-opt').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            panel.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; b.style.background = 'none'; });
-            btn.style.borderColor = '#7f77dd'; btn.style.background = '#1a1a2e';
-            chosenEmoji = btn.dataset.emoji;
-            document.getElementById('chosen-emoji').textContent = chosenEmoji;
-        });
-    });
-
-    document.getElementById('cancel-mood').addEventListener('click', function() { panel.remove(); });
-
-    function deleteMood() {
-        apiCall('/moods/' + id, 'DELETE', null, function() {
-            chip.remove(); panel.remove();
-            if (selectedMood === name) selectedMood = null;
-        });
-    }
-    document.getElementById('delete-mood').addEventListener('click', deleteMood);
-
-    document.getElementById('save-mood').addEventListener('click', function() {
-        var newName = document.getElementById('new-mood-input').value.trim().toLowerCase();
-        if (!newName) { deleteMood(); return; }
-        apiCall('/moods/' + id, 'DELETE', null, function() {
-            apiCall('/moods', 'POST', { name: newName, emoji: chosenEmoji }, function(err, result) {
-                if (err || result.status >= 400) return;
-                chip.dataset.mood = result.data.name;
-                chip.dataset.customId = result.data.id;
-                label.textContent = (result.data.emoji ? result.data.emoji + ' ' : '') + result.data.name;
-                if (selectedMood === name) selectedMood = result.data.name;
-                panel.remove();
-            });
-        });
-    });
-}
-
-function showAddMoodPanel() {
-    var existing = document.getElementById('add-mood-panel');
+function showManageMoodsModal() {
+    var existing = document.getElementById('manage-moods-modal');
     if (existing) { existing.remove(); return; }
 
-    var emojiGrid = EMOJIS.map(function(e) {
-        return '<button class="emoji-opt" data-emoji="' + e + '">' + e + '</button>';
-    }).join('');
+    var modal = document.createElement('div');
+    modal.id = 'manage-moods-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
 
-    var panel = document.createElement('div');
-    panel.id = 'add-mood-panel';
-    panel.style.cssText = 'background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-top:12px;';
-    panel.innerHTML =
-        '<div style="font-size:12px;color:#888;margin-bottom:8px;">mood name</div>' +
-        '<input id="new-mood-input" type="text" maxlength="20" placeholder="e.g. melancholy, grind..." style="width:100%;padding:10px 12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:14px;box-sizing:border-box;margin-bottom:12px;" />' +
-        '<div style="font-size:12px;color:#888;margin-bottom:8px;">pick an emoji <span id="chosen-emoji" style="font-size:16px;margin-left:6px;">🎵</span></div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">' + emojiGrid + '</div>' +
-        (hiddenMoods.length > 0
-            ? '<div style="font-size:12px;color:#7f77dd;margin-bottom:12px;cursor:pointer;" id="restore-moods-btn">↩ restore hidden moods (' + hiddenMoods.length + ')</div>'
-            : '') +
-        '<div style="display:flex;gap:8px;">' +
-            '<button id="cancel-mood" class="skip-note-btn" style="flex:1;">cancel</button>' +
-            '<button id="save-mood" class="save-note-btn" style="flex:1;">+ add mood</button>' +
-        '</div>';
+    function renderModal() {
+        var customChips = Array.from(document.querySelectorAll('.chip.custom-chip'));
 
-    document.querySelector('.mood-section').appendChild(panel);
+        var moodRows = customChips.length > 0
+            ? customChips.map(function(chip) {
+                return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e1e1e;">' +
+                    '<span style="font-size:14px;color:#f0f0f0;">' + chip.dataset.mood + '</span>' +
+                    '<button class="delete-mood-btn" data-id="' + chip.dataset.customId + '" data-mood="' + chip.dataset.mood + '" style="background:none;border:1px solid #3a2020;border-radius:8px;color:#e05c5c;font-size:12px;padding:4px 12px;cursor:pointer;">delete</button>' +
+                '</div>';
+            }).join('')
+            : '<p style="font-size:13px;color:#555;margin:12px 0;">no custom moods yet.</p>';
 
-    var chosenEmoji = '🎵';
-    panel.querySelectorAll('.emoji-opt').forEach(function(btn) {
-        btn.style.cssText = 'background:none;border:2px solid transparent;border-radius:6px;font-size:20px;cursor:pointer;padding:3px;';
-        btn.addEventListener('click', function() {
-            panel.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
-            btn.style.borderColor = '#7f77dd';
-            chosenEmoji = btn.dataset.emoji;
-            document.getElementById('chosen-emoji').textContent = chosenEmoji;
+        modal.innerHTML =
+            '<div style="background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+                    '<div style="font-size:16px;font-weight:600;color:#f0f0f0;">manage moods</div>' +
+                    '<button id="close-manage" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;">✕</button>' +
+                '</div>' +
+
+                '<div style="margin-bottom:20px;">' +
+                    '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#555;margin-bottom:10px;">custom moods</div>' +
+                    moodRows +
+                '</div>' +
+
+                '<div style="border-top:1px solid #222;padding-top:20px;">' +
+                    '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#555;margin-bottom:12px;">add a mood</div>' +
+                    '<input id="new-mood-input" type="text" maxlength="20" placeholder="e.g. melancholy, grind..." style="width:100%;padding:10px 12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:14px;box-sizing:border-box;margin-bottom:12px;" />' +
+                    '<div style="font-size:12px;color:#888;margin-bottom:8px;">pick an emoji <span id="chosen-emoji" style="font-size:16px;margin-left:6px;">🎵</span></div>' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">' +
+                        EMOJIS.map(function(e) {
+                            return '<button class="emoji-opt" data-emoji="' + e + '" style="background:none;border:2px solid transparent;border-radius:6px;font-size:20px;cursor:pointer;padding:3px;">' + e + '</button>';
+                        }).join('') +
+                    '</div>' +
+                    '<button id="save-new-mood" class="save-note-btn" style="width:100%;">+ add mood</button>' +
+                '</div>' +
+            '</div>';
+
+        document.body.appendChild(modal);
+
+        document.getElementById('close-manage').addEventListener('click', function() { modal.remove(); });
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+
+        // delete buttons
+        modal.querySelectorAll('.delete-mood-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var id = btn.dataset.id;
+                var name = btn.dataset.mood;
+                btn.textContent = '...'; btn.disabled = true;
+                apiCall('/moods/' + id, 'DELETE', null, function() {
+                    var chip = document.querySelector('.chip.custom-chip[data-mood="' + name + '"]');
+                    if (chip) chip.remove();
+                    if (selectedMood === name) selectedMood = null;
+                    modal.remove();
+                    showManageMoodsModal();
+                });
+            });
         });
-    });
 
-    document.getElementById('cancel-mood').addEventListener('click', function() { panel.remove(); });
-
-    if (document.getElementById('restore-moods-btn')) {
-        document.getElementById('restore-moods-btn').addEventListener('click', function() {
-            hiddenMoods = [];
-            localStorage.setItem('moodtunes_hidden_moods', '[]');
-            panel.remove();
-            document.querySelectorAll('.chip[data-mood]').forEach(function(c) { c.style.display = ''; });
+        // emoji picker
+        var chosenEmoji = '🎵';
+        modal.querySelectorAll('.emoji-opt').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                modal.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
+                btn.style.borderColor = '#7f77dd';
+                chosenEmoji = btn.dataset.emoji;
+                document.getElementById('chosen-emoji').textContent = chosenEmoji;
+            });
         });
+
+        // add mood
+        document.getElementById('save-new-mood').addEventListener('click', function() {
+            var name = document.getElementById('new-mood-input').value.trim().toLowerCase();
+            if (!name) return;
+            apiCall('/moods', 'POST', { name: name, emoji: chosenEmoji }, function(err, result) {
+                if (err || result.status >= 400) {
+                    alert(result && result.data && result.data.message ? result.data.message : 'could not create mood');
+                    return;
+                }
+                addChip(result.data.name, result.data.emoji, result.data.id);
+                modal.remove();
+                showManageMoodsModal();
+            });
+        });
+
+        document.getElementById('new-mood-input').focus();
     }
 
-    document.getElementById('save-mood').addEventListener('click', function() {
-        var name = document.getElementById('new-mood-input').value.trim().toLowerCase();
-        if (!name) return;
-        apiCall('/moods', 'POST', { name: name, emoji: chosenEmoji }, function(err, result) {
-            if (err || result.status >= 400) {
-                alert(result && result.data && result.data.message ? result.data.message : 'could not create mood');
-                return;
-            }
-            addChip(result.data.name, result.data.emoji, result.data.id);
-            panel.remove();
-        });
-    });
-
-    document.getElementById('new-mood-input').focus();
+    renderModal();
 }
 
-// add the + button
-var addMoodBtn = document.createElement('button');
-addMoodBtn.classList.add('chip', 'add-mood-btn');
-addMoodBtn.title = 'add a custom mood';
-addMoodBtn.textContent = '+';
-addMoodBtn.style.cssText = 'font-size:18px;font-weight:300;padding:6px 14px;';
-addMoodBtn.addEventListener('click', showAddMoodPanel);
-moodChipsContainer.appendChild(addMoodBtn);
+// manage moods button
+var manageMoodsBtn = document.createElement('button');
+manageMoodsBtn.id = 'manage-moods-btn';
+manageMoodsBtn.textContent = 'manage moods';
+manageMoodsBtn.style.cssText = 'background:none;border:1px solid #2a2a2a;border-radius:20px;color:#666;font-size:12px;padding:6px 14px;cursor:pointer;margin-top:10px;display:block;transition:border-color 0.15s,color 0.15s;';
+manageMoodsBtn.addEventListener('mouseover', function() { this.style.borderColor = '#444'; this.style.color = '#aaa'; });
+manageMoodsBtn.addEventListener('mouseout', function() { this.style.borderColor = '#2a2a2a'; this.style.color = '#666'; });
+manageMoodsBtn.addEventListener('click', showManageMoodsModal);
+document.querySelector('.mood-section').appendChild(manageMoodsBtn);
 
 // load custom moods from backend
 apiCall('/moods', 'GET', null, function(err, result) {
