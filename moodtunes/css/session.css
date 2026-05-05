@@ -20,9 +20,10 @@
 }
 
 .session-timer-circle {
-  width: 220px;
-  height: 220px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
+  border: 3px solid #7f77dd;
   background: #0f0f0f;
   display: flex;
   align-items: center;
@@ -31,7 +32,7 @@
 }
 
 .session-hero-timer {
-  font-size: 48px;
+  font-size: 56px;
   font-weight: 300;
   color: #f0f0f0;
   letter-spacing: -2px;
