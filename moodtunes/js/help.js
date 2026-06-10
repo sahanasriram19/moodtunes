@@ -55,7 +55,7 @@ function showHelpModal() {
     modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
     document.getElementById('close-help').addEventListener('click', function() { modal.remove(); });
     document.getElementById('close-help-2').addEventListener('click', function() {
-        localStorage.setItem('moodtunes_seen_help', '1');
+        localStorage.setItem('moodtunes_seen_help_' + (_user || 'guest'), '1');
         modal.remove();
     });
 }
