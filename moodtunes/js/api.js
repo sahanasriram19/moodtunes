@@ -104,7 +104,7 @@ function openSpotify(spotifyUrl) {
 }
 
 function formatDateOnly(isoString) {
-    var date = new Date(isoString);
+    var date = new Date(isoString.replace(' ', 'T') + 'Z');
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
