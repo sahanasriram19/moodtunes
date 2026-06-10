@@ -39,7 +39,7 @@ function logout() {
 }
 
 function formatTimestamp(isoString) {
-    var date = new Date(isoString);
+    var date = new Date(isoString + (isoString.includes('T') ? '' : '+00:00'));
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
