@@ -58,7 +58,7 @@ module.exports.selectTodayLog = (data, callback) => {
 
 module.exports.insertLog = (data, callback) => {
     pool.query(
-        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
+        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, last_logged) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())',
         [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood, data.note || ''],
         callback
     );
