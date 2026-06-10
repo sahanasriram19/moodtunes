@@ -55,6 +55,7 @@ function showHelpModal() {
     modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
     document.getElementById('close-help').addEventListener('click', function() { modal.remove(); });
     document.getElementById('close-help-2').addEventListener('click', function() {
+        var _user = localStorage.getItem('moodtunes_username');
         localStorage.setItem('moodtunes_seen_help_' + (_user || 'guest'), '1');
         modal.remove();
     });
@@ -64,7 +65,8 @@ document.getElementById('help-btn').addEventListener('click', showHelpModal);
 
 // auto-show on first ever visit (journal page only)
 if (window.location.pathname.includes('index') || window.location.pathname.endsWith('/')) {
-    if (!localStorage.getItem('moodtunes_seen_help')) {
+    var _user = localStorage.getItem('moodtunes_username');
+    if (!localStorage.getItem('moodtunes_seen_help_' + _user)) {
         showHelpModal();
     }
 }
