@@ -1,6 +1,6 @@
 // api.js — shared helpers loaded on every page
 
-var BACKEND_URL = 'https://moodtunes-production.up.railway.app/api';
+var BACKEND_URL = 'https://moodtunes-2avk.onrender.com/api';
 
 function getToken() {
     return localStorage.getItem('moodtunes_token');
