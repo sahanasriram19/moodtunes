@@ -39,13 +39,11 @@ function logout() {
 }
 
 function formatTimestamp(isoString) {
-    var date = new Date(isoString.replace(' ', 'T'));
+    var date = new Date(isoString.replace(' ', 'T') + 'Z');
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-
     var timeStr = date.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true });
-
     if (date.toDateString() === today.toDateString()) return 'today at ' + timeStr;
     if (date.toDateString() === yesterday.toDateString()) return 'yesterday at ' + timeStr;
     return date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' }) + ' at ' + timeStr;
@@ -104,7 +102,7 @@ function openSpotify(spotifyUrl) {
 }
 
 function formatDateOnly(isoString) {
-    var date = new Date(isoString.replace(' ', 'T'));
+    var date = new Date(isoString.replace(' ', 'T') + 'Z');
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
