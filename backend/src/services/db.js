@@ -7,6 +7,15 @@ const pool = mysql.createPool({
     password:        process.env.DB_PASSWORD,
     database:        process.env.DB_DATABASE,
     multipleStatements: true,
-    dateStrings: true
+    dateStrings: true,
+    waitForConnections: true,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
 });
+
+pool.on('error', function(err) {
+    console.error('DB pool error:', err);
+});
+
 module.exports = pool;
