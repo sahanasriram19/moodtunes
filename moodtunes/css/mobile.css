@@ -70,12 +70,19 @@
   }
 
   .song-title {
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 180px;
   }
+
+  @media (max-width: 768px) {
+    .plays-text {
+        font-size: 10px;
+        color: #777;
+    }
+}
 
   .song-artist {
     font-size: 11px;
