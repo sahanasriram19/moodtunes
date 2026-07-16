@@ -85,8 +85,18 @@
     max-width: 180px;
   }
 
-  .log-meta { gap: 5px; flex-wrap: wrap; }
-  .date-text { display: none; }
+  .log-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.date-text {
+    display: inline;
+    font-size: 10px;
+    color: #777;
+}
 
   .play-btn {
     width: 32px;
