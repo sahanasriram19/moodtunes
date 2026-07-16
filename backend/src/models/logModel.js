@@ -68,7 +68,7 @@ module.exports.insertLog = (data, callback) => {
 
 module.exports.incrementPlayCount = (data, callback) => {
     pool.query(
-        'UPDATE Log SET play_count = play_count + 1, last_logged = CURRENT_TIMESTAMP WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR',
+        'UPDATE Log SET play_count = play_count + 1 WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
