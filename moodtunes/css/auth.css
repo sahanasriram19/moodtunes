@@ -25,6 +25,15 @@
   margin-bottom: 8px;
 }
 
+/* logo image */
+.auth-logo-img {
+  display: block;
+  width: 180px;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto 8px;
+}
+
 .auth-logo span {
   color: #7f77dd;
 }
