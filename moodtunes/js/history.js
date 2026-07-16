@@ -127,7 +127,7 @@ function renderTimeline(logs) {
 
     var grouped = {};
     logs.forEach(function(log) {
-        var key = new Date(log.last_logged).toDateString();
+        var key = new Date(log.last_logged.replace(' ', 'T') + 'Z').toDateString();
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(log);
     });

@@ -39,7 +39,9 @@ function logout() {
 }
 
 function formatTimestamp(isoString) {
-    var date = new Date(isoString.replace(' ', 'T') + '-08:00');
+    var date = new Date(
+    isoString.replace(' ', 'T') + 'Z'
+);
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
@@ -102,7 +104,9 @@ function openSpotify(spotifyUrl) {
 }
 
 function formatDateOnly(isoString) {
-    var date = new Date(isoString.replace(' ', 'T') + '-08:00');
+    var date = new Date(
+    isoString.replace(' ', 'T') + 'Z'
+);
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
