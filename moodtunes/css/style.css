@@ -30,8 +30,8 @@ body {
 
 /* === LOGO IMAGE === */
 .logo {
-  width: 42px;
-  height: 42px;
+  width: 150px;
+  height: auto;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
