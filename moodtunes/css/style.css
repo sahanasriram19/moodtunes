@@ -37,13 +37,10 @@ body {
   flex-shrink: 0;
 }
 
-.logo span {
-  color: #7f77dd;
-}
 
 .nav-links a {
   text-decoration: none;
-  color: #888;
+  color: #c9c7c7;
   font-size: 15px;
   padding-bottom: 4px;
   border-bottom: 2px solid transparent;
@@ -53,7 +50,7 @@ body {
 .nav-links a:hover,
 .nav-links a.active {
   color: #f0f0f0;
-  border-bottom-color: #7f77dd;
+  border-bottom-color: #b471ff;
 }
 
 /* === NAV RIGHT === */
