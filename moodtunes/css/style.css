@@ -16,25 +16,29 @@ body {
 .navbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 16px 32px;
   border-bottom: 1px solid #222;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-}
-
-.logo span {
-  color: #7f77dd;
+  gap: 32px;
 }
 
 .nav-links {
   list-style: none;
   display: flex;
   gap: 24px;
+  flex: 1;
+}
+
+/* === LOGO IMAGE === */
+.logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo span {
+  color: #7f77dd;
 }
 
 .nav-links a {
