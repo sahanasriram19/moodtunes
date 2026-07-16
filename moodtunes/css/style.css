@@ -26,7 +26,6 @@ body {
   display: flex;
   gap: 24px;
   flex: 1;
-  color: #f3f1f1;
 }
 
 /* === LOGO IMAGE === */
@@ -41,7 +40,7 @@ body {
 
 .nav-links a {
   text-decoration: none;
-  color: #b471ff;
+  color: #f3f1f1;
   font-size: 15px;
   padding-bottom: 4px;
   border-bottom: 2px solid transparent;
