@@ -39,16 +39,46 @@ function logout() {
 }
 
 function formatTimestamp(isoString) {
-    var date = new Date(
-    isoString.replace(' ', 'T') + 'Z'
-);
+    if (!isoString) return '';
+
+    var date;
+
+    if (typeof isoString === 'string') {
+        // MySQL: "2025-07-16 14:23:11"
+        if (isoString.indexOf('T') === -1) {
+            date = new Date(isoString.replace(' ', 'T') + 'Z');
+        } else {
+            // ISO string
+            date = new Date(isoString);
+        }
+    } else {
+        date = new Date(isoString);
+    }
+
+    if (isNaN(date.getTime())) return '';
+
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-    var timeStr = date.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true });
-    if (date.toDateString() === today.toDateString()) return 'today at ' + timeStr;
-    if (date.toDateString() === yesterday.toDateString()) return 'yesterday at ' + timeStr;
-    return date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' }) + ' at ' + timeStr;
+
+    var timeStr = date.toLocaleTimeString('en-SG', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'today at ' + timeStr;
+    }
+
+    if (date.toDateString() === yesterday.toDateString()) {
+        return 'yesterday at ' + timeStr;
+    }
+
+    return date.toLocaleDateString('en-SG', {
+        month: 'short',
+        day: 'numeric'
+    }) + ' at ' + timeStr;
 }
 
 // ── spotify open popup ─────────────────────────────────
@@ -104,14 +134,37 @@ function openSpotify(spotifyUrl) {
 }
 
 function formatDateOnly(isoString) {
-    var date = new Date(
-    isoString.replace(' ', 'T') + 'Z'
-);
+    if (!isoString) return '';
+
+    var date;
+
+    if (typeof isoString === 'string') {
+        if (isoString.indexOf('T') === -1) {
+            date = new Date(isoString.replace(' ', 'T') + 'Z');
+        } else {
+            date = new Date(isoString);
+        }
+    } else {
+        date = new Date(isoString);
+    }
+
+    if (isNaN(date.getTime())) return '';
+
     var today = new Date();
     var yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-    if (date.toDateString() === today.toDateString()) return 'today';
-    if (date.toDateString() === yesterday.toDateString()) return 'yesterday';
-    return date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' });
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'today';
+    }
+
+    if (date.toDateString() === yesterday.toDateString()) {
+        return 'yesterday';
+    }
+
+    return date.toLocaleDateString('en-SG', {
+        month: 'short',
+        day: 'numeric'
+    });
 }
 // service worker disabled
