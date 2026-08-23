@@ -15,7 +15,7 @@
 }
 
 .stat-box:nth-child(1) {
-  background: linear-gradient(135deg, #2d1f6e, #4a3ab5);
+  background: linear-gradient(135deg, #4a2570, #7a4aaa);
 }
 
 .stat-box:nth-child(2) {
@@ -130,7 +130,7 @@
 .time-bar-fill {
   height: 6px;
   border-radius: 3px;
-  background: #7f77dd;
+  background: #9b6fc2;
 }
 
 /* === TOP SONGS === */
@@ -186,7 +186,7 @@
 
 .flashback-card {
   background: #141414;
-  border: 1px solid #7f77dd33;
+  border: 1px solid #9b6fc233;
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 16px;
@@ -194,7 +194,7 @@
 
 .flashback-label {
   font-size: 10px;
-  color: #7f77dd;
+  color: #9b6fc2;
   letter-spacing: 0.08em;
   margin-bottom: 6px;
 }

@@ -18,7 +18,7 @@
 
 /* each card has its own colour */
 .stat-card:nth-child(1) {
-  background: linear-gradient(135deg, #2d1f6e, #4a3ab5); /* purple — songs logged */
+  background: linear-gradient(135deg, #4a2570, #7a4aaa); /* purple — songs logged */
 }
 
 .stat-card:nth-child(2) {
@@ -46,8 +46,8 @@
 
 /* === FLASHBACK === */
 .flashback-card {
-  background: #1a1a2e;
-  border: 1px solid #7f77dd44;
+  background: #1a0e2e;
+  border: 1px solid #9b6fc244;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 32px;
@@ -58,14 +58,14 @@
 
 .flashback-icon {
   font-size: 24px;
-  color: #7f77dd;
+  color: #9b6fc2;
   flex-shrink: 0;
 }
 
 .flashback-title {
   font-size: 13px;
   font-weight: 600;
-  color: #7f77dd;
+  color: #9b6fc2;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 4px;
@@ -141,7 +141,7 @@
 
 .history-tab.active {
   color: #f0f0f0;
-  border-bottom-color: #7f77dd;
+  border-bottom-color: #9b6fc2;
 }
 
 /* === SESSION CARDS IN HISTORY === */
@@ -323,8 +323,8 @@
 }
 
 #song-history-search:focus {
-  border-color: #7f77dd;
-  box-shadow: 0 0 0 2px #7f77dd22;
+  border-color: #9b6fc2;
+  box-shadow: 0 0 0 2px #9b6fc222;
 }
 
 #song-history-search::placeholder {
@@ -377,7 +377,7 @@
 
 .song-history-total {
   font-size: 12px;
-  color: #7f77dd;
+  color: #9b6fc2;
   margin-top: 4px;
 }
 

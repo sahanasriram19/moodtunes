@@ -20,8 +20,8 @@
   width: 250px;
   height: 250px;
   border-radius: 50%;
-  background: var(--circle-bg, #2d1f6e);
-  border: 2px solid var(--circle-border, #7f77dd);
+  background: var(--circle-bg, #4a2570);
+  border: 2px solid var(--circle-border, #9b6fc2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,7 +45,7 @@
 }
 
 #session-start-btn {
-  background: #7f77dd;
+  background: #9b6fc2;
   border: none;
   border-radius: 20px;
   color: #fff;

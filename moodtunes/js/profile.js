@@ -15,16 +15,16 @@ var THEMES = {
         '--text-primary':   '#f0f0f0',
         '--text-secondary': '#aaa',
         '--text-muted':     '#555',
-        '--accent':         '#7f77dd',
-        '--accent-bg':      '#2d1f6e',
+        '--accent':         '#9b6fc2',
+        '--accent-bg':      '#4a2570',
         '--chip-bg':        'transparent',
         '--chip-border':    '#333',
         '--search-bg':      '#7a4aaa',
         '--search-border':  '#7a4aaa',
         '--nav-bg':         '#0f0f0f',
         '--nav-border':     '#222',
-        '--circle-bg':      '#2d1f6e',
-        '--circle-border':  '#7f77dd',
+        '--circle-bg':      '#4a2570',
+        '--circle-border':  '#9b6fc2',
     },
     warm: {
         label: 'warm editorial',
@@ -81,7 +81,7 @@ var THEMES = {
         '--text-primary':   '#111',
         '--text-secondary': '#888',
         '--text-muted':     '#bbb',
-        '--accent':         '#7f77dd',
+        '--accent':         '#9b6fc2',
         '--accent-bg':      '#f0eff9',
         '--chip-bg':        '#fff',
         '--chip-border':    '#e0e0da',
@@ -90,7 +90,7 @@ var THEMES = {
         '--nav-bg':         '#fff',
         '--nav-border':     '#e8e8e4',
         '--circle-bg':      '#f0eff9',
-        '--circle-border':  '#7f77dd',
+        '--circle-border':  '#9b6fc2',
     }
 };
 
@@ -131,7 +131,7 @@ style.textContent = [
     '.save-note-btn { background: var(--accent) !important; }',
     '.add-note-btn, .edit-note-btn, .log-note { color: var(--accent) !important; }',
     '.logo span { color: var(--accent) !important; }',
-    '.session-timer-circle { background: var(--circle-bg, #2d1f6e) !important; border-color: var(--circle-border, #7f77dd) !important; }',
+    '.session-timer-circle { background: var(--circle-bg, #4a2570) !important; border-color: var(--circle-border, #9b6fc2) !important; }',
     '.session-hero-label { color: var(--text-muted) !important; }',
     '.session-hero-timer { color: var(--text-primary) !important; }',
     '#session-start-btn { background: var(--accent) !important; }',
@@ -245,7 +245,7 @@ function buildDropdown() {
         row.style.cssText = [
             'display:flex', 'align-items:center', 'gap:10px',
             'width:100%', 'padding:8px 10px',
-            'background:' + (key === currentTheme ? 'var(--accent-bg,#2d1f6e)' : 'none'),
+            'background:' + (key === currentTheme ? 'var(--accent-bg,#4a2570)' : 'none'),
             'border:none',
             'border-radius:8px',
             'cursor:pointer',
@@ -256,16 +256,16 @@ function buildDropdown() {
 
         // colour swatch
         var swatch = document.createElement('span');
-        var swatchColors = { default: '#7f77dd', warm: '#c4762d', purple: '#a09af5', light: '#7f77dd' };
+        var swatchColors = { default: '#9b6fc2', warm: '#c4762d', purple: '#a09af5', light: '#9b6fc2' };
         swatch.style.cssText = 'width:12px;height:12px;border-radius:50%;background:' + swatchColors[key] + ';flex-shrink:0;';
 
         var lbl = document.createElement('span');
-        lbl.style.cssText = 'font-size:13px;color:' + (key === currentTheme ? 'var(--accent,#7f77dd)' : 'var(--text-secondary,#aaa)') + ';';
+        lbl.style.cssText = 'font-size:13px;color:' + (key === currentTheme ? 'var(--accent,#9b6fc2)' : 'var(--text-secondary,#aaa)') + ';';
         lbl.textContent = t.label;
 
         if (key === currentTheme) {
             var tick = document.createElement('span');
-            tick.style.cssText = 'margin-left:auto;font-size:12px;color:var(--accent,#7f77dd);';
+            tick.style.cssText = 'margin-left:auto;font-size:12px;color:var(--accent,#9b6fc2);';
             tick.textContent = '✓';
             row.appendChild(swatch);
             row.appendChild(lbl);

@@ -35,7 +35,7 @@
 }
 
 .auth-logo span {
-  color: #7f77dd;
+  color: #9b6fc2;
 }
 
 .auth-tagline {
@@ -68,7 +68,7 @@
 
 .auth-tab.active {
   color: #f0f0f0;
-  border-bottom-color: #7f77dd;
+  border-bottom-color: #9b6fc2;
 }
 
 /* fields */
@@ -98,7 +98,7 @@
 }
 
 .auth-field input:focus {
-  border-color: #7f77dd;
+  border-color: #9b6fc2;
 }
 
 /* button */
@@ -107,7 +107,7 @@
   padding: 13px;
   border-radius: 8px;
   border: none;
-  background: #7f77dd;
+  background: #9b6fc2;
   color: #fff;
   font-size: 15px;
   font-weight: 500;
