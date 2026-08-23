@@ -55,22 +55,25 @@
 }
 
 .nav-links a {
-  font-size: 12px;
-  padding: 4px 10px;
+  text-decoration: none;
+  color: #888;
+  font-size: 15px;
+  padding: 6px 14px;
   border-radius: 20px;
   border-bottom: none;
   transition: color 0.2s, background 0.2s;
 }
-
-.nav-links a:hover,
-.nav-links a.active {
+ 
+.nav-links a:hover {
   color: #f0f0f0;
   background: #b471ff33;
   border-bottom: none;
 }
-
+ 
 .nav-links a.active {
-  color: #b471ff;
+  color: #fff;
+  background: #b471ff;
+  border-bottom: none;
 }
 
   /* === SEARCH === */

@@ -42,21 +42,22 @@ body {
   text-decoration: none;
   color: #888;
   font-size: 15px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   border-bottom: none;
   transition: color 0.2s, background 0.2s;
 }
-
-.nav-links a:hover,
-.nav-links a.active {
+ 
+.nav-links a:hover {
   color: #f0f0f0;
   background: #b471ff33;
   border-bottom: none;
 }
-
+ 
 .nav-links a.active {
-  color: #b471ff;
+  color: #fff;
+  background: #b471ff;
+  border-bottom: none;
 }
 
 /* === NAV RIGHT === */
@@ -175,21 +176,21 @@ body {
   flex: 1;
   padding: 14px 18px;
   border-radius: 10px;
-  border: 1px solid #4a3ab5;
-  background: #2d1f6e;
-  color: #f0f0f0;
+  border: 1px solid #b471ff;
+  background: #b471ff;
+  color: #fff;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
 }
-
+ 
 #song-search:focus {
-  border-color: #7f77dd;
-  box-shadow: 0 0 0 2px #7f77dd22;
+  border-color: #c990ff;
+  box-shadow: 0 0 0 2px #b471ff44;
 }
-
+ 
 #song-search::placeholder {
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.6);
 }
 
 #search-results {
