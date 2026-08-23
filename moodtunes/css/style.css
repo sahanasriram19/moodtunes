@@ -37,7 +37,6 @@ body {
   flex-shrink: 0;
 }
 
-
 .nav-links a {
   text-decoration: none;
   color: #888;
@@ -54,13 +53,13 @@ body {
  
 .nav-links a:hover {
   color: #f0f0f0;
-  background: #7f77dd22;
+  background: #b471ff22;
   border-bottom: none;
 }
  
 .nav-links a.active {
   color: #fff;
-  background: #7f77dd;
+  background: #b471ff;
   border-bottom: none;
 }
 
