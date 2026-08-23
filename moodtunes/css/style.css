@@ -40,17 +40,23 @@ body {
 
 .nav-links a {
   text-decoration: none;
-  color: #f3f1f1;
+  color: #888;
   font-size: 15px;
-  padding-bottom: 4px;
-  border-bottom: 2px solid transparent;
-  transition: color 0.2s;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border-bottom: none;
+  transition: color 0.2s, background 0.2s;
 }
 
 .nav-links a:hover,
 .nav-links a.active {
   color: #f0f0f0;
-  border-bottom-color: #b471ff;
+  background: #b471ff33;
+  border-bottom: none;
+}
+
+.nav-links a.active {
+  color: #b471ff;
 }
 
 /* === NAV RIGHT === */

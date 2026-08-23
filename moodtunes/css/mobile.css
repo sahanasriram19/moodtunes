@@ -56,19 +56,22 @@
 
 .nav-links a {
   font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border-bottom: none;
+  transition: color 0.2s, background 0.2s;
 }
 
-  /* === CONTAINER === */
-  .container { margin: 20px auto; padding: 0 14px; }
+.nav-links a:hover,
+.nav-links a.active {
+  color: #f0f0f0;
+  background: #b471ff33;
+  border-bottom: none;
+}
 
-  /* === MOOD CHIPS === */
-  .mood-chips { gap: 6px; flex-wrap: wrap; }
-
-  .chip {
-    padding: 5px 10px;
-    font-size: 12px;
-    border-radius: 20px;
-  }
+.nav-links a.active {
+  color: #b471ff;
+}
 
   /* === SEARCH === */
   #song-search { padding: 10px 14px; font-size: 14px; }
