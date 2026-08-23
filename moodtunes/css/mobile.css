@@ -67,16 +67,16 @@
   line-height: 1;
   transition: color 0.2s, background 0.2s;
 }
- 
+
 .nav-links a:hover {
   color: #f0f0f0;
-  background: #7f77dd22;
+  background: #9b5fd022;
   border-bottom: none;
 }
- 
+
 .nav-links a.active {
   color: #fff;
-  background: #7f77dd;
+  background: #9b5fd0;
   border-bottom: none;
 }
 

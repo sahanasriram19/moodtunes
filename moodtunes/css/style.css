@@ -37,6 +37,8 @@ body {
   flex-shrink: 0;
 }
 
+/* In style.css — replace the 3 nav-links rules */
+
 .nav-links a {
   text-decoration: none;
   color: #888;
@@ -50,16 +52,16 @@ body {
   line-height: 1;
   transition: color 0.2s, background 0.2s;
 }
- 
+
 .nav-links a:hover {
   color: #f0f0f0;
-  background: #b471ff22;
+  background: #9b5fd022;
   border-bottom: none;
 }
- 
+
 .nav-links a.active {
   color: #fff;
-  background: #b471ff;
+  background: #9b5fd0;
   border-bottom: none;
 }
 
