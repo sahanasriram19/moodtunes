@@ -42,21 +42,25 @@ body {
   text-decoration: none;
   color: #888;
   font-size: 15px;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 20px;
   border-bottom: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   transition: color 0.2s, background 0.2s;
 }
  
 .nav-links a:hover {
   color: #f0f0f0;
-  background: #b471ff33;
+  background: #7f77dd22;
   border-bottom: none;
 }
  
 .nav-links a.active {
   color: #fff;
-  background: #b471ff;
+  background: #7f77dd;
   border-bottom: none;
 }
 
@@ -176,21 +180,21 @@ body {
   flex: 1;
   padding: 14px 18px;
   border-radius: 10px;
-  border: 1px solid #b471ff;
-  background: #b471ff;
-  color: #fff;
+  border: 1px solid #7f77dd !important;
+  background: #7f77dd !important;
+  color: #fff !important;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
 }
  
 #song-search:focus {
-  border-color: #c990ff;
-  box-shadow: 0 0 0 2px #b471ff44;
+  border-color: #9990ee !important;
+  box-shadow: 0 0 0 2px #7f77dd44;
 }
  
 #song-search::placeholder {
-  color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.65) !important;
 }
 
 #search-results {
