@@ -52,16 +52,16 @@ body {
   line-height: 1;
   transition: color 0.2s, background 0.2s;
 }
-
+ 
 .nav-links a:hover {
   color: #f0f0f0;
-  background: #9b5fd022;
+  background: #7a4aaa22;
   border-bottom: none;
 }
-
+ 
 .nav-links a.active {
   color: #fff;
-  background: #9b5fd0;
+  background: #7a4aaa;
   border-bottom: none;
 }
 
