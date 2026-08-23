@@ -389,7 +389,7 @@ body {
 }
 .log-note {
   font-size: 12px;
-  color: #7f77dd;
+  color: #9b6fc2;
   font-style: italic;
   margin-top: 4px;
   margin-bottom: 4px;
@@ -577,7 +577,7 @@ body {
 .add-note-btn, .edit-note-btn {
   background: none;
   border: none;
-  color: #7f77dd;
+  color: #9b6fc2;
   font-size: 12px;
   cursor: pointer;
   padding: 0;
@@ -585,6 +585,7 @@ body {
   display: inline-block;
   transition: opacity 0.15s;
 }
+ 
 .add-note-btn:hover, .edit-note-btn:hover {
   opacity: 0.7;
 }
