@@ -4,14 +4,12 @@
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #0f0f0f;
   color: #f0f0f0;
   min-height: 100vh;
 }
-
 /* === NAVBAR === */
 .navbar {
   display: flex;
@@ -20,14 +18,12 @@ body {
   border-bottom: 1px solid #222;
   gap: 32px;
 }
-
 .nav-links {
   list-style: none;
   display: flex;
   gap: 24px;
   flex: 1;
 }
-
 /* === LOGO IMAGE === */
 .logo {
   width: 150px;
@@ -36,9 +32,6 @@ body {
   display: block;
   flex-shrink: 0;
 }
-
-/* In style.css — replace the 3 nav-links rules */
-
 .nav-links a {
   text-decoration: none;
   color: #888;
@@ -52,26 +45,22 @@ body {
   line-height: 1;
   transition: color 0.2s, background 0.2s;
 }
- 
 .nav-links a:hover {
   color: #f0f0f0;
   background: #7a4aaa22;
   border-bottom: none;
 }
- 
 .nav-links a.active {
   color: #fff;
   background: #7a4aaa;
   border-bottom: none;
 }
-
 /* === NAV RIGHT === */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 /* === SESSION BUTTON === */
 .session-btn {
   padding: 8px 18px;
@@ -85,15 +74,12 @@ body {
   transition: opacity 0.15s;
   white-space: nowrap;
 }
-
 .session-btn:hover {
   opacity: 0.85;
 }
-
 .session-btn.active-session {
   background: #e05c5c;
 }
-
 /* === LOGOUT BUTTON === */
 .logout-btn {
   background: none;
@@ -105,19 +91,16 @@ body {
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .logout-btn:hover {
   border-color: #e05c5c;
   color: #e05c5c;
 }
-
 /* === MAIN CONTAINER === */
 .container {
   max-width: 860px;
   margin: 60px auto;
   padding: 0 40px;
 }
-
 /* === SECTION LABELS === */
 .section-label {
   font-size: 12px;
@@ -126,25 +109,21 @@ body {
   color: #666;
   margin-bottom: 16px;
 }
-
 .section-subtitle {
   font-size: 13px;
   color: #555;
   margin-bottom: 24px;
   margin-top: -8px;
 }
-
 /* === MOOD CHIPS === */
 .mood-section {
   margin-bottom: 40px;
 }
-
 .mood-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-
 .chip {
   padding: 7px 16px;
   border-radius: 20px;
@@ -155,53 +134,44 @@ body {
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .chip:hover {
   border-color: #7f77dd;
   color: #f0f0f0;
 }
-
 .chip.selected {
   background: #7f77dd;
   border-color: #7f77dd;
   color: #fff;
 }
-
 /* === SEARCH === */
 .search-section {
   margin-bottom: 48px;
 }
-
 .search-row {
   display: flex;
   gap: 10px;
 }
-
 #song-search {
   flex: 1;
   padding: 14px 18px;
   border-radius: 10px;
-  border: 1px solid #7f77dd !important;
-  background: #7f77dd !important;
-  color: #fff !important;
+  border: 1px solid #4a3ab5;
+  background: #2d1f6e;
+  color: #f0f0f0;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
 }
- 
 #song-search:focus {
-  border-color: #9990ee !important;
-  box-shadow: 0 0 0 2px #7f77dd44;
+  border-color: #7f77dd;
+  box-shadow: 0 0 0 2px #7f77dd22;
 }
- 
 #song-search::placeholder {
-  color: rgba(255,255,255,0.65) !important;
+  color: rgba(255,255,255,0.4);
 }
-
 #search-results {
   margin-top: 10px;
 }
-
 /* === SEARCH RESULTS === */
 .result-item {
   display: flex;
@@ -212,62 +182,51 @@ body {
   cursor: pointer;
   transition: background 0.15s;
 }
-
 .result-item:hover {
   background: #1e1e1e;
 }
-
 .result-item img {
   width: 44px;
   height: 44px;
   border-radius: 6px;
   object-fit: cover;
 }
-
 .result-text {
   flex: 1;
 }
-
 .result-item .result-title {
   font-size: 14px;
   font-weight: 500;
   color: #f0f0f0;
 }
-
 .result-item .result-artist {
   font-size: 12px;
   color: #888;
   margin-top: 2px;
 }
-
 .no-mood-tip {
   font-size: 11px;
   color: #555;
   flex-shrink: 0;
   font-style: italic;
 }
-
 .result-clickable {
   cursor: pointer;
 }
-
 .result-clickable:hover {
   background: #1e1e1e;
   border-radius: 8px;
 }
-
 .result-hint {
   font-size: 11px;
   color: #555;
   flex-shrink: 0;
   font-style: italic;
 }
-
 /* === LOG CARDS === */
 .logs-section {
   margin-top: 8px;
 }
-
 .log-card {
   display: flex;
   align-items: center;
@@ -279,11 +238,9 @@ body {
   background: #141414;
   transition: border-color 0.2s;
 }
-
 .log-card:hover {
   border-color: #333;
 }
-
 .log-card .song-art {
   width: 52px;
   height: 52px;
@@ -292,29 +249,24 @@ body {
   background: #2a2a2a;
   flex-shrink: 0;
 }
-
 .log-card .song-info {
   flex: 1;
 }
-
 .log-card .song-title {
   font-size: 15px;
   font-weight: 500;
 }
-
 .log-card .song-artist {
   font-size: 13px;
   color: #888;
   margin-top: 3px;
 }
-
 .log-meta {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 8px;
 }
-
 .mood-badge {
   font-size: 12px;
   padding: 5px 14px;
@@ -323,17 +275,14 @@ body {
   color: #c4762d;
   border: 1px solid #c4762d44;
 }
-
 .plays-text {
   font-size: 12px;
   color: #555;
 }
-
 .date-text {
   font-size: 12px;
   color: #555;
 }
-
 /* === PLAY BUTTON === */
 .play-btn {
   background: linear-gradient(135deg, #1a4a2e, #1DB954);
@@ -351,12 +300,10 @@ body {
   justify-content: center;
   text-decoration: none;
 }
-
 .play-btn:hover {
   transform: scale(1.1);
   opacity: 0.9;
 }
-
 /* === DELETE BUTTON === */
 .delete-btn {
   background: none;
@@ -369,12 +316,10 @@ body {
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
-
 .delete-btn:hover {
   color: #f0f0f0;
   background: #2a2a2a;
 }
-
 /* === NOTE INPUT === */
 .note-input-container {
   background: #141414;
@@ -383,18 +328,15 @@ body {
   padding: 16px;
   margin-bottom: 16px;
 }
-
 .note-input-label {
   font-size: 13px;
   color: #f0f0f0;
   margin-bottom: 10px;
 }
-
 .note-input-label span {
   color: #555;
   font-size: 12px;
 }
-
 .note-textarea {
   width: 100%;
   background: #1a1a1a;
@@ -409,18 +351,15 @@ body {
   outline: none;
   transition: border-color 0.2s;
 }
-
 .note-textarea:focus {
   border-color: #7f77dd;
 }
-
 .note-btn-row {
   display: flex;
   gap: 8px;
   margin-top: 10px;
   justify-content: flex-end;
 }
-
 .save-note-btn {
   padding: 8px 16px;
   border-radius: 8px;
@@ -431,11 +370,9 @@ body {
   cursor: pointer;
   transition: opacity 0.2s;
 }
-
 .save-note-btn:hover {
   opacity: 0.85;
 }
-
 .skip-note-btn {
   padding: 8px 16px;
   border-radius: 8px;
@@ -446,12 +383,10 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .skip-note-btn:hover {
   border-color: #555;
   color: #f0f0f0;
 }
-
 .log-note {
   font-size: 12px;
   color: #7f77dd;
@@ -459,25 +394,21 @@ body {
   margin-top: 4px;
   margin-bottom: 4px;
 }
-
 /* === SESSION PANEL === */
 .session-panel {
   background: #1a1a2e;
   border-bottom: 1px solid #7f77dd44;
   padding: 16px 60px 20px;
 }
-
 .session-panel.hidden {
   display: none;
 }
-
 .session-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
 }
-
 .session-panel-info {
   display: flex;
   align-items: center;
@@ -485,7 +416,6 @@ body {
   font-size: 13px;
   color: #f0f0f0;
 }
-
 .session-live-dot {
   width: 8px;
   height: 8px;
@@ -493,18 +423,15 @@ body {
   background: #1DB954;
   animation: pulse 1.5s infinite;
 }
-
 @keyframes pulse {
   0% { opacity: 1; }
   50% { opacity: 0.3; }
   100% { opacity: 1; }
 }
-
 .session-time {
   color: #666;
   font-size: 12px;
 }
-
 .session-end-btn {
   padding: 6px 16px;
   border-radius: 20px;
@@ -515,19 +442,16 @@ body {
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .session-end-btn:hover {
   background: #e05c5c;
   color: #fff;
 }
-
 .session-recommendations {
   display: flex;
   gap: 14px;
   overflow-x: auto;
   padding-bottom: 8px;
 }
-
 .session-rec-card {
   display: flex;
   flex-direction: column;
@@ -538,18 +462,15 @@ body {
   cursor: pointer;
   transition: transform 0.15s;
 }
-
 .session-rec-card:hover {
   transform: scale(1.05);
 }
-
 .rec-img-wrap {
   position: relative;
   width: 90px;
   height: 90px;
   flex-shrink: 0;
 }
-
 .rec-img-wrap img {
   width: 90px;
   height: 90px;
@@ -558,7 +479,6 @@ body {
   display: block;
   transition: filter 0.2s;
 }
-
 .rec-no-art {
   width: 90px;
   height: 90px;
@@ -570,11 +490,9 @@ body {
   font-size: 24px;
   color: #555;
 }
-
 .rec-img-wrap:hover img {
   filter: brightness(0.5);
 }
-
 .rec-play-overlay {
   position: absolute;
   inset: 0;
@@ -585,11 +503,9 @@ body {
   transition: opacity 0.2s;
   border-radius: 10px;
 }
-
 .rec-img-wrap:hover .rec-play-overlay {
   opacity: 1;
 }
-
 .session-rec-card .rec-title {
   font-size: 11px;
   color: #f0f0f0;
@@ -599,7 +515,6 @@ body {
   text-overflow: ellipsis;
   width: 110px;
 }
-
 .session-rec-card .rec-artist {
   font-size: 11px;
   color: #666;
@@ -609,7 +524,6 @@ body {
   text-overflow: ellipsis;
   width: 110px;
 }
-
 /* === SESSION SUMMARY === */
 .session-summary {
   position: fixed;
@@ -623,7 +537,6 @@ body {
   justify-content: center;
   z-index: 9999;
 }
-
 .session-summary-box {
   background: #141414;
   border: 1px solid #222;
@@ -633,7 +546,6 @@ body {
   max-height: 80vh;
   overflow-y: auto;
 }
-
 .session-summary-title {
   font-size: 18px;
   font-weight: 600;
@@ -641,13 +553,11 @@ body {
   margin-bottom: 4px;
   text-transform: capitalize;
 }
-
 .session-summary-meta {
   font-size: 12px;
   color: #666;
   margin-bottom: 20px;
 }
-
 .session-summary-close {
   width: 100%;
   padding: 12px;
@@ -660,7 +570,6 @@ body {
   margin-top: 16px;
   transition: opacity 0.15s;
 }
-
 .session-summary-close:hover {
   opacity: 0.85;
 }
@@ -676,11 +585,9 @@ body {
   display: inline-block;
   transition: opacity 0.15s;
 }
-
 .add-note-btn:hover, .edit-note-btn:hover {
   opacity: 0.7;
 }
-
 .log-note-area {
   margin-top: 2px;
 }
@@ -693,7 +600,6 @@ body {
   margin-bottom: 14px;
   text-transform: capitalize;
 }
-
 .logs-section .timeline-date:first-child {
   margin-top: 4px;
 }
