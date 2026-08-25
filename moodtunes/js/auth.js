@@ -71,3 +71,9 @@ document.getElementById('register-btn').addEventListener('click', function() {
     })
     .catch(function() { errorEl.textContent = 'could not connect to server'; });
 }); 
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
+}

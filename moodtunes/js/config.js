@@ -8,3 +8,9 @@ const CONFIG = {
   SPOTIFY_CLIENT_SECRET: 'a0d531ec7fa443869e10020abbf25e71', // paste your Client Secret
   LASTFM_API_KEY: 'ccb3901b55a1189d510dba927a4ec5d7'
 };
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
