@@ -1,5 +1,10 @@
 @media (max-width: 768px) {
 
+.container {
+  padding: 0 16px;
+  margin: 24px auto;
+}
+
   /* === NAVBAR === */
 /* === MOBILE NAVBAR === */
 .navbar {
@@ -205,9 +210,9 @@
   }
 
   /* === STATS (history) === */
-  .stats-grid { 
-    grid-template-columns: 1fr 1fr 1fr; 
-    gap: 8px; 
+  #stats-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
   }
 
   .stat-card { 
