@@ -282,7 +282,7 @@ function buildDropdown() {
             applyTheme(key);
             closeDropdown();
             // rebuild to reflect new selection
-            setTimeout(function() { if (document.getElementById('profile-btn')) document.getElementById('profile-btn').click(); }, 50);
+            setTimeout(function() { if (document.getElementById('profile-btn')) document.getElementById('profile-btn').click(); }, 190);
         });
 
         d.appendChild(row);
@@ -324,7 +324,12 @@ function buildDropdown() {
 
 var dropdown = null;
 function closeDropdown() {
-    if (dropdown) { dropdown.remove(); dropdown = null; }
+    if (!dropdown) return;
+    // let it animate out (see #profile-dropdown.closing in motion.css) before removing
+    var closing = dropdown;
+    dropdown = null;
+    closing.classList.add('closing');
+    setTimeout(function() { closing.remove(); }, 170);
 }
 
 profileBtn.style.position = 'relative';

@@ -1,7 +1,14 @@
 // help.js — shared help modal for all pages
+// fade + slide the modal out (see #help-modal.closing in motion.css), then remove it
+function closeHelpModal(modal) {
+    if (!modal || modal.classList.contains('closing')) return;
+    modal.classList.add('closing');
+    setTimeout(function() { modal.remove(); }, 220);
+}
+
 function showHelpModal() {
     var existing = document.getElementById('help-modal');
-    if (existing) { existing.remove(); return; }
+    if (existing) { closeHelpModal(existing); return; }
 
     var modal = document.createElement('div');
     modal.id = 'help-modal';
@@ -65,12 +72,12 @@ function showHelpModal() {
         '</div>';
 
     document.body.appendChild(modal);
-    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-    document.getElementById('close-help').addEventListener('click', function() { modal.remove(); });
+    modal.addEventListener('click', function(e) { if (e.target === modal) closeHelpModal(modal); });
+    document.getElementById('close-help').addEventListener('click', function() { closeHelpModal(modal); });
     document.getElementById('close-help-2').addEventListener('click', function() {
         var _user = localStorage.getItem('moodtunes_username');
         localStorage.setItem('moodtunes_seen_help_' + (_user || 'guest'), '1');
-        modal.remove();
+        closeHelpModal(modal);
     });
 }
 

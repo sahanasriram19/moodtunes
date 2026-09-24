@@ -21,6 +21,7 @@ var EMOJI = {
 };
 
 var root = document.documentElement;
+var DEFAULT_PARTNER = '#e27fa8';   // rose pink — pairs with the purple accent when no mood is picked
 var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // custom moods get a stable colour derived from their name
@@ -75,6 +76,8 @@ function setMood(mood) {
     currentMood = mood || null;
     root.style.setProperty('--mood', color(mood));
     root.style.setProperty('--mood-ink', ink(color(mood)));
+    // second glow colour: the mood itself, or rose pink alongside purple when no mood is picked
+    root.style.setProperty('--mood-2', mood ? color(mood) : DEFAULT_PARTNER);
     root.style.setProperty('--mood-tempo', tempo(mood) + 's');
     if (mood) root.setAttribute('data-mood', mood); else root.removeAttribute('data-mood');
 }
@@ -121,6 +124,12 @@ function decorate(node) {
         var c = color(b.textContent);
         b.style.setProperty('--mc', c);
         b.classList.add('mood-tinted');
+        // tint the song card the badge belongs to (journal, history, playlists)
+        var card = b.closest('.log-card, .song-history-card');
+        if (card && !card.classList.contains('mood-card')) {
+            card.style.setProperty('--mc', c);
+            card.classList.add('mood-card');
+        }
     });
 }
 
@@ -801,9 +810,9 @@ function closeTopLayer() {
     var summary = document.querySelector('.mt-summary.open #close-summary');
     if (summary) { summary.click(); return true; }
     var popup = document.getElementById('spotify-open-popup');
-    if (popup) { popup.remove(); return true; }
+    if (popup) { var cancel = document.getElementById('cancel-open-btn'); if (cancel) cancel.click(); else popup.remove(); return true; }
     var help = document.getElementById('help-modal');
-    if (help) { help.remove(); return true; }
+    if (help && !help.classList.contains('closing')) { var x = document.getElementById('close-help'); if (x) x.click(); else help.remove(); return true; }
     var dd = document.getElementById('profile-dropdown');
     if (dd) { document.body.click(); return true; }
     var note = document.getElementById('search-note-panel');
@@ -981,14 +990,25 @@ function initialMood() {
     return null;
 }
 
-function boot() {
-    mountAmbient();
-    setMood(initialMood());
+// watch the page for new content: colour mood badges/cards straight away and give
+// freshly loaded lists their entrance animation. this starts as soon as mood.js
+// runs (not at DOMContentLoaded) so content drawn from saved data is already
+// coloured when a page transition reveals the page
+var booted = false;
+function watchPage() {
     decorate(document.body);
-    applyHidden();
-    syncHidden();
+    new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+            m.addedNodes.forEach(function(n) {
+                if (n.nodeType !== 1) return;
+                decorate(n);
+                if (booted) stagger(n);   // content present before the page is shown doesn't animate in
+            });
+        });
+    }).observe(document.body, { childList: true, subtree: true });
 
-    // selecting any mood chip re-tints the page
+    // selecting any mood chip re-tints the page. capture phase, so chips whose own
+    // click handler stops the event (like the picker inside the search panel) still work
     document.addEventListener('click', function(e) {
         var chip = e.target.closest && e.target.closest('.chip[data-mood]');
         if (!chip || window.managingMoods) return;
@@ -997,18 +1017,16 @@ function boot() {
         chip.classList.remove('mt-pop');
         void chip.offsetWidth;
         chip.classList.add('mt-pop');
-    });
+    }, true);
+}
 
-    var mo = new MutationObserver(function(muts) {
-        muts.forEach(function(m) {
-            m.addedNodes.forEach(function(n) {
-                if (n.nodeType !== 1) return;
-                decorate(n);
-                stagger(n);
-            });
-        });
-    });
-    mo.observe(document.body, { childList: true, subtree: true });
+function boot() {
+    mountAmbient();
+    setMood(initialMood());      // again, now that profile.js has applied the theme accent
+    decorate(document.body);
+    applyHidden();
+    syncHidden();
+    booted = true;
 
     if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }
@@ -1016,7 +1034,7 @@ function boot() {
 // set colour vars and create the glow layer immediately, so they're already there
 // when a page transition reveals this page; the rest waits for the DOM + profile.js
 setMood(initialMood());
-if (document.body) { mountAmbient(); mountTabbar(); }
+if (document.body) { mountAmbient(); mountTabbar(); watchPage(); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else setTimeout(boot, 0);
 

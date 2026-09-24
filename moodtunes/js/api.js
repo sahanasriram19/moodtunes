@@ -30,17 +30,16 @@ function apiCall(endpoint, method, body, callback) {
                 return { status: res.status, data: data };
             });
         })
-        .then(function(result) {
-            // a successful change means cached page data may be out of date
-            if (method !== 'GET' && result.status < 400) clearApiCache();
-            callback(null, result);
-        })
+        .then(function(result) { callback(null, result); })
         .catch(function(err) { callback(err, null); });
 }
 
 // ── instant page loads ─────────────────────────────────
 // apiCallCached draws the page straight away from the last response we saw,
 // then fetches fresh data and only calls back again if something changed.
+// saved data is kept after you log/delete things too: the page shows it for a
+// moment and then quietly updates, which is much faster than waiting on the
+// backend with loading placeholders. it's only wiped on logout.
 // That way a page (and its page transition) shows real content immediately
 // instead of loading placeholders while the backend wakes up.
 var API_CACHE_PREFIX = 'moodtunes_cache_';

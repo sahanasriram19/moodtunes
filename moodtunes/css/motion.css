@@ -15,12 +15,18 @@
   initial-value: #9b6fc2;
 }
 
+@property --mood-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e27fa8;
+}
+
 :root {
   --mood-tempo: 1.2s;
   --mood-ink: #fff;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition: --mood 0.9s ease, --np 1.4s ease;
+  transition: --mood 0.9s ease, --mood-2 0.9s ease, --np 1.4s ease;
 }
 
 :root:not(.has-np) {
@@ -72,7 +78,7 @@
   bottom: -34vmax;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--mood) 44%, transparent),
+    color-mix(in srgb, var(--mood-2) 44%, transparent),
     transparent 65%
   );
   animation: drift-b 32s ease-in-out infinite alternate;
@@ -2058,4 +2064,191 @@ body {
     padding: 8px 12px;
     font-size: 12px;
   }
+}
+
+/* === MOOD-TINTED SONG CARDS === */
+/* every logged song picks up its mood's colour: an accent edge, a soft wash and
+   a glow under the album art (set up by js/mood.js from the card's mood badge) */
+.log-card.mood-card,
+.song-history-card.mood-card {
+  border-left: 3px solid var(--mc) !important;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--mc) 13%, var(--bg-card, #141414)) 0%,
+    var(--bg-card, #141414) 60%
+  ) !important;
+  transition: border-color 0.2s, box-shadow 0.25s, transform 0.25s var(--ease-out);
+}
+
+.log-card.mood-card:hover,
+.song-history-card.mood-card:hover {
+  border-color: color-mix(in srgb, var(--mc) 45%, transparent) !important;
+  border-left-color: var(--mc) !important;
+  box-shadow: 0 10px 30px -18px var(--mc);
+}
+
+.log-card.mood-card .song-art,
+.song-history-card.mood-card .song-history-header img {
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--mc) 85%, transparent);
+}
+
+.log-card.mood-card .log-note {
+  color: color-mix(in srgb, var(--mc) 75%, #fff) !important;
+}
+
+/* === POP-UP ANIMATIONS === */
+/* profile menu pops out of its button */
+#profile-dropdown {
+  transform-origin: top right;
+  animation: menu-in 0.26s var(--ease-spring) both;
+}
+
+#profile-dropdown.closing {
+  animation: menu-out 0.16s ease-in both;
+  pointer-events: none;
+}
+
+#profile-dropdown > * {
+  animation: enter 0.3s var(--ease-out) backwards;
+}
+
+#profile-dropdown > *:nth-child(2) {
+  animation-delay: 0.03s;
+}
+
+#profile-dropdown > *:nth-child(3) {
+  animation-delay: 0.06s;
+}
+
+#profile-dropdown > *:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
+#profile-dropdown > *:nth-child(5) {
+  animation-delay: 0.12s;
+}
+
+#profile-dropdown > *:nth-child(6) {
+  animation-delay: 0.15s;
+}
+
+#profile-dropdown > *:nth-child(7) {
+  animation-delay: 0.18s;
+}
+
+#profile-dropdown > *:nth-child(8) {
+  animation-delay: 0.21s;
+}
+
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+}
+
+@keyframes menu-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.95);
+  }
+}
+
+/* help: backdrop fades, the card springs in (slides up as a sheet on phones) */
+#help-modal {
+  animation: backdrop-in 0.25s ease both;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#help-modal > div {
+  animation: card-in 0.42s var(--ease-spring) both;
+}
+
+#help-modal.closing {
+  animation: backdrop-out 0.22s ease both;
+  pointer-events: none;
+}
+
+#help-modal.closing > div {
+  animation: card-out 0.22s ease-in both;
+}
+
+/* "open in spotify" popup */
+#spotify-open-popup {
+  animation: backdrop-in 0.2s ease both;
+}
+
+#spotify-open-popup > div {
+  animation: card-in 0.36s var(--ease-spring) both;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.95);
+  }
+}
+
+@keyframes card-out {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+
+@media (max-width: 768px) {
+  #help-modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  #help-modal > div {
+    max-width: none !important;
+    border-radius: 22px 22px 0 0 !important;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+    animation-name: sheet-in;
+  }
+
+  #help-modal.closing > div {
+    animation-name: sheet-out;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* buttons that open things give a little press feedback */
+/* (the profile menu lives inside its button, so only the icon shrinks — otherwise
+   tapping a menu row would shrink the whole menu) */
+#profile-btn > svg,
+#help-btn {
+  transition: transform 0.15s var(--ease-spring), border-color 0.15s, color 0.15s !important;
+}
+
+#profile-btn:active:not(:has(#profile-dropdown:active)) > svg,
+#help-btn:active {
+  transform: scale(0.85);
 }
