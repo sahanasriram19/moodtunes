@@ -258,7 +258,7 @@ function showResults(tracks) {
 
             var panel = document.createElement('div');
             panel.id = 'search-note-panel';
-            panel.style.cssText = 'background:#1a1a2e;border:1px solid #7f77dd44;border-radius:10px;padding:14px 16px;margin:4px 0 8px;';
+            panel.className = 'search-note-panel';   // colours follow the mood (see motion.css)
 
             var moodPickerHTML = !selectedMood
                 ? '<div style="margin-bottom:12px;"><div style="font-size:12px;color:#888;margin-bottom:8px;">pick a mood first</div><div class="inline-mood-picker" style="display:flex;flex-wrap:wrap;gap:6px;">' +

@@ -2252,3 +2252,27 @@ body {
 #help-btn:active {
   transform: scale(0.85);
 }
+
+
+/* === SONG BOX IN SEARCH RESULTS === */
+/* the "pick a mood / add a note" box under a search result follows the mood too,
+   so picking a mood inside it visibly re-colours it along with the page */
+.search-note-panel {
+  margin: 4px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--mood) 20%, var(--bg-card, #141414)) 0%,
+    color-mix(in srgb, var(--mood) 7%, var(--bg-card, #141414)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--mood) 45%, transparent);
+  box-shadow: 0 12px 34px -20px var(--mood);
+  animation: enter 0.35s var(--ease-out) backwards;
+  transition: background 0.9s, border-color 0.9s, box-shadow 0.9s;
+}
+
+.result-item.selected {
+  border-radius: 10px;
+  box-shadow: inset 3px 0 0 var(--mood);
+}
