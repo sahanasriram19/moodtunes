@@ -2,13 +2,22 @@
 
 requireAuth();
 
-var moodEmojis = { happy: '😊', sad: '😢', hype: '🔥', heartbreak: '💔', nostalgic: '🌙', focused: '🎯', chill: '😌' };
 
-// merge custom mood emojis on load
+// custom moods: remember the emoji each was saved with, so its playlist cover
+// shows the matching icon (built-in moods have their own icons)
+var customMoodEmoji = {};
 apiCall('/moods', 'GET', null, function(err, result) {
     if (err || !result.data) return;
     var customs = Array.isArray(result.data) ? result.data : [];
-    customs.forEach(function(m) { moodEmojis[m.name] = m.emoji; });
+    customs.forEach(function(m) { customMoodEmoji[m.name] = m.emoji; });
+    // redraw empty cover tiles now that we know the icons
+    document.querySelectorAll('.playlist-card[data-mood]').forEach(function(card) {
+        var mood = card.dataset.mood;
+        if (!customMoodEmoji[mood]) return;
+        card.querySelectorAll('.playlist-cover-empty').forEach(function(tile) {
+            tile.innerHTML = MoodFX.icon(MoodFX.moodIcon(mood, customMoodEmoji[mood]));
+        });
+    });
 });
 
 // ── playlist order persistence ─────────────────────────
@@ -92,13 +101,13 @@ function groupByMood(logs) {
 }
 
 function buildCoverHTML(songs, mood, size) {
-    var emoji = moodEmojis[mood] || '🎵';
+    var moodIconHTML = MoodFX.icon(MoodFX.moodIcon(mood, customMoodEmoji[mood]));
     var html = '<div class="' + (size === 'large' ? 'playlist-header-cover' : 'playlist-cover') + '">';
     for (var i = 0; i < 4; i++) {
         if (songs[i] && songs[i].album_art) {
             html += '<img src="' + songs[i].album_art + '" alt="album art" />';
         } else {
-            html += '<div class="playlist-cover-empty">' + emoji + '</div>';
+            html += '<div class="playlist-cover-empty">' + moodIconHTML + '</div>';
         }
     }
     return html + '</div>';

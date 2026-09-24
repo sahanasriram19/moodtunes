@@ -102,7 +102,7 @@ function renderFlashback(logs) {
     var monthName = oneMonthAgo.toLocaleDateString('en-SG', { month: 'long', day: 'numeric' });
     flashbackEl.innerHTML =
         '<div class="flashback-card">' +
-            '<div class="flashback-icon">✦</div>' +
+            '<div class="flashback-icon">' + MoodFX.icon('calendar') + '</div>' +
             '<div class="flashback-content">' +
                 '<div class="flashback-title">a month ago today</div>' +
                 '<div class="flashback-sub">on ' + monthName + ' you were listening to</div>' +

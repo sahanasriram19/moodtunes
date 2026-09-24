@@ -6,6 +6,10 @@ function closeHelpModal(modal) {
     setTimeout(function() { modal.remove(); }, 220);
 }
 
+function helpIcon(name) {
+    return window.MoodFX ? MoodFX.icon(name) : '';
+}
+
 function showHelpModal() {
     var existing = document.getElementById('help-modal');
     if (existing) { closeHelpModal(existing); return; }
@@ -21,39 +25,39 @@ function showHelpModal() {
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">📓 journal</div>' +
+                '<div class="help-heading">' + helpIcon('journal') + 'journal</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by today and yesterday. you can add or edit notes on any log, or delete it. play count updates automatically based on what you open from moodtunes in spotify.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">🎵 playlists</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">every mood gets its own playlist built from your logged songs. open a playlist to see all tracks, drag to reorder (hold the ⠿ handle on mobile too), and add or edit notes per song. the cover art is generated from your top 4 songs in the current order. you can also sync any playlist directly to your spotify account.</div>' +
+                '<div class="help-heading">' + helpIcon('playlists') + 'playlists</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">every mood gets its own playlist built from your logged songs. open a playlist to see all tracks, drag to reorder (hold the ⠿ handle on mobile too), and add or edit notes per song. the cover art shows the top 4 songs in the list — newly added songs go to the top, so your latest additions appear on the cover. you can also sync any playlist directly to your spotify account.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">📅 history</div>' +
+                '<div class="help-heading">' + helpIcon('history') + 'history</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">see everything you\'ve logged organised by date. search for any song to see every day you\'ve listened to it, how many plays, and any notes you left. the sessions tab shows your past listening sessions with the songs played in each.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">📊 stats</div>' +
+                '<div class="help-heading">' + helpIcon('stats') + 'stats</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">a full breakdown of your listening — total plays, unique songs, days active, top mood, mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">⚡ session</div>' +
+                '<div class="help-heading">' + helpIcon('session') + 'session</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood then hit start session to begin a listening session. once started you\'ll get song recommendations based on your mood playlist and similar artists — click ▶ to open in spotify, or + add to log it to your journal. hit ↻ refresh for new recs. end session saves a summary to your history.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">✨ manage moods</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">click manage moods below the mood chips on any page to add custom moods with your own name and emoji, or delete any mood you don\'t want — including the default ones. changes sync across the journal and session pages.</div>' +
+                '<div class="help-heading">' + helpIcon('sparkles') + 'manage moods</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">click manage moods below the mood chips on any page to add custom moods with your own name and icon, or delete any mood you don\'t want — including the default ones. changes sync across the journal and session pages.</div>' +
             '</div>' +
 
             // keyboard shortcuts — only worth showing on devices with a keyboard + mouse
             (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches
                 ? '<div style="margin-bottom:18px;">' +
-                    '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:8px;">⌨️ keyboard shortcuts</div>' +
+                    '<div class="help-heading">' + helpIcon('keyboard') + 'keyboard shortcuts</div>' +
                     '<div style="font-size:13px;color:#aaa;line-height:2.1;">' +
                         '<kbd class="mt-kbd">1</kbd>–<kbd class="mt-kbd" style="margin-left:6px;">9</kbd> pick a mood<br>' +
                         '<kbd class="mt-kbd">/</kbd> jump to search<br>' +
@@ -64,7 +68,7 @@ function showHelpModal() {
                 : '') +
 
             '<div style="margin-bottom:8px;">' +
-                '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">👤 profile</div>' +
+                '<div class="help-heading">' + helpIcon('user') + 'profile</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, deep purple, clean light), and log out. your chosen theme is saved and applied across all pages automatically.</div>' +
             '</div>' +
 

@@ -289,7 +289,7 @@ if (savedSession) {
 
 
 // ── custom moods ───────────────────────────────────────
-var EMOJIS = ['🎵','🌟','💫','🔥','❤️','💜','💙','🌙','⚡','🌈','🎶','🎸','🎹','🥺','😤','🤩','😴','🌊','🍃','✨','🎯','💪','🧠','👻','🦋','🌸','🌺','🎪','🏆','💎'];
+var EMOJIS = MoodFX.ICON_PICKER;   // [emoji saved to the backend, icon shown]
 var moodChipsContainer = document.querySelector('.mood-chips');
 var managingMoods = false;
 
@@ -320,8 +320,8 @@ function addChip(name, emoji, id) {
 
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
-    delBtn.innerHTML = '🗑';
-    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
+    delBtn.innerHTML = MoodFX.icon('trash');
+    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
         if (selectedMood === name && !activeSession) selectedMood = null;
         MoodFX.undoable({
@@ -349,8 +349,8 @@ chips.forEach(function(chip) {
 
     var delBtn = document.createElement('button');
     delBtn.classList.add('chip-delete-btn');
-    delBtn.innerHTML = '🗑';
-    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
+    delBtn.innerHTML = MoodFX.icon('trash');
+    delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
         var m = chip.dataset.mood;
         if (selectedMood === m && !activeSession) { selectedMood = null; chip.classList.remove('selected'); }
@@ -401,10 +401,10 @@ addMoodSection.style.cssText = 'display:none;margin-top:16px;background:#141414;
 addMoodSection.innerHTML =
     '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#555;margin-bottom:12px;">add a mood</div>' +
     '<input id="new-mood-input" type="text" maxlength="20" placeholder="e.g. melancholy, grind..." style="width:100%;padding:10px 12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:14px;box-sizing:border-box;margin-bottom:12px;" />' +
-    '<div style="font-size:12px;color:#888;margin-bottom:8px;">pick an emoji <span id="chosen-emoji" style="font-size:16px;margin-left:6px;">🎵</span></div>' +
+    '<div style="font-size:12px;color:#888;margin-bottom:8px;">pick an icon <span id="chosen-emoji" style="margin-left:6px;">' + MoodFX.icon('note') + '</span></div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">' +
         EMOJIS.map(function(e) {
-            return '<button class="emoji-opt" data-emoji="' + e + '" style="background:none;border:2px solid transparent;border-radius:6px;font-size:20px;cursor:pointer;padding:3px;">' + e + '</button>';
+            return '<button class="emoji-opt" data-emoji="' + e[0] + '" data-icon="' + e[1] + '" title="' + e[1] + '" aria-label="' + e[1] + '" style="background:none;border:2px solid transparent;border-radius:8px;cursor:pointer;padding:4px;">' + MoodFX.icon(e[1]) + '</button>';
         }).join('') +
     '</div>' +
     '<button id="save-new-mood" class="save-note-btn" style="width:100%;">+ add mood</button>';
@@ -416,7 +416,7 @@ addMoodSection.querySelectorAll('.emoji-opt').forEach(function(btn) {
         addMoodSection.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
         btn.style.borderColor = '#7f77dd';
         chosenEmoji = btn.dataset.emoji;
-        document.getElementById('chosen-emoji').textContent = chosenEmoji;
+        document.getElementById('chosen-emoji').innerHTML = MoodFX.icon(btn.dataset.icon);
     });
 });
 
@@ -447,7 +447,7 @@ document.getElementById('save-new-mood').addEventListener('click', function() {
         var chip = addChip(result.data.name, result.data.emoji, result.data.id);
         document.getElementById('new-mood-input').value = '';
         chosenEmoji = '🎵';
-        document.getElementById('chosen-emoji').textContent = '🎵';
+        document.getElementById('chosen-emoji').innerHTML = MoodFX.icon('note');
         addMoodSection.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
         // close manage mode after adding
         managingMoods = false;

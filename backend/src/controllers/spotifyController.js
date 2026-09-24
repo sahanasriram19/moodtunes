@@ -455,3 +455,44 @@ module.exports.searchTracks = (req, res, next) => {
     }
     run(false);
 };
+
+// ── playback controls (play / pause / next / previous) ─────────────────────
+// used by the now-playing card. spotify only allows this for Premium accounts
+// and needs a device that's currently active (the phone or computer playing).
+const PLAYER_ACTIONS = {
+    play:     { method: 'put',  path: 'play' },
+    pause:    { method: 'put',  path: 'pause' },
+    next:     { method: 'post', path: 'next' },
+    previous: { method: 'post', path: 'previous' }
+};
+
+module.exports.controlPlayback = (req, res, next) => {
+    const action = PLAYER_ACTIONS[req.params.action];
+    if (!action) return res.status(400).json({ message: 'unknown action' });
+    const userId = res.locals.userId;
+    const url = 'https://api.spotify.com/v1/me/player/' + action.path;
+    const self = module.exports;
+
+    function send(token, retried) {
+        axios({ method: action.method, url: url, headers: { 'Authorization': 'Bearer ' + token } })
+        .then(function() { res.status(200).json({ ok: true, action: req.params.action }); })
+        .catch(function(e) {
+            const status = e.response ? e.response.status : 0;
+            if (status === 401 && !retried) {
+                return self.refreshToken(userId, function(err, newToken) {
+                    if (err) return res.status(401).json({ reason: 'not_connected', message: 'Spotify not connected' });
+                    send(newToken, true);
+                });
+            }
+            const reason = e.response && e.response.data && e.response.data.error && e.response.data.error.reason;
+            if (status === 403) return res.status(403).json({ reason: 'premium_required', message: 'Spotify Premium is needed to control playback' });
+            if (status === 404) return res.status(404).json({ reason: 'no_active_device', message: 'No active Spotify device' });
+            res.status(502).json({ reason: reason || 'failed', message: 'Couldn’t control playback' });
+        });
+    }
+
+    self.getUserToken(userId, function(err, token) {
+        if (err) return res.status(401).json({ reason: 'not_connected', message: 'Spotify not connected' });
+        send(token, false);
+    });
+};

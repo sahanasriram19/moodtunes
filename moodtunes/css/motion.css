@@ -1319,15 +1319,15 @@ select,
 }
 
 ::view-transition-old(root) {
-  animation: vt-out 0.2s ease-in both;
+  animation: vt-out 0.14s ease-in both;
 }
 
 ::view-transition-new(root) {
-  animation: vt-in 0.42s var(--ease-out) 0.05s both;
+  animation: vt-in 0.3s var(--ease-out) both;
 }
 
 ::view-transition-group(ambient) {
-  animation-duration: 0.9s;
+  animation-duration: 0.6s;
 }
 
 ::view-transition-group(navbar) {
@@ -2275,4 +2275,236 @@ body {
 .result-item.selected {
   border-radius: 10px;
   box-shadow: inset 3px 0 0 var(--mood);
+}
+
+/* === ICONS === */
+/* line icons (js/mood.js) used in place of emojis; they take the text colour */
+.mt-icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  vertical-align: -0.2em;
+}
+
+/* mood chips: the icon wears the mood colour; on a selected chip it matches the text */
+.chip .chip-emoji {
+  display: inline-flex;
+  color: var(--mc, currentColor);
+}
+
+.chip .chip-emoji .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.chip.selected .chip-emoji {
+  color: inherit;
+}
+
+/* custom-mood icon picker */
+.emoji-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #aaa);
+  transition: color 0.15s, background 0.15s, transform 0.15s var(--ease-spring);
+}
+
+.emoji-opt:hover {
+  color: var(--text-primary, #f0f0f0);
+  background: #ffffff0f !important;
+  transform: scale(1.1);
+}
+
+.emoji-opt .mt-icon {
+  width: 22px;
+  height: 22px;
+}
+
+#chosen-emoji {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--mood);
+}
+
+#chosen-emoji .mt-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.chip-delete-btn .mt-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.restore-chip .mt-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+/* help headings */
+.help-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9b8cf0;
+}
+
+.help-heading .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* "a month ago" cards */
+.flashback-icon {
+  display: flex;
+  color: var(--mood);
+}
+
+.flashback-icon .mt-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.flashback-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flashback-label .mt-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* placeholders where there's no album art */
+.playlist-cover-empty,
+.rec-no-art,
+.np-art-fallback,
+.sum-cover-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #666);
+}
+
+.playlist-cover-empty .mt-icon {
+  width: 40%;
+  height: 40%;
+}
+
+.rec-no-art .mt-icon,
+.np-art-fallback .mt-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.sum-cover-empty .mt-icon {
+  width: 38%;
+  height: 38%;
+}
+
+/* session summary */
+.sum-emoji {
+  display: flex;
+  justify-content: center;
+  color: var(--mc);
+}
+
+.sum-emoji .mt-icon {
+  width: 46px;
+  height: 46px;
+  filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--mc) 60%, transparent));
+}
+
+/* === NOW PLAYING: PLAYBACK CONTROLS === */
+.np-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.np-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-primary, #f0f0f0);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s var(--ease-spring), opacity 0.15s;
+}
+
+.np-btn:hover {
+  background: #ffffff14;
+}
+
+.np-btn:active {
+  transform: scale(0.88);
+}
+
+.np-btn .mt-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* the big play/pause button wears the song's colour */
+.np-toggle {
+  width: 44px;
+  height: 44px;
+  background: var(--np-color);
+  color: var(--np-ink, #fff);
+  box-shadow: 0 8px 22px -10px var(--np-color);
+}
+
+.np-toggle:hover {
+  background: color-mix(in srgb, var(--np-color) 85%, #fff);
+}
+
+.np-toggle .mt-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.np-btn.np-busy {
+  opacity: 0.6;
+}
+
+.np-idle .np-controls {
+  display: none;
+}
+
+/* "+ added to session" now sits next to the "now playing" label */
+.np-label .np-added {
+  position: static;
+  margin-left: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.np-compact .np-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.np-compact .np-toggle {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 420px) {
+  .np-compact .np-prev {
+    display: none;
+  }
 }

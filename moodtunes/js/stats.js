@@ -39,7 +39,7 @@ function render(data) {
     if (flashback.length > 0) {
         var fbMood = flashback[0].mood;
         html += '<div class="flashback-card">' +
-            '<div class="flashback-label">FLASHBACK — A MONTH AGO</div>' +
+            '<div class="flashback-label">' + MoodFX.icon('calendar') + 'FLASHBACK — A MONTH AGO</div>' +
             '<div class="flashback-subtitle">you were feeling ' + fbMood + ' and listening to these</div>' +
             '<div class="flashback-songs">' +
             flashback.map(function(s) {

@@ -13,6 +13,7 @@ router.get('/search',           jwt.verifyToken, spotify.searchTrack);
 router.get('/premium',          jwt.verifyToken, spotify.checkPremium);
 router.get('/now-playing',      jwt.verifyToken, spotify.getNowPlaying);
 router.get('/search-tracks',    jwt.verifyToken, spotify.searchTracks);
+router.post('/player/:action',  jwt.verifyToken, spotify.controlPlayback);
 router.post('/sync-playlist',   jwt.verifyToken, spotify.syncPlaylist);
 router.post('/queue',           jwt.verifyToken, spotify.addToQueue);
 

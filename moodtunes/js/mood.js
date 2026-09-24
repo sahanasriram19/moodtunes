@@ -17,9 +17,92 @@ var COLORS = {
 var TEMPO = {
     hype: 0.45, happy: 0.6, focused: 1.0, nostalgic: 1.4, chill: 1.8, heartbreak: 2.0, sad: 2.4
 };
-var EMOJI = {
-    happy: '😊', sad: '🌧️', hype: '🔥', heartbreak: '💔', nostalgic: '📼', focused: '🎯', chill: '🌊'
+// ── icons ──────────────────────────────────────────────
+// one set of line icons used everywhere instead of emojis, which look different
+// on every phone and computer. all 24x24, drawn with the current text colour.
+var ICON_PATHS = {
+    // moods
+    smile:      '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+    rain:       '<path d="M7 15.5a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8a3.5 3.5 0 0 1 .5 7"/><path d="M8 18.5l-1 2.5M12 17.5l-1 3.5M16 18.5l-1 2.5"/>',
+    flame:      '<path d="M12 21.5c-4 0-7-2.9-7-6.7 0-3.1 2-5.3 3.6-7 .4 1.8 1.4 3 2.7 3.4.1-3.4 1-6 3.6-8.2.4 3 2 4.8 3.3 6.6 1 1.4 1.6 3 1.6 4.8 0 3.8-3.1 7.1-7.8 7.1z"/><path d="M12 21.5c-1.7 0-3-1.3-3-3 0-1.8 1.4-2.8 2-4 .9 1 3.6 2.1 3.6 4.2 0 1.6-1.2 2.8-2.6 2.8z"/>',
+    heart:      '<path d="M12 20.5s-7.5-4.6-9.2-9.2C1.7 8.2 3.6 4.5 7.2 4.5c2 0 3.4 1.1 4.8 2.9 1.4-1.8 2.8-2.9 4.8-2.9 3.6 0 5.5 3.7 4.4 6.8-1.7 4.6-9.2 9.2-9.2 9.2z"/>',
+    heartbreak: '<path d="M12 20.5s-7.5-4.6-9.2-9.2C1.7 8.2 3.6 4.5 7.2 4.5c2 0 3.4 1.1 4.8 2.9 1.4-1.8 2.8-2.9 4.8-2.9 3.6 0 5.5 3.7 4.4 6.8-1.7 4.6-9.2 9.2-9.2 9.2z"/><path d="M12 7.4l-1.8 3.6 3.3 2-1.5 3.6"/>',
+    cassette:   '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="8" cy="11" r="2"/><circle cx="16" cy="11" r="2"/><path d="M10 11h4"/><path d="M6.5 19l1.5-3.5h8l1.5 3.5"/>',
+    target:     '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>',
+    waves:      '<path d="M2 7c2 0 2-1.6 4-1.6S8 7 10 7s2-1.6 4-1.6S16 7 18 7s2-1.6 4-1.6"/><path d="M2 12.5c2 0 2-1.6 4-1.6s2 1.6 4 1.6 2-1.6 4-1.6 2 1.6 4 1.6 2-1.6 4-1.6"/><path d="M2 18c2 0 2-1.6 4-1.6S8 18 10 18s2-1.6 4-1.6 2 1.6 4 1.6 2-1.6 4-1.6"/>',
+    // custom-mood picker
+    note:       '<path d="M9 18V4.5l10-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+    headphones: '<path d="M3.5 18v-5.5a8.5 8.5 0 0 1 17 0V18"/><path d="M20.5 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3.5 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-3z"/>',
+    guitar:     '<path d="M14.5 9.5L20 4M18.5 2.5l3 3"/><path d="M12.8 8.2a3.4 3.4 0 0 0-4.6.3c-.9 1-.7 2.2-2 3.1a3.4 3.4 0 0 0-.8 5.9c1.9 1.6 4.8 1.4 6.3-.4.9-1.1.8-2.4 1.8-3.3a3.3 3.3 0 0 0-.7-5.6z"/><circle cx="9.8" cy="14.2" r="1.3"/>',
+    piano:      '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/><path d="M7.5 4v8h3V4M13.5 4v8h3V4"/>',
+    star:       '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>',
+    sparkles:   '<path d="M11 3c.6 4.1 2 5.5 6 6.1-4 .6-5.4 2-6 6.1-.6-4.1-2-5.5-6-6.1 4-.6 5.4-2 6-6.1z"/><path d="M18.5 14.5c.3 1.9.9 2.5 2.7 2.8-1.8.3-2.4.9-2.7 2.7-.3-1.8-.9-2.4-2.7-2.7 1.8-.3 2.4-.9 2.7-2.8z"/>',
+    moon:       '<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>',
+    sun:        '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
+    bolt:       '<path d="M13 2.5L4.5 14H11l-1 7.5L19.5 10H13z"/>',
+    rainbow:    '<path d="M2.5 18a9.5 9.5 0 0 1 19 0"/><path d="M6 18a6 6 0 0 1 12 0"/><path d="M9.5 18a2.5 2.5 0 0 1 5 0"/>',
+    leaf:       '<path d="M5 20c-.5-8.5 4.5-14.5 15-15.5C19.5 15 13.5 20.5 5 20z"/><path d="M5 20c3-4.5 6-7.5 10-10"/>',
+    flower:     '<circle cx="12" cy="12" r="2.3"/><path d="M12 9.7C9.8 7 10.4 3.4 12 3c1.6.4 2.2 4 0 6.7zM14.3 12c2.7-2.2 6.3-1.6 6.7 0-.4 1.6-4 2.2-6.7 0zM12 14.3c2.2 2.7 1.6 6.3 0 6.7-1.6-.4-2.2-4 0-6.7zM9.7 12C7 14.2 3.4 13.6 3 12c.4-1.6 4-2.2 6.7 0z"/>',
+    butterfly:  '<path d="M12 7.5v12"/><path d="M12 10.5C10.3 6.5 6.5 4.5 4.5 5c-1.8.6-.7 6 2.6 7-2.9 1.3-2.5 5.3-.5 5.9 2 .6 4.5-2 5.4-5M12 10.5c1.7-4 5.5-6 7.5-5.5 1.8.6.7 6-2.6 7 2.9 1.3 2.5 5.3.5 5.9-2 .6-4.5-2-5.4-5"/>',
+    ghost:      '<path d="M5 21V10.5a7 7 0 0 1 14 0V21l-2.3-1.8-2.3 1.8-2.4-1.8-2.4 1.8-2.3-1.8z"/><path d="M9.5 10.5h.01M14.5 10.5h.01"/>',
+    dumbbell:   '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',
+    brain:      '<path d="M12 5.5a3 3 0 0 0-5.6-1.3A3 3 0 0 0 4 8.8 3.2 3.2 0 0 0 4.7 14 3 3 0 0 0 8 18.5a2.6 2.6 0 0 0 4 .7z"/><path d="M12 5.5a3 3 0 0 1 5.6-1.3A3 3 0 0 1 20 8.8a3.2 3.2 0 0 1-.7 5.2 3 3 0 0 1-3.3 4.5 2.6 2.6 0 0 1-4 .7z"/><path d="M12 5.5v13.7"/>',
+    trophy:     '<path d="M8 3.5h8v5.5a4 4 0 0 1-8 0z"/><path d="M8 5.5H5.2c0 2.6 1.1 4.4 3.2 4.9M16 5.5h2.8c0 2.6-1.1 4.4-3.2 4.9"/><path d="M12 13v3.5M8.5 20.5h7M10 16.5h4v4h-4z"/>',
+    gem:        '<path d="M6.5 3.5h11L21 9l-9 11.5L3 9z"/><path d="M3 9h18M9.5 3.5L8 9l4 11.5L16 9l-1.5-5.5"/>',
+    sleep:      '<path d="M4 9.5h5l-5 6.5h5"/><path d="M13 4.5h4l-4 5h4"/><path d="M16.5 14h3.5l-3.5 4.5H20"/>',
+    party:      '<path d="M4 20.5l4.2-12.3 8.1 8.1z"/><path d="M13.5 3c.4 1.6-.2 3-1.6 3.6M21 10.5c-1.6-.4-3 .2-3.6 1.6M16.5 5.5l.6-2M18.5 7.5l2-.6"/>',
+    coffee:     '<path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h1.3a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3v3M12 3v3"/>',
+    // app ui
+    journal:    '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2"/><path d="M10 8h5M10 12h5"/>',
+    playlists:  '<path d="M3 6h12M3 11h12M3 16h7"/><path d="M18 17V7l3-1"/><circle cx="16" cy="17" r="2"/>',
+    session:    '<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/>',
+    history:    '<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/>',
+    stats:      '<path d="M5 20v-8M12 20V5M19 20v-5"/>',
+    calendar:   '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h.01M12 13.5h.01M16.5 13.5h.01M7.5 17h.01M12 17h.01"/>',
+    trash:      '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M5.5 7l1 13h11l1-13"/><path d="M9 7V4h6v3"/>',
+    user:       '<circle cx="12" cy="8" r="4"/><path d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7"/>',
+    keyboard:   '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+    // playback (filled)
+    play:       '<path d="M8 5.2v13.6L19 12z" fill="currentColor" stroke="none"/>',
+    pause:      '<rect x="6.5" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.7" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none"/>',
+    next:       '<path d="M5.5 5.5v13l9.5-6.5z" fill="currentColor" stroke="none"/><path d="M18.5 5.5v13" stroke-width="2.4"/>',
+    prev:       '<path d="M18.5 5.5v13L9 12z" fill="currentColor" stroke="none"/><path d="M5.5 5.5v13" stroke-width="2.4"/>'
 };
+
+function icon(name, cls) {
+    return '<svg class="mt-icon' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        (ICON_PATHS[name] || ICON_PATHS.note) + '</svg>';
+}
+
+var MOOD_ICON = {
+    happy: 'smile', sad: 'rain', hype: 'flame', heartbreak: 'heartbreak',
+    nostalgic: 'cassette', focused: 'target', chill: 'waves'
+};
+
+// custom moods are saved with an emoji (so the backend and existing moods keep
+// working); this is the icon each one is shown as. the picker offers these.
+var ICON_PICKER = [
+    ['🎵', 'note'], ['🎧', 'headphones'], ['🎸', 'guitar'], ['🎹', 'piano'], ['🌟', 'star'], ['✨', 'sparkles'],
+    ['🔥', 'flame'], ['❤️', 'heart'], ['🌙', 'moon'], ['☀️', 'sun'], ['⚡', 'bolt'], ['🌈', 'rainbow'],
+    ['🌊', 'waves'], ['🍃', 'leaf'], ['🌸', 'flower'], ['🦋', 'butterfly'], ['👻', 'ghost'], ['🎯', 'target'],
+    ['💪', 'dumbbell'], ['🧠', 'brain'], ['🏆', 'trophy'], ['💎', 'gem'], ['😴', 'sleep'], ['🎪', 'party'],
+    ['☕', 'coffee'], ['🌧️', 'rain']
+];
+var EMOJI_ICON = {};
+ICON_PICKER.forEach(function(p) { EMOJI_ICON[p[0].replace(/\uFE0F/g, '')] = p[1]; });
+// emojis from the old picker that aren't offered any more
+['💜', '💙'].forEach(function(e) { EMOJI_ICON[e] = 'heart'; });
+EMOJI_ICON['💫'] = 'sparkles'; EMOJI_ICON['🎶'] = 'note'; EMOJI_ICON['🥺'] = 'rain';
+EMOJI_ICON['😤'] = 'flame'; EMOJI_ICON['🤩'] = 'star'; EMOJI_ICON['🌺'] = 'flower';
+
+// the icon name for a mood: built-in moods have their own; custom moods use the
+// icon matching the emoji they were saved with (or a music note)
+function moodIcon(mood, savedEmoji) {
+    var m = (mood || '').toLowerCase();
+    if (MOOD_ICON[m]) return MOOD_ICON[m];
+    if (savedEmoji) return EMOJI_ICON[String(savedEmoji).replace(/\uFE0F/g, '')] || 'note';
+    return 'note';
+}
 
 var root = document.documentElement;
 var DEFAULT_PARTNER = '#e27fa8';   // rose pink — pairs with the purple accent when no mood is picked
@@ -42,8 +125,8 @@ function tempo(mood) {
     return TEMPO[(mood || '').toLowerCase()] || 1.2;
 }
 
-function emoji(mood) {
-    return EMOJI[(mood || '').toLowerCase()] || '';
+function hasMoodIcon(mood) {
+    return !!MOOD_ICON[(mood || '').toLowerCase()];
 }
 
 // readable text colour on top of a mood colour: dark ink on light moods (e.g. happy yellow), white otherwise
@@ -108,14 +191,11 @@ function decorate(node) {
         chip.style.setProperty('--mc', color(chip.dataset.mood));
         chip.style.setProperty('--mc-ink', ink(color(chip.dataset.mood)));
         if (!chip.querySelector('.chip-emoji')) {
-            var e = chip.dataset.emoji || emoji(chip.dataset.mood);
-            if (e) {
-                var span = document.createElement('span');
-                span.className = 'chip-emoji';
-                span.setAttribute('aria-hidden', 'true');
-                span.textContent = e;
-                chip.insertBefore(span, chip.firstChild);
-            }
+            var span = document.createElement('span');
+            span.className = 'chip-emoji';
+            span.setAttribute('aria-hidden', 'true');
+            span.innerHTML = icon(moodIcon(chip.dataset.mood, chip.dataset.emoji));
+            chip.insertBefore(span, chip.firstChild);
         }
     });
 
@@ -290,7 +370,7 @@ function nudgeMoods(scope) {
         el.classList.add('mt-shake');
     });
     if (main && !isInView(main)) main.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
-    toast('pick a mood first ✨');
+    toast('pick a mood first');
 }
 function isInView(el) {
     var r = el.getBoundingClientRect();
@@ -385,7 +465,7 @@ function renderRestore() {
         var b = document.createElement('button');
         b.className = 'restore-chip';
         b.style.setProperty('--mc', color(m));
-        b.textContent = '+ ' + (emoji(m) ? emoji(m) + ' ' : '') + m;
+        b.innerHTML = '+ ' + icon(moodIcon(m)) + ' ' + esc(m);
         b.addEventListener('click', function() {
             unhideMood(m);
             toast(m + ' is back on your page', m);
@@ -495,7 +575,7 @@ function sessionSummary(mood, startTime, endTime, songs) {
     var covers = songs.length > 0
         ? '<div class="sum-covers">' + songs.map(function(s, i) {
             return '<a class="sum-cover" style="--i:' + i + '" href="' + esc(s.spotify_url || '#') + '" target="_blank" rel="noopener" title="' + esc(s.title) + '">' +
-                (s.album_art ? '<img src="' + esc(s.album_art) + '" alt="" />' : '<span class="sum-cover-empty">♪</span>') +
+                (s.album_art ? '<img src="' + esc(s.album_art) + '" alt="" />' : '<span class="sum-cover-empty">' + icon('note') + '</span>') +
                 '<span class="sum-cover-title">' + esc(s.title) + '</span>' +
             '</a>';
           }).join('') + '</div>'
@@ -504,7 +584,7 @@ function sessionSummary(mood, startTime, endTime, songs) {
     overlay.innerHTML =
         '<div class="session-summary-box" role="dialog" aria-modal="true" aria-labelledby="sum-title">' +
             '<div class="sum-glow" aria-hidden="true"></div>' +
-            (emoji(mood) ? '<div class="sum-emoji" aria-hidden="true">' + emoji(mood) + '</div>' : '') +
+            '<div class="sum-emoji" aria-hidden="true">' + icon(moodIcon(mood)) + '</div>' +
             '<div class="session-summary-title" id="sum-title">' + esc(mood) + ' session complete</div>' +
             '<div class="session-summary-meta">' + fmt(startTime) + ' – ' + fmt(endTime) + '</div>' +
             '<div class="sum-stats">' +
@@ -592,14 +672,18 @@ function nowPlaying(container, opts) {
     container.classList.add('np-mount');
     container.innerHTML =
         '<div class="np-card' + (opts.compact ? ' np-compact' : '') + ' np-idle">' +
-            '<div class="np-art-wrap"><img class="np-art" alt="" /><div class="np-art-fallback">♪</div></div>' +
+            '<div class="np-art-wrap"><img class="np-art" alt="" /><div class="np-art-fallback">' + icon('note') + '</div></div>' +
             '<div class="np-body">' +
-                '<div class="np-label"><span class="np-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-status">listening for spotify…</span></div>' +
+                '<div class="np-label"><span class="np-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-status">listening for spotify…</span><span class="np-added" aria-live="polite"></span></div>' +
                 '<div class="np-title"></div>' +
                 '<div class="np-artist"></div>' +
                 '<div class="np-progress"><div class="np-bar"><div class="np-fill"></div></div><span class="np-time"></span></div>' +
             '</div>' +
-            '<div class="np-added" aria-live="polite"></div>' +
+            '<div class="np-controls">' +
+                '<button class="np-btn np-prev" aria-label="previous song">' + icon('prev') + '</button>' +
+                '<button class="np-btn np-toggle" aria-label="pause">' + icon('pause') + '</button>' +
+                '<button class="np-btn np-next" aria-label="next song">' + icon('next') + '</button>' +
+            '</div>' +
         '</div>';
 
     var card   = container.querySelector('.np-card');
@@ -610,6 +694,7 @@ function nowPlaying(container, opts) {
     var fill   = container.querySelector('.np-fill');
     var time   = container.querySelector('.np-time');
     var added  = container.querySelector('.np-added');
+    var toggle = container.querySelector('.np-toggle');
 
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
 
@@ -684,6 +769,7 @@ function nowPlaying(container, opts) {
         card.classList.remove('np-idle');
         card.classList.toggle('np-paused', !state.playing);
         status.textContent = state.playing ? 'now playing' : 'paused';
+        syncToggle();
 
         if (changed) {
             state.track = t;
@@ -703,6 +789,57 @@ function nowPlaying(container, opts) {
         if (state.playing) autoLog(t);
         if (!raf) raf = requestAnimationFrame(tick);
     }
+
+    // ── playback controls ──
+    // play/pause flips straight away, then asks spotify; if spotify says no
+    // (not Premium, or nothing active to control) it flips back and explains
+    function syncToggle() {
+        toggle.innerHTML = icon(state.playing ? 'pause' : 'play');
+        toggle.setAttribute('aria-label', state.playing ? 'pause' : 'play');
+    }
+
+    var PLAYBACK_ERRORS = {
+        premium_required: 'controlling playback needs Spotify Premium',
+        no_active_device: 'open Spotify on a device first — nothing is active to control',
+        not_connected: 'connect Spotify to control playback'
+    };
+
+    function control(action, btn) {
+        if (!state.track || btn.disabled) return;
+        var before = { playing: state.playing, base: state.base, at: state.at };
+        if (action === 'play' || action === 'pause') {
+            // freeze/resume the progress bar where it is
+            var pos = state.base + (state.playing ? performance.now() - state.at : 0);
+            state.base = pos; state.at = performance.now(); state.playing = action === 'play';
+            card.classList.toggle('np-paused', !state.playing);
+            status.textContent = state.playing ? 'now playing' : 'paused';
+            syncToggle();
+            if (state.playing && !raf) raf = requestAnimationFrame(tick);
+        }
+        btn.disabled = true;
+        btn.classList.add('np-busy');
+        apiCall('/spotify/player/' + action, 'POST', null, function(err, res) {
+            btn.disabled = false;
+            btn.classList.remove('np-busy');
+            if (err || !res || res.status >= 400) {
+                // undo the optimistic change
+                state.playing = before.playing; state.base = before.base; state.at = before.at;
+                card.classList.toggle('np-paused', !state.playing);
+                status.textContent = state.playing ? 'now playing' : 'paused';
+                syncToggle();
+                var reason = res && res.data && res.data.reason;
+                toast(PLAYBACK_ERRORS[reason] || 'couldn’t reach spotify — try again');
+                return;
+            }
+            // skipping changes the song: check what's playing now
+            if (action === 'next' || action === 'previous') setTimeout(function() { poll(true); }, 450);
+            else setTimeout(function() { poll(true); }, 1500);
+        });
+    }
+
+    toggle.addEventListener('click', function() { control(state.playing ? 'pause' : 'play', toggle); });
+    container.querySelector('.np-next').addEventListener('click', function(e) { control('next', e.currentTarget); });
+    container.querySelector('.np-prev').addEventListener('click', function(e) { control('previous', e.currentTarget); });
 
     function schedule() {
         clearTimeout(pollTimer);
@@ -730,10 +867,10 @@ function nowPlaying(container, opts) {
 
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) { clearTimeout(pollTimer); }
-        else if (!stopped) { poll(true); }
+        else if (!stopped && !document.prerendering) { poll(true); }
     });
 
-    poll();
+    whenActive(poll);   // (auto-logging songs must not happen from a background-prepared page)
 
     return {
         refresh: function() { poll(true); },
@@ -857,15 +994,12 @@ document.addEventListener('keydown', function(e) {
 // on phones the top nav links are hidden and this bar sits at the bottom where
 // thumbs reach. the highlight pill has a view-transition-name, so it slides
 // from the old tab to the new one when you switch pages.
-var TAB_ICON = function(paths) {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
-};
 var TABS = [
-    { href: 'index.html',     label: 'journal',   icon: TAB_ICON('<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2"/><path d="M10 8h5M10 12h5"/>') },
-    { href: 'playlists.html', label: 'playlists', icon: TAB_ICON('<path d="M3 6h12M3 11h12M3 16h7"/><path d="M18 17V7l3-1"/><circle cx="16" cy="17" r="2"/>') },
-    { href: 'session.html',   label: 'session',   icon: TAB_ICON('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/>') },
-    { href: 'history.html',   label: 'history',   icon: TAB_ICON('<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/>') },
-    { href: 'stats.html',     label: 'stats',     icon: TAB_ICON('<path d="M5 20v-8M12 20V5M19 20v-5"/>') }
+    { href: 'index.html',     label: 'journal',   icon: icon('journal') },
+    { href: 'playlists.html', label: 'playlists', icon: icon('playlists') },
+    { href: 'session.html',   label: 'session',   icon: icon('session') },
+    { href: 'history.html',   label: 'history',   icon: icon('history') },
+    { href: 'stats.html',     label: 'stats',     icon: icon('stats') }
 ];
 
 function mountTabbar() {
@@ -945,7 +1079,7 @@ window.addEventListener('appinstalled', function() {
     installPrompt = null;
     var b = document.getElementById('install-btn');
     if (b) b.remove();
-    toast('moodtunes is installed — open it from your home screen ✨');
+    toast('moodtunes is installed — open it from your home screen');
 });
 
 function isIOS() {
@@ -980,7 +1114,17 @@ function maybeShowIOSHint() {
 
 // ── connection status ──────────────────────────────────
 window.addEventListener('offline', function() { toast('you’re offline — showing what’s saved'); });
-window.addEventListener('online', function() { toast('back online ✓'); });
+window.addEventListener('online', function() { toast('back online'); });
+
+// ── prerendered pages ──────────────────────────────────
+// pages can be prepared in the background before you click (see the
+// speculationrules in each page's <head>). anything that writes data or talks to
+// spotify waits until the page is really opened, so a page you only hovered over
+// never changes anything
+function whenActive(fn) {
+    if (document.prerendering) document.addEventListener('prerenderingchange', function() { fn(); }, { once: true });
+    else fn();
+}
 
 // ── boot ───────────────────────────────────────────────
 function initialMood() {
@@ -1040,14 +1184,15 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else setTimeout(boot, 0);
 
 window.MoodFX = {
-    color: color, tempo: tempo, emoji: emoji, ink: ink,
+    color: color, tempo: tempo, ink: ink,
+    icon: icon, moodIcon: moodIcon, hasMoodIcon: hasMoodIcon, ICON_PICKER: ICON_PICKER,
     setMood: setMood, getMood: function() { return currentMood; },
     skeleton: skeleton, toast: toast, confetti: confetti, countUp: countUp,
     sessionSummary: sessionSummary, nowPlaying: nowPlaying,
     markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion,
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
-    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive
+    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive
 };
 
 })();
