@@ -7,9 +7,10 @@
 
 // ── mood palette ───────────────────────────────────────
 // colours match stats.js so the whole app speaks the same colour language
-// (happy is sunny yellow so it doesn't clash with focused's green)
+// (happy is sunny yellow so it doesn't clash with focused's green; hype is a warm
+// caramel brown so it doesn't clash with happy)
 var COLORS = {
-    happy: '#f2c84b', sad: '#378add', hype: '#ef9f27',
+    happy: '#f2c84b', sad: '#378add', hype: '#b07a50',
     heartbreak: '#d4537e', nostalgic: '#7f77dd', focused: '#1D9E75', chill: '#888780'
 };
 // seconds per "beat" — drives breathing / pulse speed. hype is fast, sad is slow.
