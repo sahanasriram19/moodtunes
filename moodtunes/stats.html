@@ -15,6 +15,9 @@
     @view-transition { navigation: auto; }
     @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
   </style>
+  <!-- don't reveal this page until #mt-ready (after the scripts) is parsed, so the
+       transition lands on the finished page — glow, mood colour and content included -->
+  <link rel="expect" href="#mt-ready" blocking="render" />
   <!-- fonts: connect early and load in parallel with the other stylesheets -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -58,5 +61,6 @@
   <script src="js/stats.js"></script>
   <script src="js/help.js"></script>
   <script src="js/profile.js"></script>
+  <div id="mt-ready" hidden></div>
 </body>
 </html>

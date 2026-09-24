@@ -11,6 +11,24 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="images/favicon.png">
   <title>History</title>
+  <!-- page transitions: declared here (not in motion.css) so Chrome sees the opt-in
+       before the new page is shown — otherwise it sometimes skips the transition -->
+  <style>
+    @view-transition { navigation: auto; }
+    @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+  </style>
+  <!-- don't reveal this page until #mt-ready (after the scripts) is parsed, so the
+       transition lands on the finished page — glow, mood colour and content included -->
+  <link rel="expect" href="#mt-ready" blocking="render" />
+  <!-- fonts: connect early and load in parallel with the other stylesheets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://moodtunes-2avk.onrender.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&amp;family=Outfit:wght@300..700&amp;display=swap" />
+  <!-- start fetching a page when you hover its link (Chrome/Edge; ignored elsewhere) -->
+  <script type="speculationrules">
+    { "prefetch": [{ "where": { "href_matches": "/*" }, "eagerness": "moderate" }] }
+  </script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/history.css" />
   <link rel="stylesheet" href="css/mobile.css" />
@@ -71,5 +89,6 @@
   <script src="js/help.js"></script>
 
   <script src="js/profile.js"></script>
+  <div id="mt-ready" hidden></div>
 </body>
 </html>

@@ -72,6 +72,8 @@ function apiCallCached(endpoint, callback) {
         var freshText = JSON.stringify(result);
         if (freshText === cachedText) return;                  // nothing changed — no re-render
         try { localStorage.setItem(apiCacheKey(endpoint), freshText); } catch (e) {}
+        // the page is already showing cached content: update it quietly, no entrance animations
+        if (cachedText) window.__mtQuietUntil = performance.now() + 100;
         callback(null, result, false);
     });
 }

@@ -10,7 +10,7 @@ module.exports.selectAllByUser = (data, callback) => {
         ' MIN(id) as id, MAX(note) as note' +
         ' FROM Log WHERE user_id = ?' +
         ' GROUP BY song_id, user_id, title, artist, album_art, spotify_url, mood' +
-        ' ORDER BY MAX(last_logged) DESC',
+        ' ORDER BY MAX(last_logged) DESC, MIN(id) DESC',
         [data.user_id], callback
     );
 };
@@ -22,7 +22,7 @@ module.exports.selectByMood = (data, callback) => {
         ' MIN(id) as id, MAX(note) as note' +
         ' FROM Log WHERE user_id = ? AND mood = ?' +
         ' GROUP BY song_id, user_id, title, artist, album_art, spotify_url, mood' +
-        ' ORDER BY SUM(play_count) DESC',
+        ' ORDER BY SUM(play_count) DESC, MAX(last_logged) DESC, MIN(id) DESC',
         [data.user_id, data.mood], callback
     );
 };
@@ -32,7 +32,7 @@ module.exports.selectByMood = (data, callback) => {
 
 module.exports.selectAllByUserPerDay = (data, callback) => {
     pool.query(
-        'SELECT * FROM Log WHERE user_id = ? ORDER BY last_logged DESC',
+        'SELECT * FROM Log WHERE user_id = ? ORDER BY last_logged DESC, id DESC',
         [data.user_id], callback
     );
 };
@@ -40,7 +40,7 @@ module.exports.selectAllByUserPerDay = (data, callback) => {
 // ── today and yesterday only — for journal recently played ───────────────────
 module.exports.selectRecentTwoDays = (data, callback) => {
     pool.query(
-        'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 48 HOUR ORDER BY last_logged DESC',
+        'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 48 HOUR ORDER BY last_logged DESC, id DESC',
         [data.user_id], callback
     );
 };
@@ -115,7 +115,7 @@ module.exports.getMoodBreakdown = (data, callback) => {
     pool.query(`
         SELECT mood, SUM(play_count) as total_plays, COUNT(*) as song_count
         FROM Log WHERE user_id = ?
-        GROUP BY mood ORDER BY total_plays DESC
+        GROUP BY mood ORDER BY total_plays DESC, mood ASC
     `, [data.user_id], callback);
 };
 
@@ -124,7 +124,7 @@ module.exports.getTopSongs = (data, callback) => {
         SELECT title, artist, album_art, spotify_url, SUM(play_count) as total_plays, mood
         FROM Log WHERE user_id = ?
         GROUP BY song_id, title, artist, album_art, spotify_url, mood
-        ORDER BY total_plays DESC LIMIT 5
+        ORDER BY total_plays DESC, title ASC, artist ASC, mood ASC LIMIT 5
     `, [data.user_id], callback);
 };
 
@@ -147,6 +147,6 @@ module.exports.getFlashback = (data, callback) => {
         WHERE user_id = ?
           AND last_logged BETWEEN DATE_SUB(NOW(), INTERVAL 37 DAY) AND DATE_SUB(NOW(), INTERVAL 30 DAY)
         GROUP BY song_id, title, artist, album_art, spotify_url, mood
-        ORDER BY total_plays DESC LIMIT 5
+        ORDER BY total_plays DESC, title ASC, artist ASC, mood ASC LIMIT 5
     `, [data.user_id], callback);
 };

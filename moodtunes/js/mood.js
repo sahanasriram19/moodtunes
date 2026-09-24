@@ -134,6 +134,8 @@ var batch = 0, batchReset = null;
 
 function stagger(node) {
     if (!node || node.nodeType !== 1 || reduceMotion) return;
+    // background refreshes (see apiCallCached) swap content in place without replaying entrance animations
+    if (window.__mtQuietUntil && performance.now() < window.__mtQuietUntil) return;
     var list = [];
     if (node.matches(ENTER_SEL)) list.push(node);
     list = list.concat(Array.prototype.slice.call(node.querySelectorAll(ENTER_SEL)));
@@ -880,8 +882,10 @@ function boot() {
     mo.observe(document.body, { childList: true, subtree: true });
 }
 
-// set colour vars immediately so there's no flash, then finish once DOM + profile.js are ready
+// set colour vars and create the glow layer immediately, so they're already there
+// when a page transition reveals this page; the rest waits for the DOM + profile.js
 setMood(initialMood());
+if (document.body) mountAmbient();
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else setTimeout(boot, 0);
 
