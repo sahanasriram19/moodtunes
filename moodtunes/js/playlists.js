@@ -309,7 +309,10 @@ var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('
 
 // ── boot ───────────────────────────────────────────────
 playlistsList.innerHTML = MoodFX.skeleton('rows', 4);
-apiCall('/logs', 'GET', null, function(err, result) {
+apiCallCached('/logs', function(err, result, fromCache) {
+    // don't yank someone out of a playlist they've already opened
+    var openView = document.getElementById('playlist-view');
+    if (!fromCache && openView && openView.classList.contains('active')) return;
     if (err) { playlistsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your playlists', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
     var logs = Array.isArray(result.data) ? result.data : [];
     if (logs.length === 0) {

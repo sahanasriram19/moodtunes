@@ -192,14 +192,14 @@ document.getElementById('stats-content').innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">' + MoodFX.skeleton('block') + MoodFX.skeleton('block') + '</div>' +
     MoodFX.skeleton('block');
 
-apiCall('/logs/stats', 'GET', null, function(err, result) {
+apiCallCached('/logs/stats', function(err, result) {
     if (err || !result.data) {
         document.getElementById('stats-content').innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your stats', text: 'check your connection and try again', action: { label: 'try again', reload: true } });
         return;
     }
     render(result.data);
     // fetch per-day logs for the graph
-    apiCall('/logs/perday', 'GET', null, function(err2, r2) {
+    apiCallCached('/logs/perday', function(err2, r2) {
         if (!err2 && r2 && r2.data) buildLineGraph(r2.data);
         else { var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY</div><p style="color:#555;font-size:13px;">not enough data yet</p>'; }
     });

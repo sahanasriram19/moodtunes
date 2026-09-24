@@ -328,7 +328,7 @@ function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
 function loadLogs(highlightSongId) {
     if (!logsList.children.length) logsList.innerHTML = MoodFX.skeleton('rows', 4);
     var highlighted = false;
-    apiCall('/logs/recent', 'GET', null, function(err, result) {
+    apiCallCached('/logs/recent', function(err, result) {
         if (err) { logsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your journal', text: 'check your connection and give it another go', action: { label: 'try again', reload: true } }); return; }
         var logs = Array.isArray(result.data) ? result.data : [];
         logsList.innerHTML = '';

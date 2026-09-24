@@ -30,11 +30,54 @@ function apiCall(endpoint, method, body, callback) {
                 return { status: res.status, data: data };
             });
         })
-        .then(function(result) { callback(null, result); })
+        .then(function(result) {
+            // a successful change means cached page data may be out of date
+            if (method !== 'GET' && result.status < 400) clearApiCache();
+            callback(null, result);
+        })
         .catch(function(err) { callback(err, null); });
 }
 
+// ── instant page loads ─────────────────────────────────
+// apiCallCached draws the page straight away from the last response we saw,
+// then fetches fresh data and only calls back again if something changed.
+// That way a page (and its page transition) shows real content immediately
+// instead of loading placeholders while the backend wakes up.
+var API_CACHE_PREFIX = 'moodtunes_cache_';
+
+function apiCacheKey(endpoint) {
+    return API_CACHE_PREFIX + (localStorage.getItem('moodtunes_username') || '') + ':' + endpoint;
+}
+
+function clearApiCache() {
+    try {
+        Object.keys(localStorage).forEach(function(k) {
+            if (k.indexOf(API_CACHE_PREFIX) === 0) localStorage.removeItem(k);
+        });
+    } catch (e) {}
+}
+
+function apiCallCached(endpoint, callback) {
+    var cachedText = null;
+    try { cachedText = localStorage.getItem(apiCacheKey(endpoint)); } catch (e) {}
+    if (cachedText) {
+        try { callback(null, JSON.parse(cachedText), true); }
+        catch (e) { cachedText = null; }      // bad cache entry — fall through to a normal load
+    }
+    apiCall(endpoint, 'GET', null, function(err, result) {
+        if (err || !result || result.status !== 200) {
+            if (!cachedText) callback(err, result, false);   // keep showing cached data if the refresh fails
+            return;
+        }
+        var freshText = JSON.stringify(result);
+        if (freshText === cachedText) return;                  // nothing changed — no re-render
+        try { localStorage.setItem(apiCacheKey(endpoint), freshText); } catch (e) {}
+        callback(null, result, false);
+    });
+}
+
 function logout() {
+    clearApiCache();
     localStorage.removeItem('moodtunes_token');
     localStorage.removeItem('moodtunes_username');
     window.location.href = 'login.html';

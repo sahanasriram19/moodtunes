@@ -1,8 +1,6 @@
 /* motion.css — mood theming, live animations, skeletons, now-playing, session ring
-   loaded after style.css on every page. works with js/mood.js */
-
-/* fonts: Outfit (display) + DM Sans (body) — this @import must stay above every other rule */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Outfit:wght@300..700&display=swap');
+   loaded after style.css on every page. works with js/mood.js
+   fonts (Outfit + DM Sans) are loaded by a <link> in each page's <head> */
 
 /* registered so the colour can transition smoothly between moods */
 @property --mood {
@@ -1304,11 +1302,8 @@ select,
 }
 
 /* === PAGE TRANSITIONS === */
-/* Chrome, Edge, Safari 18.2+; others navigate normally */
-@view-transition {
-  navigation: auto;
-}
-
+/* Chrome, Edge, Safari 18.2+; others navigate normally.
+   the opt-in (@view-transition) is in each page's <head> so it's seen in time */
 .navbar {
   view-transition-name: navbar;
 }
@@ -1585,10 +1580,4 @@ kbd.mt-kbd {
   background: #ffffff10;
   border: 1px solid #ffffff22;
   border-bottom-width: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: none;
-  }
 }

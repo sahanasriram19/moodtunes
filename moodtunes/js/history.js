@@ -328,7 +328,7 @@ var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('
 // ── boot ───────────────────────────────────────────────
 statsGrid.innerHTML = MoodFX.skeleton('stats', 3).replace('sk-stats', 'sk-stats sk-3');
 timeline.innerHTML  = MoodFX.skeleton('rows', 5);
-apiCall('/logs/perday', 'GET', null, function(err, result) {
+apiCallCached('/logs/perday', function(err, result) {
     if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your history', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
     allLogs = Array.isArray(result.data) ? result.data : [];
     renderStats(allLogs);
