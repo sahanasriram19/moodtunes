@@ -7,8 +7,9 @@
 
 // ── mood palette ───────────────────────────────────────
 // colours match stats.js so the whole app speaks the same colour language
+// (happy is sunny yellow so it doesn't clash with focused's green)
 var COLORS = {
-    happy: '#5dcaa5', sad: '#378add', hype: '#ef9f27',
+    happy: '#f2c84b', sad: '#378add', hype: '#ef9f27',
     heartbreak: '#d4537e', nostalgic: '#7f77dd', focused: '#1D9E75', chill: '#888780'
 };
 // seconds per "beat" — drives breathing / pulse speed. hype is fast, sad is slow.
@@ -43,6 +44,26 @@ function emoji(mood) {
     return EMOJI[(mood || '').toLowerCase()] || '';
 }
 
+// readable text colour on top of a mood colour: dark ink on light moods (e.g. happy yellow), white otherwise
+var inkCache = {};
+function ink(c) {
+    if (!c) return '#fff';
+    if (inkCache[c]) return inkCache[c];
+    var probe = document.createElement('span');
+    probe.style.color = c;
+    probe.style.display = 'none';
+    root.appendChild(probe);
+    var m = getComputedStyle(probe).color.match(/[\d.]+/g);
+    probe.remove();
+    if (!m) return '#fff';
+    var lin = function(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    var L = 0.2126 * lin(+m[0]) + 0.7152 * lin(+m[1]) + 0.0722 * lin(+m[2]);
+    // only genuinely light colours (e.g. happy yellow, hype orange) get dark text — the rest keep white
+    var out = L > 0.4 ? '#1a1405' : '#fff';
+    inkCache[c] = out;
+    return out;
+}
+
 function accent() {
     var a = getComputedStyle(root).getPropertyValue('--accent').trim();
     return a || '#9b6fc2';
@@ -53,6 +74,7 @@ var currentMood = null;
 function setMood(mood) {
     currentMood = mood || null;
     root.style.setProperty('--mood', color(mood));
+    root.style.setProperty('--mood-ink', ink(color(mood)));
     root.style.setProperty('--mood-tempo', tempo(mood) + 's');
     if (mood) root.setAttribute('data-mood', mood); else root.removeAttribute('data-mood');
 }
@@ -69,7 +91,7 @@ function mountAmbient() {
     var amb = document.createElement('div');
     amb.id = 'mood-ambient';
     amb.setAttribute('aria-hidden', 'true');
-    amb.innerHTML = '<span class="blob blob-a"></span><span class="blob blob-b"></span><span class="blob blob-c"></span>';
+    amb.innerHTML = '<span class="blob blob-a"></span><span class="blob blob-b"></span><span class="blob blob-c"></span><span class="blob blob-d"></span>';
     document.body.insertBefore(amb, document.body.firstChild);
 }
 
@@ -80,6 +102,7 @@ function decorate(node) {
     chips = chips.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.chip[data-mood]') : []));
     chips.forEach(function(chip) {
         chip.style.setProperty('--mc', color(chip.dataset.mood));
+        chip.style.setProperty('--mc-ink', ink(color(chip.dataset.mood)));
         if (!chip.querySelector('.chip-emoji')) {
             var e = chip.dataset.emoji || emoji(chip.dataset.mood);
             if (e) {
@@ -281,6 +304,7 @@ function sessionSummary(mood, startTime, endTime, songs) {
     var overlay = document.createElement('div');
     overlay.className = 'session-summary mt-summary';
     overlay.style.setProperty('--mc', c);
+    overlay.style.setProperty('--mc-ink', ink(c));
 
     var covers = songs.length > 0
         ? '<div class="sum-covers">' + songs.map(function(s, i) {
@@ -485,6 +509,7 @@ function nowPlaying(container, opts) {
             if (t.albumArt) art.src = t.albumArt; else art.removeAttribute('src');
             artColor(t.albumArt, function(c) {
                 card.style.setProperty('--np-color', c || 'var(--mood)');
+                card.style.setProperty('--np-ink', c ? ink(c) : 'var(--mood-ink)');
                 setTrackColor(c);
             });
             if (opts.onTrack) opts.onTrack(t);
@@ -574,7 +599,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else setTimeout(boot, 0);
 
 window.MoodFX = {
-    color: color, tempo: tempo, emoji: emoji,
+    color: color, tempo: tempo, emoji: emoji, ink: ink,
     setMood: setMood, getMood: function() { return currentMood; },
     skeleton: skeleton, toast: toast, confetti: confetti, countUp: countUp,
     sessionSummary: sessionSummary, nowPlaying: nowPlaying,

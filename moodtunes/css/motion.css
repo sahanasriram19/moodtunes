@@ -7,6 +7,7 @@
 
 :root {
   --mood-tempo: 1.2s;
+  --mood-ink: #fff;
   --ease-out: cubic-bezier(.22, 1, .36, 1);
   --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
   transition: --mood .9s ease, --np 1.4s ease;
@@ -15,31 +16,44 @@
 
 
 /* ── ambient glow ─────────────────────────────────────── */
+/* a soft full-screen wash in the mood colour, plus four drifting glows:
+   top-left + bottom-right + centre follow the mood, top-right follows the album art */
 #mood-ambient {
   position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--mood) 16%, transparent) 0%,
+      color-mix(in srgb, var(--mood) 7%, transparent) 45%,
+      color-mix(in srgb, var(--mood) 12%, transparent) 100%);
 }
 #mood-ambient .blob {
-  position: absolute; border-radius: 50%; filter: blur(80px); opacity: .75;
+  position: absolute; border-radius: 50%; filter: blur(70px); opacity: .9;
   will-change: transform;
 }
 #mood-ambient .blob-a {
-  width: 60vmax; height: 60vmax; left: -18vmax; top: -24vmax;
-  background: radial-gradient(circle, color-mix(in srgb, var(--mood) 38%, transparent), transparent 65%);
+  width: 85vmax; height: 85vmax; left: -28vmax; top: -34vmax;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mood) 50%, transparent), transparent 65%);
   animation: drift-a 26s ease-in-out infinite alternate;
 }
 #mood-ambient .blob-b {
-  width: 50vmax; height: 50vmax; right: -16vmax; bottom: -22vmax;
-  background: radial-gradient(circle, color-mix(in srgb, var(--np) 30%, transparent), transparent 65%);
+  width: 80vmax; height: 80vmax; right: -26vmax; bottom: -34vmax;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mood) 44%, transparent), transparent 65%);
   animation: drift-b 32s ease-in-out infinite alternate;
 }
 #mood-ambient .blob-c {
-  width: 30vmax; height: 30vmax; left: 40%; top: 30%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--mood) 14%, transparent), transparent 70%);
+  width: 70vmax; height: 70vmax; left: 15%; top: 10%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mood) 24%, transparent), transparent 68%);
   animation: drift-c 40s ease-in-out infinite alternate;
 }
-@keyframes drift-a { to { transform: translate(10vmax, 8vmax) scale(1.1); } }
-@keyframes drift-b { to { transform: translate(-12vmax, -6vmax) scale(.92); } }
-@keyframes drift-c { 0% { transform: translate(-20vmax, -5vmax); } 100% { transform: translate(15vmax, 10vmax) scale(1.3); } }
+#mood-ambient .blob-d {
+  width: 60vmax; height: 60vmax; right: -20vmax; top: -22vmax;
+  background: radial-gradient(circle, color-mix(in srgb, var(--np) 38%, transparent), transparent 65%);
+  animation: drift-d 36s ease-in-out infinite alternate;
+}
+@keyframes drift-a { to { transform: translate(14vmax, 12vmax) scale(1.1); } }
+@keyframes drift-b { to { transform: translate(-16vmax, -10vmax) scale(.92); } }
+@keyframes drift-c { 0% { transform: translate(-18vmax, -6vmax); } 100% { transform: translate(18vmax, 14vmax) scale(1.2); } }
+@keyframes drift-d { to { transform: translate(-10vmax, 16vmax) scale(1.15); } }
 
 /* ── mood chips ───────────────────────────────────────── */
 .chip { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 6px; }
@@ -179,7 +193,7 @@
 
 .np-added {
   position: absolute; right: 14px; top: 12px; font-size: 11px; font-weight: 600;
-  padding: 4px 10px; border-radius: 999px; color: #fff; background: var(--np-color);
+  padding: 4px 10px; border-radius: 999px; color: var(--np-ink, #fff); background: var(--np-color);
   opacity: 0; transform: translateY(-6px) scale(.9); pointer-events: none;
 }
 .np-added.show { animation: added-pill 2.4s var(--ease-out) forwards; }
@@ -297,7 +311,7 @@
 .sum-cover-title { display: block; font-size: 10px; color: var(--text-secondary, #888); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @keyframes cover-pop { from { opacity: 0; transform: scale(.5) translateY(10px); } }
 .sum-empty { position: relative; color: var(--text-muted, #666); font-size: 13px; }
-.mt-summary .session-summary-close { position: relative; background: var(--mc) !important; font-weight: 600; }
+.mt-summary .session-summary-close { position: relative; background: var(--mc) !important; color: var(--mc-ink, #fff) !important; font-weight: 600; }
 
 .mt-confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100001; }
 
@@ -316,5 +330,9 @@
   .session-timer-circle { width: 210px !important; height: 210px !important; }
   .np-card { gap: 12px; padding: 12px; }
   .np-art-wrap { width: 52px; height: 52px; }
-  #mood-ambient .blob { filter: blur(60px); }
+  #mood-ambient .blob { filter: blur(50px); }
 }
+
+/* labels sit on top of the stronger mood glow — keep them readable in every mood */
+body .section-label,
+body .section-subtitle { color: color-mix(in srgb, var(--text-primary, #f0f0f0) 62%, transparent) !important; }

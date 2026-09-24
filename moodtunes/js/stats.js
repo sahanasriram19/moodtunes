@@ -2,7 +2,7 @@
 requireAuth();
 
 var MOOD_COLORS = {
-    happy: '#5dcaa5', sad: '#378add', hype: '#ef9f27',
+    happy: '#f2c84b', sad: '#378add', hype: '#ef9f27',
     heartbreak: '#d4537e', nostalgic: '#7f77dd', focused: '#1D9E75', chill: '#888780'
 };
 

@@ -104,10 +104,10 @@ chips.forEach(function(chip) {
 var manageMoodsBtn = document.createElement('button');
 manageMoodsBtn.id = 'manage-moods-btn';
 manageMoodsBtn.textContent = 'manage moods';
-manageMoodsBtn.style.cssText = 'background:none;border:none;border-bottom:1px solid #333;color:#555;font-size:12px;padding:2px 0;cursor:pointer;margin-top:14px;display:block;letter-spacing:0.04em;transition:color 0.15s,border-color 0.15s;';
+manageMoodsBtn.style.cssText = 'background:none;border:none;border-bottom:1px solid #333;color:#9a9a9a;font-size:12px;padding:2px 0;cursor:pointer;margin-top:14px;display:block;letter-spacing:0.04em;transition:color 0.15s,border-color 0.15s;';
 manageMoodsBtn.addEventListener('mouseover', function() { this.style.color = '#aaa'; });
 manageMoodsBtn.addEventListener('mouseout', function() {
-    this.style.color = managingMoods ? '#7f77dd' : '#555';
+    this.style.color = managingMoods ? '#7f77dd' : '#9a9a9a';
     this.style.borderColor = managingMoods ? '#7f77dd' : '#333';
 });
 manageMoodsBtn.addEventListener('click', function() {
@@ -117,7 +117,7 @@ manageMoodsBtn.addEventListener('click', function() {
     manageMoodsBtn.style.borderBottom = managingMoods ? '1px solid #7f77dd' : '1px solid #333';
     manageMoodsBtn.style.padding = managingMoods ? '4px 14px' : '2px 0';
     manageMoodsBtn.style.borderRadius = managingMoods ? '20px' : '0';
-    manageMoodsBtn.style.color = managingMoods ? '#7f77dd' : '#555';
+    manageMoodsBtn.style.color = managingMoods ? '#7f77dd' : '#9a9a9a';
     
     document.querySelectorAll('.chip-delete-btn').forEach(function(btn) {
         btn.style.display = managingMoods ? 'block' : 'none';
@@ -200,7 +200,7 @@ document.getElementById('save-new-mood').addEventListener('click', function() {
         manageMoodsBtn.style.borderBottom = '1px solid #333';
         manageMoodsBtn.style.padding = '2px 0';
         manageMoodsBtn.style.borderRadius = '0';
-        manageMoodsBtn.style.color = '#555';
+        manageMoodsBtn.style.color = '#9a9a9a';
         document.querySelectorAll('.chip-delete-btn').forEach(function(b) { b.style.display = 'none'; });
         addMoodSection.style.display = 'none';
     });
