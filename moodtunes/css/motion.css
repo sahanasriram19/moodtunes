@@ -1581,3 +1581,137 @@ kbd.mt-kbd {
   border: 1px solid #ffffff22;
   border-bottom-width: 2px;
 }
+
+/* === SAFE AREAS (NOTCH, STATUS BAR, HOME BAR) === */
+/* when installed as an app the page runs edge to edge, so keep content clear of
+   the iPhone notch/status bar and the home bar. these are 0 in a normal browser */
+.navbar {
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-left: calc(32px + env(safe-area-inset-left));
+  padding-right: calc(32px + env(safe-area-inset-right));
+}
+
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mt-toast {
+  bottom: calc(28px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding-top: calc(14px + env(safe-area-inset-top));
+    padding-left: calc(16px + env(safe-area-inset-left));
+    padding-right: calc(16px + env(safe-area-inset-right));
+  }
+}
+
+/* === INSTALL APP BUTTON === */
+.install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mood) 55%, transparent);
+  background: color-mix(in srgb, var(--mood) 14%, transparent);
+  color: var(--text-primary, #f0f0f0);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  animation: enter 0.5s var(--ease-out) backwards;
+  transition: background 0.2s, transform 0.2s var(--ease-spring);
+}
+
+.install-btn:hover {
+  background: color-mix(in srgb, var(--mood) 28%, transparent);
+  transform: translateY(-1px);
+}
+
+.install-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* === IPHONE "ADD TO HOME SCREEN" HINT === */
+.ios-hint {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 100002;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 16px 16px 14px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--mood) 14%, #161616f5);
+  border: 1px solid color-mix(in srgb, var(--mood) 40%, transparent);
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transform: translateY(140%);
+  transition: transform 0.5s var(--ease-spring);
+}
+
+.ios-hint.show {
+  transform: none;
+}
+
+.ios-hint-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #0f0f0f url('../assets/apple-touch-icon.png') center / cover;
+}
+
+.ios-hint-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #f0f0f0);
+  margin-bottom: 3px;
+}
+
+.ios-hint-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #bbb);
+}
+
+.ios-hint-text svg {
+  width: 15px;
+  height: 15px;
+  vertical-align: -3px;
+  color: #3d8bfd;
+}
+
+.ios-hint-close {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff14;
+  color: var(--text-secondary, #bbb);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* installed app: no install prompts */
+@media (display-mode: standalone) {
+  .install-btn,
+  .ios-hint {
+    display: none !important;
+  }
+}
+
+/* toast: size to the message instead of being squeezed into half the screen */
+.mt-toast {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}

@@ -843,6 +843,83 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// ── install as an app ──────────────────────────────────
+// android + desktop chrome/edge: the browser tells us when the app can be
+// installed (beforeinstallprompt) and we show an "install app" button.
+// iphone: safari has no install prompt, so we show a one-time hint instead.
+var isStandalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+var installPrompt = null;
+
+var DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>';
+var SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+
+function showInstallButton() {
+    if (isStandalone || !installPrompt || document.getElementById('install-btn')) return;
+    var navRight = document.querySelector('.nav-right');
+    if (!navRight) return;
+    var b = document.createElement('button');
+    b.id = 'install-btn';
+    b.className = 'install-btn';
+    b.innerHTML = DOWNLOAD_ICON + '<span>install app</span>';
+    b.addEventListener('click', function() {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        installPrompt.userChoice.then(function(choice) {
+            if (choice && choice.outcome === 'accepted') b.remove();
+            installPrompt = null;
+        });
+    });
+    navRight.insertBefore(b, navRight.firstChild);
+}
+
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();          // keep chrome's mini-bar away; we show our own button
+    installPrompt = e;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showInstallButton);
+    else showInstallButton();
+});
+
+window.addEventListener('appinstalled', function() {
+    installPrompt = null;
+    var b = document.getElementById('install-btn');
+    if (b) b.remove();
+    toast('moodtunes is installed — open it from your home screen ✨');
+});
+
+function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // iPadOS reports as a Mac
+}
+
+function maybeShowIOSHint() {
+    if (isStandalone || !isIOS()) return;
+    var KEY = 'moodtunes_ios_hint_dismissed';
+    var last = 0;
+    try { last = parseInt(localStorage.getItem(KEY) || '0', 10); } catch (e) {}
+    if (Date.now() - last < 30 * 24 * 3600 * 1000) return;     // not again for 30 days
+
+    var h = document.createElement('div');
+    h.className = 'ios-hint';
+    h.setAttribute('role', 'dialog');
+    h.setAttribute('aria-label', 'install moodtunes');
+    h.innerHTML =
+        '<div class="ios-hint-icon" aria-hidden="true"></div>' +
+        '<div><div class="ios-hint-title">get the moodtunes app</div>' +
+        '<div class="ios-hint-text">tap ' + SHARE_ICON + ' <b>share</b> below, then <b>add to home screen</b></div></div>' +
+        '<button class="ios-hint-close" aria-label="dismiss">✕</button>';
+    document.body.appendChild(h);
+    setTimeout(function() { h.classList.add('show'); }, 50);
+    h.querySelector('.ios-hint-close').addEventListener('click', function() {
+        try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+        h.classList.remove('show');
+        setTimeout(function() { h.remove(); }, 500);
+    });
+}
+
+// ── connection status ──────────────────────────────────
+window.addEventListener('offline', function() { toast('you’re offline — showing what’s saved'); });
+window.addEventListener('online', function() { toast('back online ✓'); });
+
 // ── boot ───────────────────────────────────────────────
 function initialMood() {
     try {
@@ -880,6 +957,8 @@ function boot() {
         });
     });
     mo.observe(document.body, { childList: true, subtree: true });
+
+    if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }
 
 // set colour vars and create the glow layer immediately, so they're already there

@@ -140,3 +140,10 @@ input {
 .auth-tab {
   font-family: 'Outfit', 'DM Sans', 'Segoe UI', sans-serif;
 }
+
+/* === SAFE AREAS === */
+/* keep the login card clear of the notch and home bar when installed as an app */
+.auth-container {
+  padding: calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+}

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <title>moodtunes · offline</title>
+  <!-- self-contained on purpose: this page has to work with no network at all -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+      background: #0f0f0f;
+      color: #f0f0f0;
+      font-family: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .glow {
+      position: fixed;
+      inset: -20%;
+      z-index: -1;
+      background: radial-gradient(circle at 30% 25%, rgba(155, 111, 194, 0.35), transparent 55%),
+        radial-gradient(circle at 75% 80%, rgba(155, 111, 194, 0.2), transparent 50%);
+      filter: blur(40px);
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      to {
+        transform: translate(4%, -3%) scale(1.05);
+      }
+    }
+
+    .card {
+      max-width: 340px;
+    }
+
+    .logo {
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 20px;
+      border-radius: 22px;
+      background: #141414 url('images/favicon.png') center / 62% no-repeat;
+      box-shadow: 0 12px 40px -12px rgba(155, 111, 194, 0.7);
+      animation: bob 3s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    h1 {
+      font-family: 'Outfit', 'DM Sans', 'Segoe UI', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #aaa;
+    }
+
+    button {
+      margin-top: 22px;
+      padding: 12px 26px;
+      border: none;
+      border-radius: 999px;
+      background: #9b6fc2;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #777;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .glow,
+      .logo {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+  <main class="card">
+    <div class="logo" role="img" aria-label="moodtunes"></div>
+    <h1>you're offline</h1>
+    <p>moodtunes needs a connection to reach your journal. pages you've already opened still work — this one just hasn't been saved yet.</p>
+    <button id="retry">try again</button>
+    <div class="status" id="status">we'll reconnect automatically when you're back online</div>
+  </main>
+  <script>
+    document.getElementById('retry').addEventListener('click', function() { location.reload(); });
+    window.addEventListener('online', function() {
+      document.getElementById('status').textContent = 'back online — reloading…';
+      setTimeout(function() { location.reload(); }, 600);
+    });
+  </script>
+</body>
+</html>
