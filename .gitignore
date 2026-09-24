@@ -1,0 +1,12 @@
+gitignore
+# secrets — never commit
+backend/.env
+.env
+
+# dependencies
+node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

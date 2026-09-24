@@ -44,8 +44,8 @@ function render(data) {
             '<div class="flashback-songs">' +
             flashback.map(function(s) {
                 return '<div class="flashback-song">' +
-                    (s.album_art ? '<img class="flashback-art" src="' + s.album_art + '" alt="' + s.title + '" />' : '<div class="flashback-art"></div>') +
-                    '<div class="flashback-title">' + s.title + '</div>' +
+                    (s.album_art ? '<img class="flashback-art" src="' + MoodFX.esc(s.album_art) + '" alt="' + MoodFX.esc(s.title) + '" />' : '<div class="flashback-art"></div>') +
+                    '<div class="flashback-title">' + MoodFX.esc(s.title) + '</div>' +
                     '<div class="flashback-plays">' + s.total_plays + ' plays</div>' +
                 '</div>';
             }).join('') +
@@ -59,7 +59,7 @@ function render(data) {
     moods.forEach(function(m) {
         var pct = Math.round((m.total_plays / maxMoodPlays) * 100);
         html += '<div class="mood-bar-row">' +
-            '<div class="mood-bar-name">' + m.mood + '</div>' +
+            '<div class="mood-bar-name">' + MoodFX.esc(m.mood) + '</div>' +
             '<div class="mood-bar-track"><div class="mood-bar-fill" style="width:' + pct + '%;background:' + getMoodColor(m.mood) + ';"></div></div>' +
             '<div class="mood-bar-count">' + m.total_plays + '</div>' +
         '</div>';
@@ -86,8 +86,8 @@ function render(data) {
         topSongs.forEach(function(s, i) {
             html += '<div class="top-song-row">' +
                 '<div class="top-song-num">' + (i + 1) + '</div>' +
-                (s.album_art ? '<img class="top-song-art" src="' + s.album_art + '" alt="' + s.title + '" />' : '<div class="top-song-art"></div>') +
-                '<div class="top-song-info"><div class="top-song-title">' + s.title + '</div><div class="top-song-artist">' + s.artist + '</div></div>' +
+                (s.album_art ? '<img class="top-song-art" src="' + MoodFX.esc(s.album_art) + '" alt="' + MoodFX.esc(s.title) + '" />' : '<div class="top-song-art"></div>') +
+                '<div class="top-song-info"><div class="top-song-title">' + MoodFX.esc(s.title) + '</div><div class="top-song-artist">' + MoodFX.esc(s.artist) + '</div></div>' +
                 '<div class="top-song-plays">' + s.total_plays + ' plays</div>' +
             '</div>';
         });
@@ -99,7 +99,7 @@ function render(data) {
 
 
 function buildLineGraph(logs) {
-    if (!logs || logs.length === 0) return;
+    logs = logs || [];
 
     // group plays by date and mood
     var byDate = {};
@@ -116,7 +116,11 @@ function buildLineGraph(logs) {
     // only show last 14 days
     if (dates.length > 14) dates = dates.slice(dates.length - 14);
     var moods = Object.keys(moodSet);
-    if (dates.length < 2) return;
+    if (dates.length < 2) {
+        var c0 = document.getElementById('mood-graph-container');
+        if (c0) c0.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div><p style="color:#888;font-size:13px;">log songs on a couple of different days to see your mood graph</p>';
+        return;
+    }
 
     var W = 600, H = 200, padL = 20, padR = 20, padT = 16, padB = 32;
     var gW = W - padL - padR, gH = H - padT - padB;
@@ -173,12 +177,12 @@ function buildLineGraph(logs) {
     var legend = '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px;">';
     moods.forEach(function(mood) {
         var color = MOOD_COLORS[mood] || '#7f77dd';
-        legend += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:#888;">' + mood + '</span></div>';
+        legend += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:#888;">' + MoodFX.esc(mood) + '</span></div>';
     });
     legend += '</div>';
 
     var container = document.getElementById('mood-graph-container');
-    if (container) container.innerHTML = svg + legend;
+    if (container) container.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div>' + svg + legend;
 }
 
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);

@@ -97,7 +97,7 @@ function startTimer(startTime) {
 
 // ── session controls ───────────────────────────────────
 sessionStartBtn.addEventListener('click', function() {
-    if (!selectedMood) return;
+    if (!selectedMood) { MoodFX.nudgeMoods(); return; }
     apiCall('/sessions', 'POST', { mood: selectedMood }, function(err, result) {
         if (err || result.status !== 201) return;
         var startTime = new Date();
@@ -147,7 +147,7 @@ function loadRecommendations(mood) {
 
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         if (err || !result.data || result.data.length === 0) {
-            discoverContent.innerHTML = '<p style="color:#555;font-size:13px;">log some ' + mood + ' songs in your journal first!</p>';
+            discoverContent.innerHTML = '<p style="color:#555;font-size:13px;">log some ' + MoodFX.esc(mood) + ' songs in your journal first!</p>';
             return;
         }
 
@@ -194,7 +194,7 @@ function loadRecommendations(mood) {
 
             discoverContent.innerHTML = '';
             var grid = document.createElement('div');
-            grid.style.cssText = 'display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:start;width:100%;';
+            grid.className = 'rec-grid';   // columns set in motion.css (6 on desktop, 3 on phones)
 
             tracks.forEach(function(track) {
                 var card = document.createElement('div');
@@ -202,14 +202,14 @@ function loadRecommendations(mood) {
                 card.style.cssText = 'display:flex;flex-direction:column;';
                 card.innerHTML =
                     '<div style="position:relative;width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;margin-bottom:6px;background:#2a2a2a;">' +
-                        (track.albumArt ? '<img src="' + track.albumArt + '" style="width:100%;height:100%;object-fit:cover;" />' : '') +
+                        (track.albumArt ? '<img src="' + MoodFX.esc(track.albumArt) + '" style="width:100%;height:100%;object-fit:cover;" />' : '') +
                         '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">' +
-                            '<button class="session-play-btn" data-url="' + track.spotifyUrl + '" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" style="background:#1DB954;border:none;width:28px;height:28px;border-radius:50%;color:#fff;font-size:11px;cursor:pointer;">▶</button>' +
+                            '<button class="session-play-btn" data-url="' + MoodFX.esc(track.spotifyUrl) + '" data-id="' + track.id + '" data-title="' + MoodFX.esc(track.title) + '" data-artist="' + MoodFX.esc(track.artist) + '" data-art="' + MoodFX.esc(track.albumArt||'') + '" style="background:#1DB954;border:none;width:28px;height:28px;border-radius:50%;color:#fff;font-size:11px;cursor:pointer;">▶</button>' +
                         '</div>' +
                     '</div>' +
-                    '<div style="font-size:12px;color:#f0f0f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">' + track.title + '</div>' +
-                    '<div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;width:100%;">' + track.artist + '</div>' +
-                    '<button class="session-add-btn" data-id="' + track.id + '" data-title="' + track.title.replace(/"/g,'&quot;') + '" data-artist="' + track.artist.replace(/"/g,'&quot;') + '" data-art="' + (track.albumArt||'') + '" data-url="' + track.spotifyUrl + '" data-mood="' + mood + '" style="background:none;border:1px solid #333;border-radius:14px;color:#888;font-size:11px;padding:3px 10px;cursor:pointer;width:100%;margin-top:auto;">+ add</button>';
+                    '<div style="font-size:12px;color:#f0f0f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">' + MoodFX.esc(track.title) + '</div>' +
+                    '<div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;width:100%;">' + MoodFX.esc(track.artist) + '</div>' +
+                    '<button class="session-add-btn" data-id="' + track.id + '" data-title="' + MoodFX.esc(track.title) + '" data-artist="' + MoodFX.esc(track.artist) + '" data-art="' + MoodFX.esc(track.albumArt||'') + '" data-url="' + MoodFX.esc(track.spotifyUrl) + '" data-mood="' + MoodFX.esc(mood) + '" style="background:none;border:1px solid #333;border-radius:14px;color:#888;font-size:11px;padding:3px 10px;cursor:pointer;width:100%;margin-top:auto;">+ add</button>';
                 grid.appendChild(card);
             });
 
@@ -253,7 +253,7 @@ var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('session-now-play
     getSession: function() { return activeSession; },
     onTrack: function(track) {
         if (track.albumArt) {
-            ringArt.style.backgroundImage = 'url("' + track.albumArt + '")';
+            ringArt.style.backgroundImage = 'url("' + String(track.albumArt).replace(/["\\]/g, '') + '")';
             ringArt.classList.add('show');
         } else {
             ringArt.classList.remove('show');
@@ -321,10 +321,12 @@ function addChip(name, emoji, id) {
     delBtn.innerHTML = '🗑';
     delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
-        delBtn.innerHTML = '...'; delBtn.disabled = true;
-        apiCall('/moods/' + id, 'DELETE', null, function() {
-            if (selectedMood === name) selectedMood = null;
-            wrap.remove();
+        if (selectedMood === name && !activeSession) selectedMood = null;
+        MoodFX.undoable({
+            message: 'deleted “' + name + '”', mood: name,
+            hide:    function() { wrap.style.display = 'none'; },
+            restore: function() { wrap.style.display = ''; },
+            commit:  function() { apiCall('/moods/' + id, 'DELETE', null, function() { wrap.remove(); }); }
         });
     });
 
@@ -348,8 +350,13 @@ chips.forEach(function(chip) {
     delBtn.innerHTML = '🗑';
     delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
-        wrap.remove();
-        if (selectedMood === chip.dataset.mood) selectedMood = null;
+        var m = chip.dataset.mood;
+        if (selectedMood === m && !activeSession) { selectedMood = null; chip.classList.remove('selected'); }
+        MoodFX.hideMood(m);
+        MoodFX.toast('removed “' + m + '” from your moods', m, {
+            action: 'undo', duration: 5000,
+            onAction: function() { MoodFX.unhideMood(m); }
+        });
     });
     wrap.appendChild(delBtn);
 });

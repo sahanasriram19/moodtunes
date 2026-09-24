@@ -231,7 +231,7 @@ function buildDropdown() {
     var info = document.createElement('div');
     info.style.cssText = 'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border, #222);';
     info.innerHTML =
-        '<div style="font-size:14px;font-weight:500;color:var(--text-primary,#f0f0f0);margin-bottom:2px;">' + username + '</div>' +
+        '<div style="font-size:14px;font-weight:500;color:var(--text-primary,#f0f0f0);margin-bottom:2px;">' + (window.MoodFX ? MoodFX.esc(username) : username) + '</div>' +
         '<div style="font-size:11px;color:var(--text-muted,#555);">moodtunes account</div>';
     d.appendChild(info);
 

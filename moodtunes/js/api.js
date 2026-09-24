@@ -21,6 +21,8 @@ function apiCall(endpoint, method, body, callback) {
         }
     };
     if (body) options.body = JSON.stringify(body);
+    // keepalive lets writes complete even if the user navigates away mid-request
+    if (method !== 'GET') options.keepalive = true;
 
     fetch(BACKEND_URL + endpoint, options)
         .then(function(res) {

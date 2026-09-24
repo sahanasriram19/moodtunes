@@ -3,7 +3,6 @@ requireAuth();
 
 var selectedMood  = null;
 var activeSession = null;
-var spotifyToken  = null;
 
 var chips         = document.querySelectorAll('.chip');
 var songSearch    = document.getElementById('song-search');
@@ -15,19 +14,6 @@ var sessionBtn    = document.getElementById('session-btn');
 var sessionEndBtn = document.getElementById('session-end-btn');
 var sessionLabel  = document.getElementById('session-mood-label');
 var sessionTime   = document.getElementById('session-start-time');
-
-// ── spotify search token ───────────────────────────────
-async function loadSpotifyToken() {
-    try {
-        var creds = btoa(CONFIG.SPOTIFY_CLIENT_ID + ':' + CONFIG.SPOTIFY_CLIENT_SECRET);
-        var r = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            headers: { 'Authorization': 'Basic ' + creds, 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'grant_type=client_credentials'
-        });
-        spotifyToken = (await r.json()).access_token;
-    } catch(e) { console.error('spotify token:', e); }
-}
 
 // ── custom moods ───────────────────────────────────────
 var EMOJIS = ['🎵','🌟','💫','🔥','❤️','💜','💙','🌙','⚡','🌈','🎶','🎸','🎹','🥺','😤','🤩','😴','🌊','🍃','✨','🎯','💪','🧠','👻','🦋','🌸','🌺','🎪','🏆','💎'];
@@ -58,10 +44,12 @@ function addChip(name, emoji, id) {
     delBtn.innerHTML = '🗑';
     delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
-        delBtn.innerHTML = '...'; delBtn.disabled = true;
-        apiCall('/moods/' + id, 'DELETE', null, function() {
-            if (selectedMood === name) selectedMood = null;
-            wrap.remove();
+        if (selectedMood === name) selectedMood = null;
+        MoodFX.undoable({
+            message: 'deleted “' + name + '”', mood: name,
+            hide:    function() { wrap.style.display = 'none'; },
+            restore: function() { wrap.style.display = ''; },
+            commit:  function() { apiCall('/moods/' + id, 'DELETE', null, function() { wrap.remove(); }); }
         });
     });
 
@@ -85,8 +73,13 @@ chips.forEach(function(chip) {
     delBtn.innerHTML = '🗑';
     delBtn.style.cssText = 'display:none;background:none;border:none;color:#e05c5c;font-size:20px;padding:2px 4px;cursor:pointer;line-height:1;';
     delBtn.addEventListener('click', function() {
-        wrap.remove();
-        if (selectedMood === chip.dataset.mood) selectedMood = null;
+        var m = chip.dataset.mood;
+        if (selectedMood === m) { selectedMood = null; chip.classList.remove('selected'); }
+        MoodFX.hideMood(m);
+        MoodFX.toast('removed “' + m + '” from your moods', m, {
+            action: 'undo', duration: 5000,
+            onAction: function() { MoodFX.unhideMood(m); }
+        });
     });
     wrap.appendChild(delBtn);
 
@@ -222,16 +215,20 @@ songSearch.addEventListener('input', function() {
     searchTimer = setTimeout(function() { doSearch(q); }, 350);
 });
 
-async function doSearch(query) {
-    if (!spotifyToken) { await loadSpotifyToken(); }
-    try {
-        var r = await fetch('https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) + '&type=track&limit=5', {
-            headers: { 'Authorization': 'Bearer ' + spotifyToken }
-        });
-        var data = await r.json();
-        if (data.error && data.error.status === 401) { await loadSpotifyToken(); return doSearch(query); }
-        showResults(data.tracks ? data.tracks.items : []);
-    } catch(e) { console.error('search:', e); }
+// searches go through the backend (/spotify/search-tracks) so the Spotify
+// client secret never has to be shipped to the browser
+var latestQuery = '';
+function doSearch(query) {
+    latestQuery = query;
+    if (!searchResults.children.length) searchResults.innerHTML = MoodFX.skeleton('rows', 3);
+    apiCall('/spotify/search-tracks?q=' + encodeURIComponent(query) + '&limit=5', 'GET', null, function(err, res) {
+        if (query !== latestQuery) return;               // a newer search already started
+        if (err || !res || res.status !== 200 || !Array.isArray(res.data)) {
+            searchResults.innerHTML = '<p style="color:#888;font-size:13px;padding:8px 0;">search is unavailable right now — try again in a moment</p>';
+            return;
+        }
+        showResults(res.data);
+    });
 }
 
 function showResults(tracks) {
@@ -248,8 +245,8 @@ function showResults(tracks) {
         var item = document.createElement('div');
         item.classList.add('result-item');
         item.innerHTML =
-            (art ? '<img src="' + art + '" alt="album art" />' : '<div style="width:44px;height:44px;background:#2a2a2a;border-radius:6px;flex-shrink:0;"></div>') +
-            '<div class="result-text"><div class="result-title">' + track.name + '</div><div class="result-artist">' + artists + '</div></div>' +
+            (art ? '<img src="' + MoodFX.esc(art) + '" alt="album art" />' : '<div style="width:44px;height:44px;background:#2a2a2a;border-radius:6px;flex-shrink:0;"></div>') +
+            '<div class="result-text"><div class="result-title">' + MoodFX.esc(track.name) + '</div><div class="result-artist">' + MoodFX.esc(artists) + '</div></div>' +
             '<span class="result-hint">▶ play</span>';
 
         item.addEventListener('click', function() {
@@ -264,9 +261,10 @@ function showResults(tracks) {
             panel.style.cssText = 'background:#1a1a2e;border:1px solid #7f77dd44;border-radius:10px;padding:14px 16px;margin:4px 0 8px;';
 
             var moodPickerHTML = !selectedMood
-                ? '<div style="margin-bottom:12px;"><div style="font-size:12px;color:#888;margin-bottom:8px;">pick a mood first</div><div style="display:flex;flex-wrap:wrap;gap:6px;">' +
-                      ['happy','sad','hype','heartbreak','nostalgic','focused','chill'].map(function(m) {
-                          return '<button class="chip inline-mood-chip" data-mood="' + m + '" style="font-size:11px;padding:5px 10px;">' + m + '</button>';
+                ? '<div style="margin-bottom:12px;"><div style="font-size:12px;color:#888;margin-bottom:8px;">pick a mood first</div><div class="inline-mood-picker" style="display:flex;flex-wrap:wrap;gap:6px;">' +
+                      MoodFX.visibleMoods().map(function(m) {
+                          var custom = document.querySelector('.mood-chips .custom-chip[data-mood="' + CSS.escape(m) + '"]');
+                          return '<button class="chip inline-mood-chip" data-mood="' + MoodFX.esc(m) + '"' + (custom && custom.dataset.emoji ? ' data-emoji="' + MoodFX.esc(custom.dataset.emoji) + '"' : '') + ' style="font-size:11px;padding:5px 10px;">' + MoodFX.esc(m) + '</button>';
                       }).join('') + '</div></div>'
                 : '';
 
@@ -287,7 +285,7 @@ function showResults(tracks) {
                     panel.querySelectorAll('.inline-mood-chip').forEach(function(c) { c.classList.remove('selected'); });
                     chip.classList.add('selected');
                     chips.forEach(function(c) { c.classList.remove('selected'); });
-                    document.querySelectorAll('.chip[data-mood="' + chip.dataset.mood + '"]').forEach(function(c) { c.classList.add('selected'); });
+                    document.querySelectorAll('.chip[data-mood="' + CSS.escape(chip.dataset.mood) + '"]').forEach(function(c) { c.classList.add('selected'); });
                     selectedMood = chip.dataset.mood;
                     document.getElementById('search-note-input').focus();
                 });
@@ -296,14 +294,14 @@ function showResults(tracks) {
             if (selectedMood) document.getElementById('search-note-input').focus();
 
             document.getElementById('just-play-btn').addEventListener('click', function() {
-                if (!selectedMood) { alert('pick a mood first!'); return; }
+                if (!selectedMood) { MoodFX.nudgeMoods(panel); return; }
                 panel.remove();
                 logSong(track.id, track.name, artists, art, track.external_urls.spotify, selectedMood, '');
                 openSpotify(track.external_urls.spotify);
             });
 
             document.getElementById('play-with-note-btn').addEventListener('click', function() {
-                if (!selectedMood) { alert('pick a mood first!'); return; }
+                if (!selectedMood) { MoodFX.nudgeMoods(panel); return; }
                 var note = document.getElementById('search-note-input').value.trim();
                 panel.remove();
                 logSong(track.id, track.name, artists, art, track.external_urls.spotify, selectedMood, note);
@@ -364,18 +362,18 @@ function loadLogs(highlightSongId) {
                         highlighted = true;
                     }
                     card.innerHTML =
-                        '<img class="song-art" src="' + log.album_art + '" alt="album art" />' +
+                        '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
                         '<div class="song-info">' +
-                            '<div class="song-title">' + log.title + '</div>' +
-                            '<div class="song-artist">' + log.artist + '</div>' +
-                            (log.note ? '<div class="log-note">"' + log.note + '"</div>' : '') +
+                            '<div class="song-title">' + MoodFX.esc(log.title) + '</div>' +
+                            '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
+                            (log.note ? '<div class="log-note">"' + MoodFX.esc(log.note) + '"</div>' : '') +
                             '<div class="log-meta">' +
-                                '<span class="mood-badge">' + log.mood + '</span>' +
+                                '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                                 '<span class="plays-text">' + log.play_count + ' play' + (log.play_count !== 1 ? 's' : '') + '</span>' +
                                 '<span class="date-text">' + formatTimestamp(log.last_logged) + '</span>' +
                             '</div>' +
                         '</div>' +
-                        '<button class="play-btn log-play-btn" data-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + log.mood + '" data-title="' + log.title.replace(/"/g, '&quot;') + '" data-artist="' + log.artist.replace(/"/g, '&quot;') + '" data-art="' + log.album_art + '" data-url="' + log.spotify_url + '">▶</button>';
+                        '<button class="play-btn log-play-btn" data-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-title="' + MoodFX.esc(log.title) + '" data-artist="' + MoodFX.esc(log.artist) + '" data-art="' + MoodFX.esc(log.album_art) + '" data-url="' + MoodFX.esc(log.spotify_url) + '">▶</button>';
                     logsList.appendChild(card);
                 });
             });
@@ -388,9 +386,13 @@ document.addEventListener('click', function(e) {
         openSpotify(e.target.dataset.url);
     }
     if (e.target.classList.contains('journal-delete-btn')) {
-        if (!confirm('remove this song from your journal?')) return;
-        apiCall('/logs/' + e.target.dataset.id, 'DELETE', null, function(err) {
-            if (!err) { var c = document.getElementById('log-' + e.target.dataset.id); if (c) c.remove(); }
+        var logId = e.target.dataset.id;
+        var card = document.getElementById('log-' + logId);
+        MoodFX.undoable({
+            message: 'removed from your journal',
+            hide:    function() { if (card) card.style.display = 'none'; },
+            restore: function() { if (card) card.style.display = ''; },
+            commit:  function() { apiCall('/logs/' + logId, 'DELETE', null, function(err) { if (!err && card) card.remove(); }); }
         });
     }
 });
@@ -423,7 +425,7 @@ function loadSessionRecs(mood) {
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         var logs = Array.isArray(result && result.data) ? result.data : [];
         if (err || logs.length === 0) {
-            sessionRecs.innerHTML = '<p style="color:#666;font-size:13px;">log some ' + mood + ' songs first to get recommendations</p>';
+            sessionRecs.innerHTML = '<p style="color:#666;font-size:13px;">log some ' + MoodFX.esc(mood) + ' songs first to get recommendations</p>';
             return;
         }
         logs.sort(function(a, b) { return b.play_count - a.play_count; });
@@ -451,11 +453,11 @@ function loadSessionRecs(mood) {
                 card.classList.add('session-rec-card');
                 card.innerHTML =
                     '<div class="rec-img-wrap">' +
-                        (track.albumArt ? '<img src="' + track.albumArt + '" alt="album art" />' : '<div class="rec-no-art">♪</div>') +
+                        (track.albumArt ? '<img src="' + MoodFX.esc(track.albumArt) + '" alt="album art" />' : '<div class="rec-no-art">♪</div>') +
                         '<div class="rec-play-overlay"><button class="play-btn">▶</button></div>' +
                     '</div>' +
-                    '<div class="rec-title">' + track.title + '</div>' +
-                    '<div class="rec-artist">' + track.artist + '</div>';
+                    '<div class="rec-title">' + MoodFX.esc(track.title) + '</div>' +
+                    '<div class="rec-artist">' + MoodFX.esc(track.artist) + '</div>';
                 card.addEventListener('click', (function(t) {
                     return function() {
                         openSpotify(t.spotifyUrl);
@@ -494,7 +496,7 @@ function showSessionSummary(mood, startTime, endTime, songs) {
 
 sessionBtn.addEventListener('click', function() {
     if (activeSession) { endSession(); }
-    else { if (!selectedMood) { alert('pick a mood first!'); return; } startSession(selectedMood); }
+    else { if (!selectedMood) { MoodFX.nudgeMoods(); return; } startSession(selectedMood); }
 });
 sessionEndBtn.addEventListener('click', endSession);
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
@@ -564,7 +566,6 @@ document.addEventListener('visibilitychange', function() {
 
 // boot — sessions only start when you click the button
 // but if YOU started one this browser session, restore it across tab switches
-loadSpotifyToken();
 loadLogs();
 
 var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('now-playing'), {

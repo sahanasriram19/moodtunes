@@ -73,7 +73,7 @@ function renderGrid(grouped) {
         card.dataset.mood = mood;
         card.innerHTML =
             buildCoverHTML(sorted, mood, 'small') +
-            '<div class="playlist-card-title">' + mood + ' playlist</div>' +
+            '<div class="playlist-card-title">' + MoodFX.esc(mood) + ' playlist</div>' +
             '<div class="playlist-card-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>';
         card.addEventListener('click', (function(m, s) {
             return function() { openPlaylist(m, s); };
@@ -99,7 +99,7 @@ function openPlaylist(mood, songs) {
         '<div class="playlist-view-header">' +
             '<div id="playlist-cover-wrap">' + buildCoverHTML(listSongs, mood, 'large') + '</div>' +
             '<div class="playlist-view-info">' +
-                '<div class="playlist-view-title">' + mood + ' playlist</div>' +
+                '<div class="playlist-view-title">' + MoodFX.esc(mood) + ' playlist</div>' +
                 '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' · built from your journal</div>' +
                 '<div style="font-size:12px;color:#555;margin-top:4px;">drag to reorder · cover shows top 4</div>' +
             '</div>' +
@@ -120,23 +120,23 @@ function openPlaylist(mood, songs) {
         card.draggable = true;
         card.innerHTML =
             '<div class="drag-handle" title="drag to reorder">⠿</div>' +
-            '<img class="song-art" src="' + song.album_art + '" alt="album art" />' +
+            '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="album art" />' +
             '<div class="song-info">' +
-                '<div class="song-title">' + song.title + '</div>' +
-                '<div class="song-artist">' + song.artist + '</div>' +
-                '<div class="log-note-area" id="pl-note-area-' + song.song_id + '-' + mood + '">' +
+                '<div class="song-title">' + MoodFX.esc(song.title) + '</div>' +
+                '<div class="song-artist">' + MoodFX.esc(song.artist) + '</div>' +
+                '<div class="log-note-area" id="pl-note-area-' + song.song_id + '-' + MoodFX.esc(mood) + '">' +
                     (song.note
-                        ? '<div class="log-note">"' + song.note + '"</div><button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + mood + '" data-note="' + song.note.replace(/"/g, '&quot;') + '" data-source="playlist">edit note</button>'
-                        : '<button class="add-note-btn" data-song-id="' + song.song_id + '" data-mood="' + mood + '" data-source="playlist">+ add note</button>') +
+                        ? '<div class="log-note">"' + MoodFX.esc(song.note) + '"</div><button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(song.note) + '" data-source="playlist">edit note</button>'
+                        : '<button class="add-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>') +
                 '</div>' +
                 '<div class="log-meta">' +
-                    '<span class="mood-badge">' + song.mood + '</span>' +
+                    '<span class="mood-badge">' + MoodFX.esc(song.mood) + '</span>' +
                     '<span class="plays-text">' + song.play_count + ' play' + (song.play_count !== 1 ? 's' : '') + '</span>' +
                     '<span class="date-text">' + formatTimestamp(song.last_logged) + '</span>' +
                 '</div>' +
             '</div>' +
-            '<button class="play-btn song-play-btn" data-url="' + song.spotify_url + '">▶</button>' +
-            '<button class="delete-btn playlist-remove-btn" data-songid="' + song.song_id + '" data-mood="' + mood + '" title="remove from view">✕</button>';
+            '<button class="play-btn song-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '">▶</button>' +
+            '<button class="delete-btn playlist-remove-btn" data-songid="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" title="remove from view">✕</button>';
         block.appendChild(card);
     });
 
@@ -156,7 +156,7 @@ function openPlaylist(mood, songs) {
         });
         saveOrder(mood, orderedIds);
         document.getElementById('playlist-cover-wrap').innerHTML = buildCoverHTML(top4, mood, 'large');
-        var gridCard = document.querySelector('.playlist-card[data-mood="' + mood + '"]');
+        var gridCard = document.querySelector('.playlist-card[data-mood="' + CSS.escape(mood) + '"]');
         if (gridCard) {
             var oldCover = gridCard.querySelector('.playlist-cover');
             if (oldCover) {
@@ -271,7 +271,7 @@ function showInlineNotePlaylist(songId, mood, existingNote) {
     var area = document.getElementById('pl-note-area-' + songId + '-' + mood);
     if (!area) return;
     area.innerHTML =
-        '<textarea class="note-textarea" id="pl-inline-note-' + songId + '" style="margin-top:8px;" placeholder="what does this song mean to you right now...">' + (existingNote || '') + '</textarea>' +
+        '<textarea class="note-textarea" id="pl-inline-note-' + songId + '" style="margin-top:8px;" placeholder="what does this song mean to you right now...">' + MoodFX.esc(existingNote || '') + '</textarea>' +
         '<div class="note-btn-row">' +
             '<button class="skip-note-btn" id="pl-cancel-' + songId + '">cancel</button>' +
             '<button class="save-note-btn" id="pl-save-' + songId + '">save</button>' +
@@ -281,15 +281,15 @@ function showInlineNotePlaylist(songId, mood, existingNote) {
         var note = document.getElementById('pl-inline-note-' + songId).value.trim();
         apiCall('/logs/latest/' + songId + '/' + mood, 'PUT', { note: note }, function() {
             area.innerHTML = note
-                ? '<div class="log-note">"' + note + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + mood + '" data-note="' + note.replace(/"/g, '&quot;') + '" data-source="playlist">edit note</button>'
-                : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + mood + '" data-source="playlist">+ add note</button>';
+                ? '<div class="log-note">"' + MoodFX.esc(note) + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(note) + '" data-source="playlist">edit note</button>'
+                : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>';
         });
     });
 
     document.getElementById('pl-cancel-' + songId).addEventListener('click', function() {
         area.innerHTML = existingNote
-            ? '<div class="log-note">"' + existingNote + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + mood + '" data-note="' + existingNote.replace(/"/g, '&quot;') + '" data-source="playlist">edit note</button>'
-            : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + mood + '" data-source="playlist">+ add note</button>';
+            ? '<div class="log-note">"' + MoodFX.esc(existingNote) + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(existingNote) + '" data-source="playlist">edit note</button>'
+            : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>';
     });
 }
 

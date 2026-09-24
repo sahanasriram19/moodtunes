@@ -336,3 +336,45 @@
 /* labels sit on top of the stronger mood glow — keep them readable in every mood */
 body .section-label,
 body .section-subtitle { color: color-mix(in srgb, var(--text-primary, #f0f0f0) 62%, transparent) !important; }
+
+/* ── toast action (undo) ──────────────────────────────── */
+.mt-toast { overflow: hidden; }
+.mt-toast-action {
+  margin-left: 6px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+  font-size: 12px; font-weight: 600; letter-spacing: .02em;
+  background: var(--mc); color: var(--mc-ink, #fff); border: none;
+  transition: transform .15s;
+}
+.mt-toast-action:hover { transform: scale(1.06); }
+.mt-toast-timer {
+  position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
+  background: var(--mc); transform-origin: left; opacity: .7;
+  animation: toast-timer linear forwards;
+}
+@keyframes toast-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ── "pick a mood first" shake ───────────────────────── */
+.mt-shake { animation: shake .5s cubic-bezier(.36,.07,.19,.97); }
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-7px); }
+  40%, 60% { transform: translateX(7px); }
+}
+
+/* ── restore hidden moods (manage mode) ───────────────── */
+#hidden-moods-restore { margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border, #2a2a2a); }
+#hidden-moods-restore .restore-label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-secondary, #999); margin-bottom: 10px; }
+#hidden-moods-restore .restore-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.restore-chip {
+  padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px;
+  background: transparent; color: var(--text-secondary, #aaa);
+  border: 1px dashed color-mix(in srgb, var(--mc) 60%, transparent);
+  transition: background .2s, color .2s, border-color .2s;
+}
+.restore-chip:hover { background: color-mix(in srgb, var(--mc) 18%, transparent); color: var(--text-primary, #fff); border-style: solid; }
+
+/* ── session recommendation grid ─────────────────────── */
+.rec-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: start; width: 100%; }
+@media (max-width: 768px) { .rec-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } }
+.mt-toast-action, .restore-chip { font-family: inherit; }

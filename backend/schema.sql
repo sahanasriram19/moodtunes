@@ -1,3 +1,4 @@
+schemasql
 CREATE TABLE IF NOT EXISTS User (
     id                    INT AUTO_INCREMENT PRIMARY KEY,
     username              VARCHAR(255) NOT NULL UNIQUE,
@@ -54,4 +55,14 @@ CREATE TABLE IF NOT EXISTS SpotifyPlaylist (
     playlist_id VARCHAR(255) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES User(id),
     UNIQUE KEY unique_user_mood (user_id, mood)
+);
+
+-- built-in moods a user has removed from their page
+CREATE TABLE IF NOT EXISTS HiddenMood (
+    id        INT AUTO_INCREMENT PRIMARY KEY,
+    user_id   INT NOT NULL,
+    mood      VARCHAR(50) NOT NULL,
+    hidden_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    UNIQUE KEY unique_user_hidden_mood (user_id, mood)
 );

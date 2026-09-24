@@ -411,3 +411,47 @@ module.exports.getNowPlaying = (req, res, next) => {
         });
     });
 };
+
+// ── track search for the journal (app token, server-side) ──────────────────
+// The frontend used to fetch a Spotify token itself, which meant shipping the
+// client secret to every browser. Searching through the backend keeps it here.
+// Uses the app's own client-credentials token, so it works even for users who
+// haven't connected their Spotify account yet.
+let appToken = null;
+let appTokenExpires = 0;
+
+function getAppToken(callback) {
+    if (appToken && Date.now() < appTokenExpires - 60000) return callback(null, appToken);
+    const creds = Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64');
+    axios.post('https://accounts.spotify.com/api/token', 'grant_type=client_credentials',
+        { headers: { 'Authorization': 'Basic ' + creds, 'Content-Type': 'application/x-www-form-urlencoded' } }
+    )
+    .then(function(r) {
+        appToken = r.data.access_token;
+        appTokenExpires = Date.now() + (r.data.expires_in || 3600) * 1000;
+        callback(null, appToken);
+    })
+    .catch(callback);
+}
+
+module.exports.searchTracks = (req, res, next) => {
+    const q = (req.query.q || '').trim();
+    if (!q) return res.status(400).json({ message: 'query required' });
+    const limit = Math.min(parseInt(req.query.limit, 10) || 5, 20);
+
+    function run(retried) {
+        getAppToken(function(err, token) {
+            if (err) return res.status(502).json({ message: 'Spotify unavailable' });
+            axios.get('https://api.spotify.com/v1/search', {
+                params: { q: q, type: 'track', limit: limit },
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(function(r) { res.status(200).json((r.data.tracks && r.data.tracks.items) || []); })
+            .catch(function(e) {
+                if (!retried && e.response && e.response.status === 401) { appToken = null; return run(true); }
+                res.status(502).json({ message: 'Search failed' });
+            });
+        });
+    }
+    run(false);
+};

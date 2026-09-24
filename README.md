@@ -185,15 +185,7 @@ In your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard):
 
 ### 5. Configure frontend
 
-Create `moodtunes/js/config.js`:
-
-```javascript
-const CONFIG = {
-    SPOTIFY_CLIENT_ID: 'your_spotify_client_id',
-    SPOTIFY_CLIENT_SECRET: 'your_spotify_client_secret',
-    LASTFM_API_KEY: 'your_lastfm_api_key'
-};
-```
+`moodtunes/js/config.js` no longer holds any keys. Spotify search goes through the backend (`/api/spotify/search-tracks`), so the client secret only lives in `backend/.env`.
 
 ### 6. Run the app
 

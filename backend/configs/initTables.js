@@ -1,3 +1,4 @@
+inittables
 require('dotenv').config();
 
 const pool = require('../src/services/db');
@@ -50,6 +51,15 @@ CREATE TABLE IF NOT EXISTS SessionLog (
     spotify_url TEXT,
     played_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (session_id) REFERENCES Session(id)
+);
+
+CREATE TABLE IF NOT EXISTS HiddenMood (
+    id        INT AUTO_INCREMENT PRIMARY KEY,
+    user_id   INT NOT NULL,
+    mood      VARCHAR(50) NOT NULL,
+    hidden_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    UNIQUE KEY unique_user_hidden_mood (user_id, mood)
 );
 
 CREATE TABLE IF NOT EXISTS SpotifyPlaylist (

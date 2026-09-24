@@ -190,9 +190,13 @@ function skeleton(kind, n) {
 }
 
 // ── toast ──────────────────────────────────────────────
-function toast(text, mood) {
+// opts: { action: 'undo', onAction: fn, duration: ms }
+var toastTimer = null;
+function toast(text, mood, opts) {
+    opts = opts || {};
     var old = document.querySelector('.mt-toast');
     if (old) old.remove();
+    clearTimeout(toastTimer);
     var t = document.createElement('div');
     t.className = 'mt-toast';
     t.setAttribute('role', 'status');
@@ -203,13 +207,183 @@ function toast(text, mood) {
     msg.textContent = text;
     t.appendChild(dot);
     t.appendChild(msg);
+    if (opts.action) {
+        var btn = document.createElement('button');
+        btn.className = 'mt-toast-action';
+        btn.textContent = opts.action;
+        btn.addEventListener('click', function() {
+            dismiss();
+            if (opts.onAction) opts.onAction();
+        });
+        t.appendChild(btn);
+        // a thin bar that runs down while the action is still available
+        var bar = document.createElement('span');
+        bar.className = 'mt-toast-timer';
+        bar.style.animationDuration = (opts.duration || 5000) + 'ms';
+        t.appendChild(bar);
+    }
     document.body.appendChild(t);
     requestAnimationFrame(function() { t.classList.add('show'); });
-    setTimeout(function() {
+    function dismiss() {
+        clearTimeout(toastTimer);
         t.classList.remove('show');
         setTimeout(function() { t.remove(); }, 400);
-    }, 2600);
+    }
+    toastTimer = setTimeout(dismiss, opts.duration || 2600);
+    return dismiss;
 }
+
+// ── delete with undo ───────────────────────────────────
+// hides the thing straight away, offers "undo" for 5s, then commits.
+// anything still pending when the page is left is committed immediately.
+var pending = [];
+function undoable(o) {
+    var entry = { done: false, commit: o.commit };
+    pending.push(entry);
+    if (o.hide) o.hide();
+    var timer = setTimeout(finish, o.duration || 5000);
+    function finish() {
+        if (entry.done) return;
+        entry.done = true;
+        pending.splice(pending.indexOf(entry), 1);
+        entry.commit();
+    }
+    toast(o.message, o.mood, {
+        action: 'undo', duration: o.duration || 5000,
+        onAction: function() {
+            if (entry.done) return;
+            entry.done = true;
+            clearTimeout(timer);
+            pending.splice(pending.indexOf(entry), 1);
+            if (o.restore) o.restore();
+        }
+    });
+}
+window.addEventListener('pagehide', function() {
+    pending.slice().forEach(function(e) { if (!e.done) { e.done = true; e.commit(); } });
+});
+
+// ── "pick a mood first" nudge (replaces alert()) ───────
+function nudgeMoods(scope) {
+    var targets = [];
+    if (scope && scope.querySelector) {
+        var inner = scope.querySelector('.inline-mood-picker');
+        if (inner) targets.push(inner);
+    }
+    var main = document.querySelector('.mood-chips');
+    if (main) targets.push(main);
+    targets.forEach(function(el) {
+        el.classList.remove('mt-shake');
+        void el.offsetWidth;
+        el.classList.add('mt-shake');
+    });
+    if (main && !isInView(main)) main.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    toast('pick a mood first ✨');
+}
+function isInView(el) {
+    var r = el.getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= innerHeight;
+}
+
+// ── hidden built-in moods ──────────────────────────────
+// users can remove any built-in mood from their page; the choice is saved to
+// the backend (with a local copy so the page doesn't flash hidden chips)
+var DEFAULT_MOODS = ['happy', 'sad', 'hype', 'heartbreak', 'nostalgic', 'focused', 'chill'];
+function hiddenKey() { return 'moodtunes_hidden_moods_' + (localStorage.getItem('moodtunes_username') || 'guest'); }
+var hiddenMoods = (function() {
+    try { var h = JSON.parse(localStorage.getItem(hiddenKey()) || '[]'); return Array.isArray(h) ? h : []; }
+    catch (e) { return []; }
+})();
+
+var hiddenStyle = document.createElement('style');
+hiddenStyle.id = 'mt-hidden-moods';
+document.head.appendChild(hiddenStyle);
+
+function saveHidden() {
+    try { localStorage.setItem(hiddenKey(), JSON.stringify(hiddenMoods)); } catch (e) {}
+}
+
+function applyHidden() {
+    // CSS rather than DOM removal, so chips added later by other scripts are covered too
+    hiddenStyle.textContent = hiddenMoods.map(function(m) {
+        var sel = '.chip[data-mood="' + CSS.escape(m) + '"]:not(.custom-chip)';
+        return '.chip-wrap:has(> ' + sel + '), .mood-chips > ' + sel + ', .inline-mood-picker ' + sel;
+    }).join(',\n') + (hiddenMoods.length ? ' { display: none !important; }' : '');
+    renderRestore();
+}
+
+function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
+
+function hideMood(m) {
+    if (!m || isHidden(m)) return;
+    hiddenMoods.push(m);
+    saveHidden();
+    applyHidden();
+    if (currentMood === m) setMood(null);
+    apiCall('/moods/hidden', 'POST', { mood: m }, function() {});
+}
+
+function unhideMood(m) {
+    if (!isHidden(m)) return;
+    hiddenMoods.splice(hiddenMoods.indexOf(m), 1);
+    saveHidden();
+    applyHidden();
+    apiCall('/moods/hidden/' + encodeURIComponent(m), 'DELETE', null, function() {});
+}
+
+function syncHidden() {
+    apiCall('/moods/hidden', 'GET', null, function(err, res) {
+        // older backend without the route: keep the local list
+        if (err || !res || res.status !== 200 || !Array.isArray(res.data)) return;
+        hiddenMoods = res.data.filter(function(m) { return DEFAULT_MOODS.indexOf(m) !== -1; });
+        saveHidden();
+        applyHidden();
+    });
+}
+
+// the moods currently on the page: visible built-ins + the user's custom ones
+function visibleMoods() {
+    var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
+    document.querySelectorAll('.mood-chips .chip.custom-chip[data-mood]').forEach(function(c) {
+        if (list.indexOf(c.dataset.mood) === -1) list.push(c.dataset.mood);
+    });
+    return list;
+}
+
+// "hidden moods — tap to bring back", shown inside the add-mood panel in manage mode
+function renderRestore() {
+    var host = document.getElementById('add-mood-section');
+    if (!host) return;
+    var box = document.getElementById('hidden-moods-restore');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'hidden-moods-restore';
+        host.insertBefore(box, host.firstChild);
+    }
+    box.innerHTML = '';
+    if (!hiddenMoods.length) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    var label = document.createElement('div');
+    label.className = 'restore-label';
+    label.textContent = 'hidden moods — tap to bring one back';
+    box.appendChild(label);
+    var row = document.createElement('div');
+    row.className = 'restore-row';
+    hiddenMoods.forEach(function(m) {
+        var b = document.createElement('button');
+        b.className = 'restore-chip';
+        b.style.setProperty('--mc', color(m));
+        b.textContent = '+ ' + (emoji(m) ? emoji(m) + ' ' : '') + m;
+        b.addEventListener('click', function() {
+            unhideMood(m);
+            toast(m + ' is back on your page', m);
+        });
+        row.appendChild(b);
+    });
+    box.appendChild(row);
+}
+
+applyHidden();
 
 // ── ripple on chip / button press ──────────────────────
 function ripple(el, evt) {
@@ -569,6 +743,8 @@ function boot() {
     mountAmbient();
     setMood(initialMood());
     decorate(document.body);
+    applyHidden();
+    syncHidden();
 
     // selecting any mood chip re-tints the page
     document.addEventListener('click', function(e) {
@@ -603,7 +779,10 @@ window.MoodFX = {
     setMood: setMood, getMood: function() { return currentMood; },
     skeleton: skeleton, toast: toast, confetti: confetti, countUp: countUp,
     sessionSummary: sessionSummary, nowPlaying: nowPlaying,
-    markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion
+    markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion,
+    undoable: undoable, nudgeMoods: nudgeMoods,
+    hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
+    DEFAULT_MOODS: DEFAULT_MOODS
 };
 
 })();

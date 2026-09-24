@@ -29,7 +29,7 @@ function searchSongHistory(query) {
     });
 
     if (matches.length === 0) {
-        songSearchResults.innerHTML = '<p style="color:#555;font-size:13px;padding:12px 0;">no songs found matching "' + query + '"</p>';
+        songSearchResults.innerHTML = '<p style="color:#555;font-size:13px;padding:12px 0;">no songs found matching "' + MoodFX.esc(query) + '"</p>';
         return;
     }
 
@@ -50,10 +50,10 @@ function searchSongHistory(query) {
             var date = new Date(e.last_logged);
             var dateStr = date.toLocaleDateString('en-SG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
             return '<div class="song-history-entry">' +
-                '<span class="mood-badge">' + e.mood + '</span>' +
+                '<span class="mood-badge">' + MoodFX.esc(e.mood) + '</span>' +
                 '<span class="song-history-date">' + dateStr + '</span>' +
                 '<span class="song-history-plays">' + e.play_count + ' play' + (e.play_count !== 1 ? 's' : '') + '</span>' +
-                (e.note ? '<span class="log-note" style="display:block;margin-top:4px;margin-left:0;">"' + e.note + '"</span>' : '') +
+                (e.note ? '<span class="log-note" style="display:block;margin-top:4px;margin-left:0;">"' + MoodFX.esc(e.note) + '"</span>' : '') +
             '</div>';
         }).join('');
 
@@ -61,13 +61,13 @@ function searchSongHistory(query) {
         card.classList.add('song-history-card');
         card.innerHTML =
             '<div class="song-history-header">' +
-                '<img src="' + song.album_art + '" alt="album art" />' +
+                '<img src="' + MoodFX.esc(song.album_art) + '" alt="album art" />' +
                 '<div class="song-history-info">' +
-                    '<div class="song-history-title">' + song.title + '</div>' +
-                    '<div class="song-history-artist">' + song.artist + '</div>' +
+                    '<div class="song-history-title">' + MoodFX.esc(song.title) + '</div>' +
+                    '<div class="song-history-artist">' + MoodFX.esc(song.artist) + '</div>' +
                     '<div class="song-history-total">' + totalPlays + ' total plays across ' + song.entries.length + ' day' + (song.entries.length !== 1 ? 's' : '') + '</div>' +
                 '</div>' +
-                '<button class="play-btn search-play-btn" data-url="' + song.spotify_url + '">▶</button>' +
+                '<button class="play-btn search-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '">▶</button>' +
             '</div>' +
             '<div class="song-history-entries">' + entryRows + '</div>';
 
@@ -107,10 +107,10 @@ function renderFlashback(logs) {
                 '<div class="flashback-title">a month ago today</div>' +
                 '<div class="flashback-sub">on ' + monthName + ' you were listening to</div>' +
                 '<div class="flashback-song">' +
-                    '<img src="' + match.album_art + '" alt="album art" />' +
+                    '<img src="' + MoodFX.esc(match.album_art) + '" alt="album art" />' +
                     '<div>' +
-                        '<div class="flashback-song-title">' + match.title + '</div>' +
-                        '<div class="flashback-song-artist">' + match.artist + '</div>' +
+                        '<div class="flashback-song-title">' + MoodFX.esc(match.title) + '</div>' +
+                        '<div class="flashback-song-artist">' + MoodFX.esc(match.artist) + '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -144,24 +144,24 @@ function renderTimeline(logs) {
                 card.classList.add('log-card');
                 card.id = 'history-log-' + log.id;
                 card.innerHTML =
-                    '<img class="song-art" src="' + log.album_art + '" alt="album art" />' +
+                    '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
                     '<div class="song-info">' +
-                        '<div class="song-title">' + log.title + '</div>' +
-                        '<div class="song-artist">' + log.artist + '</div>' +
+                        '<div class="song-title">' + MoodFX.esc(log.title) + '</div>' +
+                        '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
                         '<div class="log-note-area" id="note-area-' + log.id + '">' +
                             (log.note
-                                ? '<div class="log-note">"' + log.note + '"</div>' +
-                                  '<button class="edit-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + log.mood + '" data-note="' + log.note.replace(/"/g, '&quot;') + '">edit note</button>'
-                                : '<button class="add-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + log.mood + '">+ add note</button>') +
+                                ? '<div class="log-note">"' + MoodFX.esc(log.note) + '"</div>' +
+                                  '<button class="edit-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-note="' + MoodFX.esc(log.note) + '">edit note</button>'
+                                : '<button class="add-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '">+ add note</button>') +
                         '</div>' +
                         '<div class="log-meta">' +
-                            '<span class="mood-badge">' + log.mood + '</span>' +
+                            '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                             '<span class="plays-text">' + log.play_count + ' play' + (log.play_count !== 1 ? 's' : '') + '</span>' +
                             '<span class="date-text">' + formatTimestamp(log.last_logged) + '</span>' +
                         '</div>' +
                     '</div>' +
-                    '<button class="play-btn timeline-play-btn" data-url="' + log.spotify_url + '">▶</button>' +
-                    '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + log.mood + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>';
+                    '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '">▶</button>' +
+                    '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>';
                 group.appendChild(card);
             });
 
@@ -174,7 +174,7 @@ function showInlineNoteHistory(logId, songId, mood, existingNote) {
     var area = document.getElementById('note-area-' + logId);
     if (!area) return;
     area.innerHTML =
-        '<textarea class="note-textarea" id="inline-note-' + logId + '" style="margin-top:8px;" placeholder="what does this song mean to you right now...">' + (existingNote || '') + '</textarea>' +
+        '<textarea class="note-textarea" id="inline-note-' + logId + '" style="margin-top:8px;" placeholder="what does this song mean to you right now...">' + MoodFX.esc(existingNote || '') + '</textarea>' +
         '<div class="note-btn-row">' +
             '<button class="skip-note-btn" id="cancel-note-' + logId + '">cancel</button>' +
             '<button class="save-note-btn" id="save-note-' + logId + '">save</button>' +
@@ -184,15 +184,15 @@ function showInlineNoteHistory(logId, songId, mood, existingNote) {
         var note = document.getElementById('inline-note-' + logId).value.trim();
         apiCall('/logs/' + logId, 'PUT', { note: note }, function() {
             area.innerHTML = note
-                ? '<div class="log-note">"' + note + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + mood + '" data-note="' + note.replace(/"/g, '&quot;') + '">edit note</button>'
-                : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + mood + '">+ add note</button>';
+                ? '<div class="log-note">"' + MoodFX.esc(note) + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(note) + '">edit note</button>'
+                : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '">+ add note</button>';
         });
     });
 
     document.getElementById('cancel-note-' + logId).addEventListener('click', function() {
         area.innerHTML = existingNote
-            ? '<div class="log-note">"' + existingNote + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + mood + '" data-note="' + existingNote.replace(/"/g, '&quot;') + '">edit note</button>'
-            : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + mood + '">+ add note</button>';
+            ? '<div class="log-note">"' + MoodFX.esc(existingNote) + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(existingNote) + '">edit note</button>'
+            : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '">+ add note</button>';
     });
 }
 
@@ -233,13 +233,13 @@ function renderSessions() {
                         songs.map(function(s) {
                             return '<div class="session-song-thumb" id="ssong-' + s.id + '">' +
                                 '<div class="thumb-img-wrap">' +
-                                    '<img src="' + s.album_art + '" alt="album art" />' +
+                                    '<img src="' + MoodFX.esc(s.album_art) + '" alt="album art" />' +
                                     '<div class="thumb-play-overlay">' +
-                                        '<button class="play-btn session-thumb-play" data-url="' + s.spotify_url + '">▶</button>' +
+                                        '<button class="play-btn session-thumb-play" data-url="' + MoodFX.esc(s.spotify_url) + '">▶</button>' +
                                     '</div>' +
                                 '</div>' +
-                                '<p>' + s.title + '</p>' +
-                                '<p class="thumb-artist">' + s.artist + '</p>' +
+                                '<p>' + MoodFX.esc(s.title) + '</p>' +
+                                '<p class="thumb-artist">' + MoodFX.esc(s.artist) + '</p>' +
                                 '<div class="thumb-actions">' +
                                     '<button class="session-song-delete" data-session-id="' + session.id + '" data-song-id="' + s.id + '">✕ remove</button>' +
                                 '</div>' +
@@ -249,7 +249,7 @@ function renderSessions() {
 
                 card.innerHTML =
                     '<div class="session-history-header">' +
-                        '<div class="session-history-mood">' + session.mood + ' session</div>' +
+                        '<div class="session-history-mood">' + MoodFX.esc(session.mood) + ' session</div>' +
                         '<div class="session-history-meta">' + startStr + duration + '</div>' +
                         '<button class="session-delete-btn" data-session-id="' + session.id + '">delete session</button>' +
                     '</div>' +
@@ -289,23 +289,33 @@ document.addEventListener('click', function(e) {
         var songId = e.target.dataset.songId;
         var mood   = e.target.dataset.mood;
         var logId  = e.target.dataset.logId;
-        if (!confirm('delete this entry from your history?')) return;
-        apiCall('/logs/' + logId, 'DELETE', null, function(err) {
-            if (!err) { var card = document.getElementById('history-log-' + logId); if (card) card.remove(); }
+        var logCard = document.getElementById('history-log-' + logId);
+        MoodFX.undoable({
+            message: 'entry deleted', mood: mood,
+            hide:    function() { if (logCard) logCard.style.display = 'none'; },
+            restore: function() { if (logCard) logCard.style.display = ''; },
+            commit:  function() { apiCall('/logs/' + logId, 'DELETE', null, function(err) { if (!err && logCard) logCard.remove(); }); }
         });
     }
     if (e.target.classList.contains('session-delete-btn')) {
         var sid = e.target.dataset.sessionId;
-        if (!confirm('delete this session?')) return;
-        apiCall('/sessions/' + sid, 'DELETE', null, function(err) {
-            if (!err) { var el = document.getElementById('session-' + sid); if (el) el.remove(); }
+        var sessCard = document.getElementById('session-' + sid);
+        MoodFX.undoable({
+            message: 'session deleted',
+            hide:    function() { if (sessCard) sessCard.style.display = 'none'; },
+            restore: function() { if (sessCard) sessCard.style.display = ''; },
+            commit:  function() { apiCall('/sessions/' + sid, 'DELETE', null, function(err) { if (!err && sessCard) sessCard.remove(); }); }
         });
     }
     if (e.target.classList.contains('session-song-delete')) {
         var sessionId = e.target.dataset.sessionId;
         var songId = e.target.dataset.songId;
-        apiCall('/sessions/' + sessionId + '/songs/' + songId, 'DELETE', null, function(err) {
-            if (!err) { var el = document.getElementById('ssong-' + songId); if (el) el.remove(); }
+        var thumb = document.getElementById('ssong-' + songId);
+        MoodFX.undoable({
+            message: 'song removed from session',
+            hide:    function() { if (thumb) thumb.style.display = 'none'; },
+            restore: function() { if (thumb) thumb.style.display = ''; },
+            commit:  function() { apiCall('/sessions/' + sessionId + '/songs/' + songId, 'DELETE', null, function(err) { if (!err && thumb) thumb.remove(); }); }
         });
     }
 });
