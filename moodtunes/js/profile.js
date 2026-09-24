@@ -289,6 +289,21 @@ function buildDropdown() {
     });
 
     // logout
+    // help lives here too — on very small phones the ? button is hidden to fit the header
+    if (typeof showHelpModal === 'function') {
+        var helpRow = document.createElement('button');
+        helpRow.style.cssText = [
+            'display:flex', 'align-items:center', 'gap:10px',
+            'width:100%', 'padding:8px 10px', 'margin-top:6px',
+            'background:none', 'border:none', 'border-radius:8px',
+            'cursor:pointer', 'text-align:left',
+            'color:var(--text-secondary,#aaa)', 'font-size:13px',
+        ].join(';');
+        helpRow.innerHTML = '<span style="width:14px;text-align:center;font-weight:700;">?</span> how to use moodtunes';
+        helpRow.addEventListener('click', function(e) { e.stopPropagation(); closeDropdown(); showHelpModal(); });
+        d.appendChild(helpRow);
+    }
+
     var logoutRow = document.createElement('button');
     logoutRow.style.cssText = [
         'display:flex', 'align-items:center', 'gap:10px',

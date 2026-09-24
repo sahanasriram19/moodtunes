@@ -410,6 +410,7 @@ function startSession(mood) {
 }
 
 function showSessionPanel(mood) {
+    MoodFX.setSessionLive(true);
     sessionPanel.classList.remove('hidden');
     sessionLabel.textContent = mood + ' session active';
     sessionTime.textContent  = '· started at ' + new Date().toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -483,6 +484,7 @@ function endSession() {
         var songs = result.data && result.data.songs ? result.data.songs : [];
         activeSession = null;
         localStorage.removeItem('moodtunes_session');
+        MoodFX.setSessionLive(false);
         sessionPanel.classList.add('hidden');
         sessionBtn.textContent = '▶ start session';
         sessionBtn.classList.remove('active-session');

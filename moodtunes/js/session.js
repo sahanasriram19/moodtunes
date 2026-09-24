@@ -55,6 +55,7 @@ function startRing(startTime) {
     cancelAnimationFrame(ringRaf);
     lastMinute = -1;
     sessionHero.classList.add('live');
+    MoodFX.setSessionLive(true);     // hides the mood chips on phones so the timer is on top
     (function frame() {
         var ms     = Math.max(0, Date.now() - startTime.getTime());
         var sec    = (ms / 1000) % 60;
@@ -77,6 +78,7 @@ function startRing(startTime) {
 function stopRing() {
     cancelAnimationFrame(ringRaf);
     sessionHero.classList.remove('live', 'lap');
+    MoodFX.setSessionLive(false);
     ringProgress.style.strokeDashoffset = RING_C;
     ringDot.style.transform = 'rotate(0deg)';
     ringSub.textContent = 'minute 1';

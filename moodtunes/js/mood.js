@@ -843,6 +843,58 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// ── bottom tab bar (phones) ────────────────────────────
+// on phones the top nav links are hidden and this bar sits at the bottom where
+// thumbs reach. the highlight pill has a view-transition-name, so it slides
+// from the old tab to the new one when you switch pages.
+var TAB_ICON = function(paths) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+};
+var TABS = [
+    { href: 'index.html',     label: 'journal',   icon: TAB_ICON('<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2"/><path d="M10 8h5M10 12h5"/>') },
+    { href: 'playlists.html', label: 'playlists', icon: TAB_ICON('<path d="M3 6h12M3 11h12M3 16h7"/><path d="M18 17V7l3-1"/><circle cx="16" cy="17" r="2"/>') },
+    { href: 'session.html',   label: 'session',   icon: TAB_ICON('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/>') },
+    { href: 'history.html',   label: 'history',   icon: TAB_ICON('<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/>') },
+    { href: 'stats.html',     label: 'stats',     icon: TAB_ICON('<path d="M5 20v-8M12 20V5M19 20v-5"/>') }
+];
+
+function mountTabbar() {
+    if (document.getElementById('tabbar') || !document.querySelector('.nav-links')) return;
+    var here = location.pathname.split('/').pop() || 'index.html';
+    var live = false;
+    try { live = !!JSON.parse(localStorage.getItem('moodtunes_session') || 'null'); } catch (e) {}
+    var nav = document.createElement('nav');
+    nav.id = 'tabbar';
+    nav.className = 'tabbar';
+    nav.setAttribute('aria-label', 'main');
+    nav.innerHTML = TABS.map(function(t) {
+        var active = t.href === here;
+        return '<a href="' + t.href + '" class="tab' + (active ? ' active' : '') + '"' + (active ? ' aria-current="page"' : '') + '>' +
+            (active ? '<span class="tab-pill" aria-hidden="true"></span>' : '') +
+            '<span class="tab-icon">' + t.icon +
+                (t.href === 'session.html' && live ? '<span class="tab-live" aria-label="session running"></span>' : '') +
+            '</span>' +
+            '<span class="tab-label">' + t.label + '</span>' +
+        '</a>';
+    }).join('');
+    document.body.appendChild(nav);
+}
+
+function setSessionLive(on) {
+    document.body.classList.toggle('session-live', !!on);
+    var icon = document.querySelector('#tabbar a[href="session.html"] .tab-icon');
+    if (!icon) return;
+    var dot = icon.querySelector('.tab-live');
+    if (on && !dot) {
+        dot = document.createElement('span');
+        dot.className = 'tab-live';
+        dot.setAttribute('aria-label', 'session running');
+        icon.appendChild(dot);
+    } else if (!on && dot) {
+        dot.remove();
+    }
+}
+
 // ── install as an app ──────────────────────────────────
 // android + desktop chrome/edge: the browser tells us when the app can be
 // installed (beforeinstallprompt) and we show an "install app" button.
@@ -964,7 +1016,7 @@ function boot() {
 // set colour vars and create the glow layer immediately, so they're already there
 // when a page transition reveals this page; the rest waits for the DOM + profile.js
 setMood(initialMood());
-if (document.body) mountAmbient();
+if (document.body) { mountAmbient(); mountTabbar(); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else setTimeout(boot, 0);
 
@@ -976,7 +1028,7 @@ window.MoodFX = {
     markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion,
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
-    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState
+    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive
 };
 
 })();
