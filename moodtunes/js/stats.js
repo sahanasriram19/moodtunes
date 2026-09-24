@@ -194,7 +194,7 @@ document.getElementById('stats-content').innerHTML =
 
 apiCall('/logs/stats', 'GET', null, function(err, result) {
     if (err || !result.data) {
-        document.getElementById('stats-content').innerHTML = '<p style="color:#555;font-size:14px;">could not load stats — try again later</p>';
+        document.getElementById('stats-content').innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your stats', text: 'check your connection and try again', action: { label: 'try again', reload: true } });
         return;
     }
     render(result.data);

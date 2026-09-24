@@ -147,7 +147,7 @@ function loadRecommendations(mood) {
 
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         if (err || !result.data || result.data.length === 0) {
-            discoverContent.innerHTML = '<p style="color:#555;font-size:13px;">log some ' + MoodFX.esc(mood) + ' songs in your journal first!</p>';
+            discoverContent.innerHTML = MoodFX.emptyState({ title: 'no ' + mood + ' songs yet', text: 'recommendations are based on what you’ve logged — add a few ' + mood + ' songs in your journal first', action: { label: 'go to journal', href: 'index.html' } });
             return;
         }
 
@@ -167,7 +167,7 @@ function loadRecommendations(mood) {
 
         apiCall(recUrl, 'GET', null, function(err2, rec) {
             if (err2 || !rec || !rec.data || !rec.data.tracks || rec.data.tracks.length === 0) {
-                discoverContent.innerHTML = '<p style="color:#555;font-size:13px;">couldn\'t find recommendations — try refreshing!</p>';
+                discoverContent.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'couldn’t find recommendations', text: 'spotify came back empty this time', action: { label: '↻ refresh', click: '#session-refresh-btn' } });
                 return;
             }
 
@@ -188,7 +188,7 @@ function loadRecommendations(mood) {
             }).slice(0, 18);
 
             if (tracks.length === 0) {
-                discoverContent.innerHTML = '<p style="color:#555;font-size:13px;">no new recommendations — try refreshing!</p>';
+                discoverContent.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'you’ve heard them all', text: 'no new songs this round — refresh for another batch', action: { label: '↻ refresh', click: '#session-refresh-btn' } });
                 return;
             }
 

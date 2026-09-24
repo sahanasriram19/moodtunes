@@ -224,7 +224,7 @@ function doSearch(query) {
     apiCall('/spotify/search-tracks?q=' + encodeURIComponent(query) + '&limit=5', 'GET', null, function(err, res) {
         if (query !== latestQuery) return;               // a newer search already started
         if (err || !res || res.status !== 200 || !Array.isArray(res.data)) {
-            searchResults.innerHTML = '<p style="color:#888;font-size:13px;padding:8px 0;">search is unavailable right now — try again in a moment</p>';
+            searchResults.innerHTML = MoodFX.emptyState({ art: 'offline', compact: true, title: 'search is taking a break', text: 'couldn’t reach spotify — try again in a moment' });
             return;
         }
         showResults(res.data);
@@ -234,7 +234,7 @@ function doSearch(query) {
 function showResults(tracks) {
     searchResults.innerHTML = '';
     if (!tracks || tracks.length === 0) {
-        searchResults.innerHTML = '<p style="color:#555;font-size:13px;padding:8px 0;">no results found</p>';
+        searchResults.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'no matches', text: 'try a different spelling, or search by artist' });
         return;
     }
     tracks.forEach(function(track) {
@@ -329,11 +329,11 @@ function loadLogs(highlightSongId) {
     if (!logsList.children.length) logsList.innerHTML = MoodFX.skeleton('rows', 4);
     var highlighted = false;
     apiCall('/logs/recent', 'GET', null, function(err, result) {
-        if (err) { logsList.innerHTML = '<p style="color:#888;font-size:14px;">couldn’t load your journal — check your connection</p>'; return; }
+        if (err) { logsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your journal', text: 'check your connection and give it another go', action: { label: 'try again', reload: true } }); return; }
         var logs = Array.isArray(result.data) ? result.data : [];
         logsList.innerHTML = '';
         if (logs.length === 0) {
-            logsList.innerHTML = '<p style="color:#555;font-size:14px;">no songs logged yet — search for a song above!</p>';
+            logsList.innerHTML = MoodFX.emptyState({ title: 'your journal is empty', text: 'pick how you’re feeling, then search for the song you’re listening to — it’ll show up here', action: { label: 'search for a song', focus: '#song-search' } });
             return;
         }
 
@@ -425,7 +425,7 @@ function loadSessionRecs(mood) {
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         var logs = Array.isArray(result && result.data) ? result.data : [];
         if (err || logs.length === 0) {
-            sessionRecs.innerHTML = '<p style="color:#666;font-size:13px;">log some ' + MoodFX.esc(mood) + ' songs first to get recommendations</p>';
+            sessionRecs.innerHTML = MoodFX.emptyState({ compact: true, title: 'no ' + mood + ' songs yet', text: 'log a few ' + mood + ' songs and recommendations will appear here', action: { label: 'search for a song', focus: '#song-search' } });
             return;
         }
         logs.sort(function(a, b) { return b.play_count - a.play_count; });
@@ -444,7 +444,7 @@ function loadSessionRecs(mood) {
 
         apiCall(url, 'GET', null, function(err2, rec) {
             if (err2 || !rec || !rec.data || !rec.data.tracks || rec.data.tracks.length === 0) {
-                sessionRecs.innerHTML = '<p style="color:#666;font-size:13px;">no recommendations found — try logging more songs</p>';
+                sessionRecs.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'no recommendations yet', text: 'log a few more songs in this mood to help us find similar ones' });
                 return;
             }
             sessionRecs.innerHTML = '';

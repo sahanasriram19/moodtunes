@@ -730,6 +730,117 @@ function nowPlaying(container, opts) {
     };
 }
 
+// ── empty states ───────────────────────────────────────
+// emptyState({ art: 'vinyl'|'search'|'offline', title, text, compact,
+//              action: { label, href } | { label, focus: '#sel' } | { label, click: '#sel' } | { label, reload: true } })
+var EMPTY_ART = {
+    vinyl:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+            '<circle class="ea-glow" cx="60" cy="62" r="46"/>' +
+            '<g class="ea-spin"><circle class="ea-disc" cx="60" cy="62" r="38"/>' +
+            '<circle class="ea-groove" cx="60" cy="62" r="30"/><circle class="ea-groove" cx="60" cy="62" r="23"/>' +
+            '<circle class="ea-label" cx="60" cy="62" r="12"/><circle class="ea-hole" cx="60" cy="62" r="2.5"/>' +
+            '<path class="ea-shine" d="M34 44 A32 32 0 0 1 52 32"/></g>' +
+            '<g class="ea-note n1"><path d="M92 30 v-14 l10 -3 v14"/><circle cx="89" cy="30" r="3.5"/><circle cx="99" cy="27" r="3.5"/></g>' +
+            '<g class="ea-note n2"><path d="M22 36 v-12"/><circle cx="19" cy="36" r="3.5"/></g>' +
+        '</svg>',
+    search:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+            '<circle class="ea-glow" cx="60" cy="60" r="40"/>' +
+            '<g class="ea-bob"><circle class="ea-lens" cx="54" cy="54" r="22"/><path class="ea-handle" d="M70 70 l18 18"/>' +
+            '<path class="ea-shine" d="M42 46 A14 14 0 0 1 52 38"/></g>' +
+        '</svg>',
+    offline:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+            '<circle class="ea-glow" cx="60" cy="62" r="40"/>' +
+            '<g class="ea-bob"><path class="ea-cloud" d="M38 78 h46 a16 16 0 0 0 -3 -31.7 A22 22 0 0 0 39 52 a13 13 0 0 0 -1 26z"/>' +
+            '<path class="ea-slash" d="M44 90 L80 38"/></g>' +
+        '</svg>'
+};
+
+function emptyState(o) {
+    o = o || {};
+    var a = o.action, btn = '';
+    if (a) {
+        var attrs = a.href ? ' href="' + esc(a.href) + '"' :
+            ' href="#" data-empty-' + (a.focus ? 'focus="' + esc(a.focus) + '"' : a.click ? 'click="' + esc(a.click) + '"' : 'reload="1"');
+        btn = '<a class="mt-empty-btn"' + attrs + '>' + esc(a.label) + '</a>';
+    }
+    return '<div class="mt-empty' + (o.compact ? ' mt-empty-compact' : '') + '" role="status">' +
+        '<div class="mt-empty-art">' + (EMPTY_ART[o.art] || EMPTY_ART.vinyl) + '</div>' +
+        '<div class="mt-empty-body">' +
+            (o.title ? '<div class="mt-empty-title">' + esc(o.title) + '</div>' : '') +
+            (o.text ? '<div class="mt-empty-text">' + esc(o.text) + '</div>' : '') +
+            btn +
+        '</div>' +
+    '</div>';
+}
+
+document.addEventListener('click', function(e) {
+    var b = e.target.closest && e.target.closest('.mt-empty-btn');
+    if (!b || b.getAttribute('href') !== '#') return;
+    e.preventDefault();
+    if (b.dataset.emptyReload) { location.reload(); return; }
+    var sel = b.dataset.emptyFocus || b.dataset.emptyClick;
+    var el = sel && document.querySelector(sel);
+    if (!el) return;
+    if (b.dataset.emptyFocus) {
+        el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+        setTimeout(function() { el.focus(); }, reduceMotion ? 0 : 300);
+    } else {
+        el.click();
+    }
+});
+
+// ── keyboard shortcuts ─────────────────────────────────
+//   1–9  pick a mood        /  jump to search
+//   ?    open help          Esc close the top-most popup
+function closeTopLayer() {
+    var summary = document.querySelector('.mt-summary.open #close-summary');
+    if (summary) { summary.click(); return true; }
+    var popup = document.getElementById('spotify-open-popup');
+    if (popup) { popup.remove(); return true; }
+    var help = document.getElementById('help-modal');
+    if (help) { help.remove(); return true; }
+    var dd = document.getElementById('profile-dropdown');
+    if (dd) { document.body.click(); return true; }
+    var note = document.getElementById('search-note-panel');
+    if (note) {
+        note.remove();
+        document.querySelectorAll('.result-item.selected').forEach(function(r) { r.classList.remove('selected'); });
+        return true;
+    }
+    return false;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target;
+    var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+
+    if (e.key === 'Escape') {
+        if (!closeTopLayer() && typing) t.blur();
+        return;
+    }
+    if (typing) return;
+
+    if (e.key === '/') {
+        var search = document.querySelector('#song-search, #song-history-search');
+        if (search) { e.preventDefault(); search.focus(); search.select(); }
+    } else if (e.key === '?') {
+        var help = document.getElementById('help-btn');
+        if (help && !document.getElementById('help-modal')) { e.preventDefault(); help.click(); }
+    } else if (/^[1-9]$/.test(e.key)) {
+        if (window.managingMoods) return;
+        var chips = Array.prototype.filter.call(
+            document.querySelectorAll('.mood-chips .chip[data-mood]'),
+            function(c) { return c.offsetParent !== null; }
+        );
+        var chip = chips[parseInt(e.key, 10) - 1];
+        if (chip) { e.preventDefault(); chip.click(); chip.focus({ preventScroll: true }); }
+    }
+});
+
 // ── boot ───────────────────────────────────────────────
 function initialMood() {
     try {
@@ -782,7 +893,7 @@ window.MoodFX = {
     markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion,
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
-    DEFAULT_MOODS: DEFAULT_MOODS
+    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState
 };
 
 })();

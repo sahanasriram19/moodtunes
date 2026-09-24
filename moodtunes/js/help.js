@@ -43,6 +43,19 @@ function showHelpModal() {
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">click manage moods below the mood chips on any page to add custom moods with your own name and emoji, or delete any mood you don\'t want — including the default ones. changes sync across the journal and session pages.</div>' +
             '</div>' +
 
+            // keyboard shortcuts — only worth showing on devices with a keyboard + mouse
+            (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+                ? '<div style="margin-bottom:18px;">' +
+                    '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:8px;">⌨️ keyboard shortcuts</div>' +
+                    '<div style="font-size:13px;color:#aaa;line-height:2.1;">' +
+                        '<kbd class="mt-kbd">1</kbd>–<kbd class="mt-kbd" style="margin-left:6px;">9</kbd> pick a mood<br>' +
+                        '<kbd class="mt-kbd">/</kbd> jump to search<br>' +
+                        '<kbd class="mt-kbd">esc</kbd> close a popup<br>' +
+                        '<kbd class="mt-kbd">?</kbd> open this help' +
+                    '</div>' +
+                  '</div>'
+                : '') +
+
             '<div style="margin-bottom:8px;">' +
                 '<div style="font-size:13px;font-weight:600;color:#7f77dd;margin-bottom:6px;">👤 profile</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, deep purple, clean light), and log out. your chosen theme is saved and applied across all pages automatically.</div>' +

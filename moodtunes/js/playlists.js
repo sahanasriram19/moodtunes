@@ -310,10 +310,10 @@ var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('
 // ── boot ───────────────────────────────────────────────
 playlistsList.innerHTML = MoodFX.skeleton('rows', 4);
 apiCall('/logs', 'GET', null, function(err, result) {
-    if (err) { playlistsList.innerHTML = '<p style="color:#e05c5c;">could not load playlists</p>'; return; }
+    if (err) { playlistsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your playlists', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
     var logs = Array.isArray(result.data) ? result.data : [];
     if (logs.length === 0) {
-        playlistsList.innerHTML = '<p style="color:#555;font-size:14px;">no songs logged yet — go to the journal and log some songs first!</p>';
+        playlistsList.innerHTML = MoodFX.emptyState({ title: 'no playlists yet', text: 'every mood gets its own playlist as soon as you log a song with it', action: { label: 'log your first song', href: 'index.html' } });
         return;
     }
     renderGrid(groupByMood(logs));

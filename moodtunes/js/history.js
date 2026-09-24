@@ -29,7 +29,7 @@ function searchSongHistory(query) {
     });
 
     if (matches.length === 0) {
-        songSearchResults.innerHTML = '<p style="color:#555;font-size:13px;padding:12px 0;">no songs found matching "' + MoodFX.esc(query) + '"</p>';
+        songSearchResults.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'nothing matches “' + query + '”', text: 'you haven’t logged a song with that name yet' });
         return;
     }
 
@@ -121,7 +121,7 @@ function renderFlashback(logs) {
 function renderTimeline(logs) {
     timeline.innerHTML = '';
     if (logs.length === 0) {
-        timeline.innerHTML = '<p style="color:#555;font-size:14px;">no history yet — go to the journal and start logging songs!</p>';
+        timeline.innerHTML = MoodFX.emptyState({ title: 'no history yet', text: 'every song you log in your journal lands here, grouped by day', action: { label: 'go to journal', href: 'index.html' } });
         return;
     }
 
@@ -201,14 +201,14 @@ function renderSessions() {
     sessionsList.innerHTML = MoodFX.skeleton('rows', 3);
 
     apiCall('/sessions', 'GET', null, function(err, result) {
-        if (err) { sessionsList.innerHTML = '<p style="color:#e05c5c;font-size:14px;">could not load sessions</p>'; return; }
+        if (err) { sessionsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your sessions', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
 
         var sessions = Array.isArray(result.data) ? result.data : [];
         var ended = sessions.filter(function(s) { return s.status === 'ended'; });
 
         sessionsList.innerHTML = '';
         if (ended.length === 0) {
-            sessionsList.innerHTML = '<p style="color:#555;font-size:14px;">no completed sessions yet — start a session from the journal page!</p>';
+            sessionsList.innerHTML = MoodFX.emptyState({ title: 'no sessions yet', text: 'start a listening session and a summary of everything you played will be saved here', action: { label: 'start a session', href: 'session.html' } });
             return;
         }
 
@@ -329,7 +329,7 @@ var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('
 statsGrid.innerHTML = MoodFX.skeleton('stats', 3).replace('sk-stats', 'sk-stats sk-3');
 timeline.innerHTML  = MoodFX.skeleton('rows', 5);
 apiCall('/logs/perday', 'GET', null, function(err, result) {
-    if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = '<p style="color:#888;font-size:14px;">couldn’t load your history — try again later</p>'; return; }
+    if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your history', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
     allLogs = Array.isArray(result.data) ? result.data : [];
     renderStats(allLogs);
     renderFlashback(allLogs);
