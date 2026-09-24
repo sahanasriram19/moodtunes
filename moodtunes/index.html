@@ -1,3 +1,4 @@
+index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +14,7 @@
   <title>moodtunes</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/mobile.css" />
+  <link rel="stylesheet" href="css/motion.css" />
 </head>
 <body>
 
@@ -48,6 +50,9 @@
 
   <main class="container">
 
+    <!-- live spotify playback — filled by MoodFX.nowPlaying, hidden when nothing is playing -->
+    <div id="now-playing" class="np-hidden"></div>
+
     <section class="mood-section">
       <p class="section-label">how are you feeling right now?</p>
       <div class="mood-chips">
@@ -77,6 +82,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/mood.js"></script>
   <script src="js/app.js"></script>
   <script src="js/help.js"></script>
 

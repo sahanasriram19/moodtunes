@@ -1,3 +1,4 @@
+spotifyroutes
 const express  = require('express');
 const router   = express.Router();
 const spotify  = require('../controllers/spotifyController');
@@ -11,6 +12,7 @@ router.get('/recently-played',  jwt.verifyToken, spotify.getRecentlyPlayed);
 router.get('/recommendations',  jwt.verifyToken, spotify.getRecommendations);
 router.get('/search',           jwt.verifyToken, spotify.searchTrack);
 router.get('/premium',          jwt.verifyToken, spotify.checkPremium);
+router.get('/now-playing',      jwt.verifyToken, spotify.getNowPlaying);
 router.post('/sync-playlist',   jwt.verifyToken, spotify.syncPlaylist);
 router.post('/queue',           jwt.verifyToken, spotify.addToQueue);
 

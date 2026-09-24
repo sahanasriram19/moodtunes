@@ -198,7 +198,7 @@ function showInlineNoteHistory(logId, songId, mood, existingNote) {
 
 // ── sessions ───────────────────────────────────────────
 function renderSessions() {
-    sessionsList.innerHTML = '<p style="color:#555;font-size:14px;">loading sessions...</p>';
+    sessionsList.innerHTML = MoodFX.skeleton('rows', 3);
 
     apiCall('/sessions', 'GET', null, function(err, result) {
         if (err) { sessionsList.innerHTML = '<p style="color:#e05c5c;font-size:14px;">could not load sessions</p>'; return; }
@@ -316,8 +316,10 @@ if (sessionBtn) sessionBtn.addEventListener('click', function() { window.locatio
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── boot ───────────────────────────────────────────────
+statsGrid.innerHTML = MoodFX.skeleton('stats', 3).replace('sk-stats', 'sk-stats sk-3');
+timeline.innerHTML  = MoodFX.skeleton('rows', 5);
 apiCall('/logs/perday', 'GET', null, function(err, result) {
-    if (err || !result.data) return;
+    if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = '<p style="color:#888;font-size:14px;">couldn’t load your history — try again later</p>'; return; }
     allLogs = Array.isArray(result.data) ? result.data : [];
     renderStats(allLogs);
     renderFlashback(allLogs);

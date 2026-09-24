@@ -36,9 +36,57 @@ chips.forEach(function(chip) {
     });
 });
 
+// ── live ring ──────────────────────────────────────────
+// the SVG ring fills once per minute, a glowing dot rides the leading edge,
+// and the circle "breathes" at the mood's tempo (see motion.css)
+var sessionHero  = document.getElementById('session-controls');
+var ringProgress = document.getElementById('ring-progress');
+var ringDot      = document.getElementById('ring-dot');
+var ringSub      = document.getElementById('ring-sub');
+var ringArt      = document.getElementById('ring-art');
+var RING_C       = 2 * Math.PI * 131;
+var ringRaf      = null;
+var lastMinute   = -1;
+
+ringProgress.style.strokeDasharray  = RING_C;
+ringProgress.style.strokeDashoffset = RING_C;
+
+function startRing(startTime) {
+    cancelAnimationFrame(ringRaf);
+    lastMinute = -1;
+    sessionHero.classList.add('live');
+    (function frame() {
+        var ms     = Math.max(0, Date.now() - startTime.getTime());
+        var sec    = (ms / 1000) % 60;
+        var minute = Math.floor(ms / 60000);
+        ringProgress.style.strokeDashoffset = RING_C * (1 - sec / 60);
+        ringDot.style.transform = 'rotate(' + (sec * 6) + 'deg)';
+        if (minute !== lastMinute) {
+            if (lastMinute !== -1) {
+                // every completed minute gets a little pulse
+                sessionHero.classList.add('lap');
+                setTimeout(function() { sessionHero.classList.remove('lap'); }, 700);
+            }
+            lastMinute = minute;
+            ringSub.textContent = 'minute ' + (minute + 1);
+        }
+        ringRaf = requestAnimationFrame(frame);
+    })();
+}
+
+function stopRing() {
+    cancelAnimationFrame(ringRaf);
+    sessionHero.classList.remove('live', 'lap');
+    ringProgress.style.strokeDashoffset = RING_C;
+    ringDot.style.transform = 'rotate(0deg)';
+    ringSub.textContent = 'minute 1';
+}
+
 // ── timer ──────────────────────────────────────────────
 function startTimer(startTime) {
     clearInterval(timerInterval);
+    sessionTimerEl.style.opacity = '1';
+    startRing(startTime);
     timerInterval = setInterval(function() {
         var elapsed = Math.floor((new Date() - startTime) / 1000);
         var mins = Math.floor(elapsed / 60);
@@ -59,6 +107,9 @@ sessionStartBtn.addEventListener('click', function() {
         sessionEndBtn.classList.remove('hidden');
         sessionRefreshBtn.classList.remove('hidden');
         startTimer(startTime);
+        MoodFX.setMood(selectedMood);
+        MoodFX.toast(selectedMood + ' session started — songs you play on spotify will be added automatically', selectedMood);
+        if (nowPlayingCard) nowPlayingCard.refresh();
         loadRecommendations(selectedMood);
     });
 });
@@ -71,6 +122,7 @@ sessionRefreshBtn.addEventListener('click', function() {
 function endSession() {
     if (!activeSession) return;
     clearInterval(timerInterval);
+    stopRing();
     apiCall('/sessions/' + activeSession.id + '/end', 'PUT', null, function(err, result) {
         if (err) return;
         var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date();
@@ -86,35 +138,12 @@ function endSession() {
 }
 
 function showSessionSummary(mood, startTime, endTime, songs) {
-    var mins = Math.floor((endTime - startTime) / 60000);
-    var overlay = document.createElement('div');
-    overlay.classList.add('session-summary');
-    overlay.innerHTML =
-        '<div class="session-summary-box">' +
-            '<div class="session-summary-title">' + mood + ' session complete</div>' +
-            '<div class="session-summary-meta">' +
-                startTime.toLocaleTimeString('en-SG', {hour:'numeric',minute:'2-digit',hour12:true}) + ' – ' +
-                endTime.toLocaleTimeString('en-SG', {hour:'numeric',minute:'2-digit',hour12:true}) +
-                ' · ' + mins + ' min · ' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') +
-            '</div>' +
-            (songs.length > 0
-                ? '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">' +
-                    songs.map(function(s) {
-                        return '<div style="text-align:center;width:60px;">' +
-                            '<img src="' + s.album_art + '" style="width:52px;height:52px;border-radius:8px;object-fit:cover;" />' +
-                            '<p style="font-size:10px;color:#888;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:60px;">' + s.title + '</p>' +
-                        '</div>';
-                    }).join('') + '</div>'
-                : '<p style="color:#555;font-size:13px;margin-top:12px;">no songs logged during this session</p>') +
-            '<button class="session-summary-close" id="close-summary">done</button>' +
-        '</div>';
-    document.body.appendChild(overlay);
-    document.getElementById('close-summary').addEventListener('click', function() { overlay.remove(); });
+    MoodFX.sessionSummary(mood, startTime, endTime, songs);
 }
 
 // ── recommendations ────────────────────────────────────
 function loadRecommendations(mood) {
-    discoverContent.innerHTML = '<p style="color:#555;font-size:13px;">finding songs for your ' + mood + ' mood...</p>';
+    discoverContent.innerHTML = MoodFX.skeleton('grid', 12);
 
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         if (err || !result.data || result.data.length === 0) {
@@ -169,6 +198,7 @@ function loadRecommendations(mood) {
 
             tracks.forEach(function(track) {
                 var card = document.createElement('div');
+                card.className = 'rec-tile';
                 card.style.cssText = 'display:flex;flex-direction:column;';
                 card.innerHTML =
                     '<div style="position:relative;width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;margin-bottom:6px;background:#2a2a2a;">' +
@@ -193,6 +223,7 @@ document.addEventListener('click', function(e) {
     if (e.target.classList.contains('session-play-btn')) {
         openSpotify(e.target.dataset.url);
         if (activeSession) {
+            MoodFX.markSessionSong(activeSession.id, e.target.dataset.id);
             apiCall('/sessions/songs', 'POST', {
                 session_id: activeSession.id, song_id: e.target.dataset.id,
                 title: e.target.dataset.title, artist: e.target.dataset.artist,
@@ -215,6 +246,22 @@ document.addEventListener('click', function(e) {
 
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
+// ── live now-playing ───────────────────────────────────
+// polls spotify, shows the current track, blurs its cover inside the ring,
+// and auto-adds new tracks to the active session
+var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('session-now-playing'), {
+    getSession: function() { return activeSession; },
+    onTrack: function(track) {
+        if (track.albumArt) {
+            ringArt.style.backgroundImage = 'url("' + track.albumArt + '")';
+            ringArt.classList.add('show');
+        } else {
+            ringArt.classList.remove('show');
+        }
+    },
+    onIdle: function() { ringArt.classList.remove('show'); }
+});
+
 // ── restore active session ─────────────────────────────
 var savedSession = localStorage.getItem('moodtunes_session');
 if (savedSession) {
@@ -232,6 +279,7 @@ if (savedSession) {
             sessionEndBtn.classList.remove('hidden');
             sessionRefreshBtn.classList.remove('hidden');
             startTimer(new Date(s.startTime));
+            nowPlayingCard.refresh();   // log whatever is already playing right away
             loadRecommendations(s.mood);
         });
     } catch(e) { localStorage.removeItem('moodtunes_session'); }
@@ -252,6 +300,7 @@ function addChip(name, emoji, id) {
     chip.classList.add('chip', 'custom-chip');
     chip.dataset.mood = name;
     chip.dataset.customId = id || '';
+    chip.dataset.emoji = emoji || '';
     chip.textContent = name;
     chip.addEventListener('click', function() {
         if (managingMoods) return;

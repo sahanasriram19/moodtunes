@@ -1,3 +1,4 @@
+session.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,6 +13,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/mobile.css" />
   <link rel="stylesheet" href="css/session.css" />
+  <link rel="stylesheet" href="css/motion.css" />
 </head>
 <body>
   <nav class="navbar">
@@ -46,13 +48,22 @@
     <div id="session-controls" class="session-hero">
       <div id="session-mood-label" class="session-hero-label"></div>
       <div class="session-timer-circle">
+        <div class="ring-art" id="ring-art"></div>
+        <svg class="session-ring" viewBox="0 0 270 270" aria-hidden="true">
+          <circle class="ring-track" cx="135" cy="135" r="131" />
+          <circle class="ring-progress" id="ring-progress" cx="135" cy="135" r="131" />
+        </svg>
+        <div class="ring-dot-wrap" id="ring-dot"><span class="ring-dot"></span></div>
         <div id="session-timer" class="session-hero-timer">00:00</div>
+        <div class="ring-sub" id="ring-sub">minute 1</div>
       </div>
       <div class="session-hero-actions">
         <button id="session-refresh-btn" class="hidden">↻ refresh</button>
         <button id="session-start-btn" class="hidden">▶ start session</button>
         <button id="session-end-btn" class="hidden">■ end session</button>
       </div>
+      <!-- live spotify playback -->
+      <div id="session-now-playing"></div>
     </div>
 
     <section>
@@ -63,6 +74,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/mood.js"></script>
   <script src="js/session.js"></script>
   <script src="js/help.js"></script>
   <script src="js/profile.js"></script>

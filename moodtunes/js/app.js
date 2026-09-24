@@ -43,6 +43,7 @@ function addChip(name, emoji, id) {
     chip.classList.add('chip', 'custom-chip');
     chip.dataset.mood = name;
     chip.dataset.customId = id || '';
+    chip.dataset.emoji = emoji || '';
     chip.textContent = name;
     chip.addEventListener('click', function() {
         if (managingMoods) return;
@@ -317,17 +318,20 @@ function showResults(tracks) {
 // ── log song ───────────────────────────────────────────
 function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
     apiCall('/logs', 'POST', { song_id: songId, title: title, artist: artist, album_art: albumArt, spotify_url: spotifyUrl, mood: mood, note: note || '' }, function(err) {
-        if (err) { console.error('log error:', err); return; }
+        if (err) { console.error('log error:', err); MoodFX.toast('couldn’t log that song — try again'); return; }
         searchResults.innerHTML = '';
         songSearch.value = '';
-        loadLogs();
+        MoodFX.toast('logged “' + title + '” as ' + mood, mood);
+        loadLogs(songId);
     });
 }
 
 // ── load logs ──────────────────────────────────────────
-function loadLogs() {
+function loadLogs(highlightSongId) {
+    if (!logsList.children.length) logsList.innerHTML = MoodFX.skeleton('rows', 4);
+    var highlighted = false;
     apiCall('/logs/recent', 'GET', null, function(err, result) {
-        if (err) return;
+        if (err) { logsList.innerHTML = '<p style="color:#888;font-size:14px;">couldn’t load your journal — check your connection</p>'; return; }
         var logs = Array.isArray(result.data) ? result.data : [];
         logsList.innerHTML = '';
         if (logs.length === 0) {
@@ -355,6 +359,10 @@ function loadLogs() {
                     var card = document.createElement('div');
                     card.classList.add('log-card');
                     card.id = 'log-' + log.id;
+                    if (highlightSongId && !highlighted && log.song_id === highlightSongId) {
+                        card.classList.add('just-logged');
+                        highlighted = true;
+                    }
                     card.innerHTML =
                         '<img class="song-art" src="' + log.album_art + '" alt="album art" />' +
                         '<div class="song-info">' +
@@ -393,6 +401,8 @@ function startSession(mood) {
         if (err || result.status !== 201) return;
         activeSession = { id: result.data.session_id, mood: mood, startTime: new Date() };
         localStorage.setItem('moodtunes_session', JSON.stringify({ id: result.data.session_id, mood: mood, startTime: new Date().toISOString() }));
+        MoodFX.setMood(mood);
+        MoodFX.toast(mood + ' session started — songs you play on spotify will be added automatically', mood);
         showSessionPanel(mood);
     });
 }
@@ -409,7 +419,7 @@ function showSessionPanel(mood) {
 function loadSessionRecs(mood) {
     // don't reload if recs are already showing
     if (sessionRecs.querySelector('.session-rec-card')) return;
-    sessionRecs.innerHTML = '<p style="color:#666;font-size:13px;">loading recommendations...</p>';
+    sessionRecs.innerHTML = MoodFX.skeleton('recs', 7);
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         var logs = Array.isArray(result && result.data) ? result.data : [];
         if (err || logs.length === 0) {
@@ -452,6 +462,7 @@ function loadSessionRecs(mood) {
                         if (activeSession) {
                             var tid = t.spotifyUrl.split('/track/')[1];
                             if (tid) tid = tid.split('?')[0];
+                            MoodFX.markSessionSong(activeSession.id, tid || t.id);
                             apiCall('/sessions/songs', 'POST', { session_id: activeSession.id, song_id: tid || t.id, title: t.title, artist: t.artist, album_art: t.albumArt, spotify_url: t.spotifyUrl }, function() {});
                         }
                     };
@@ -478,20 +489,7 @@ function endSession() {
 }
 
 function showSessionSummary(mood, startTime, endTime, songs) {
-    var mins = Math.floor((endTime - startTime) / 60000);
-    var overlay = document.createElement('div');
-    overlay.classList.add('session-summary');
-    overlay.innerHTML =
-        '<div class="session-summary-box">' +
-            '<div class="session-summary-title">' + mood + ' session complete</div>' +
-            '<div class="session-summary-meta">' + startTime.toLocaleTimeString('en-SG', {hour:'numeric',minute:'2-digit',hour12:true}) + ' – ' + endTime.toLocaleTimeString('en-SG', {hour:'numeric',minute:'2-digit',hour12:true}) + ' · ' + mins + ' min · ' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>' +
-            (songs.length > 0
-                ? '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">' + songs.map(function(s) { return '<div style="text-align:center;width:60px;"><img src="' + s.album_art + '" style="width:52px;height:52px;border-radius:8px;object-fit:cover;" /><p style="font-size:10px;color:#888;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:60px;">' + s.title + '</p></div>'; }).join('') + '</div>'
-                : '<p style="color:#555;font-size:13px;">no songs logged during this session</p>') +
-            '<button class="session-summary-close" id="close-summary">done</button>' +
-        '</div>';
-    document.body.appendChild(overlay);
-    document.getElementById('close-summary').addEventListener('click', function() { overlay.remove(); });
+    MoodFX.sessionSummary(mood, startTime, endTime, songs);
 }
 
 sessionBtn.addEventListener('click', function() {
@@ -569,6 +567,12 @@ document.addEventListener('visibilitychange', function() {
 loadSpotifyToken();
 loadLogs();
 
+var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('now-playing'), {
+    compact: true,
+    hideWhenIdle: true,
+    getSession: function() { return activeSession; }
+});
+
 var savedSession = localStorage.getItem('moodtunes_session');
 if (savedSession) {
     try {
@@ -588,6 +592,7 @@ if (savedSession) {
             sessionBtn.textContent   = '■ session active';
             sessionBtn.classList.add('active-session');
             loadSessionRecs(s.mood);
+            if (nowPlayingCard) nowPlayingCard.refresh();   // log whatever is already playing
         });
     } catch(e) { localStorage.removeItem('moodtunes_session'); }
 }

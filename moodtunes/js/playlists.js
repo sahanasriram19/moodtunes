@@ -308,7 +308,7 @@ document.addEventListener('click', function(e) {
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── boot ───────────────────────────────────────────────
-playlistsList.innerHTML = '<p style="color:#555;font-size:14px;">loading...</p>';
+playlistsList.innerHTML = MoodFX.skeleton('rows', 4);
 apiCall('/logs', 'GET', null, function(err, result) {
     if (err) { playlistsList.innerHTML = '<p style="color:#e05c5c;">could not load playlists</p>'; return; }
     var logs = Array.isArray(result.data) ? result.data : [];

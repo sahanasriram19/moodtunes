@@ -105,6 +105,7 @@ function applyTheme(key) {
     // also set body bg directly for pages that use it
     document.body.style.backgroundColor = t['--bg-page'];
     localStorage.setItem('moodtunes_theme', key);
+    if (window.MoodFX) window.MoodFX.setMood(window.MoodFX.getMood());
 }
 
 // apply on load
@@ -115,26 +116,28 @@ applyTheme(savedTheme);
 var style = document.createElement('style');
 style.textContent = [
     'body { background-color: var(--bg-page) !important; color: var(--text-primary) !important; }',
-    '.navbar { background: var(--nav-bg) !important; border-bottom-color: var(--nav-border) !important; }',
+    '.navbar { background: color-mix(in srgb, var(--nav-bg) 72%, transparent) !important; border-bottom-color: var(--nav-border) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }',
     '.log-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.log-card:hover { border-color: var(--border-mid) !important; }',
     '.chip { background: var(--chip-bg) !important; border-color: var(--chip-border) !important; color: var(--text-secondary) !important; }',
-    '.chip:hover { border-color: var(--accent) !important; color: var(--text-primary) !important; }',
-    '.chip.selected { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }',
-    '#song-search { background: var(--search-bg) !important; border-color: var(--search-border) !important; color: var(--text-primary) !important; }',
+    '.chip:hover { border-color: var(--mc, var(--accent)) !important; color: var(--text-primary) !important; }',
+    '.chip.selected { background: var(--mc, var(--accent)) !important; border-color: var(--mc, var(--accent)) !important; color: #fff !important; }',
+    '#song-search { background: color-mix(in srgb, var(--mood) 24%, var(--bg-input)) !important; border-color: color-mix(in srgb, var(--mood) 55%, transparent) !important; color: var(--text-primary) !important; }',
+    '#song-search:focus { border-color: var(--mood) !important; box-shadow: 0 0 0 4px color-mix(in srgb, var(--mood) 22%, transparent), 0 10px 30px -12px var(--mood) !important; }',
     '.stats-card, .stats-card-title, .flashback-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.section-label { color: var(--text-muted) !important; }',
     '.song-title { color: var(--text-primary) !important; }',
     '.song-artist, .plays-text, .date-text { color: var(--text-secondary) !important; }',
     '.nav-links a { color: var(--text-muted) !important; }',
-    '.nav-links a:hover, .nav-links a.active { color: var(--text-primary) !important; border-bottom-color: var(--accent) !important; }',
-    '.save-note-btn { background: var(--accent) !important; }',
+    '.nav-links a:hover, .nav-links a.active { color: var(--text-primary) !important; border-bottom-color: var(--mood) !important; }',
+    '.save-note-btn { background: var(--mood) !important; transition: background .9s, opacity .2s !important; }',
     '.add-note-btn, .edit-note-btn, .log-note { color: var(--accent) !important; }',
     '.logo span { color: var(--accent) !important; }',
-    '.session-timer-circle { background: var(--circle-bg, #4a2570) !important; border-color: var(--circle-border, #9b6fc2) !important; }',
+    
     '.session-hero-label { color: var(--text-muted) !important; }',
     '.session-hero-timer { color: var(--text-primary) !important; }',
-    '#session-start-btn { background: var(--accent) !important; }',
+    '#session-start-btn { background: var(--mood) !important; box-shadow: 0 8px 24px -8px var(--mood); transition: background .9s, transform .2s !important; }',
+    '#session-start-btn:hover { transform: translateY(-1px); }',
     '#session-refresh-btn { border-color: var(--border-mid) !important; color: var(--text-secondary) !important; }',
     '.note-textarea { background: var(--bg-input) !important; border-color: var(--border-mid) !important; color: var(--text-primary) !important; }',
     '.note-input-container { background: var(--bg-card) !important; border-color: var(--accent) !important; }',

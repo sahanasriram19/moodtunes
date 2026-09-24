@@ -1,3 +1,4 @@
+spotifycontroller
 require('dotenv').config();
 
 const axios     = require('axios');
@@ -388,5 +389,26 @@ module.exports.refreshUserToken = (req, res, next) => {
     module.exports.refreshToken(userId, function(err, newToken) {
         if (err) return res.status(401).json({ message: 'Token refresh failed' });
         res.status(200).json({ message: 'Token refreshed' });
+    });
+};
+// ── now playing (live) ─────────────────────────────────────────────────────
+// Polled by the frontend every few seconds. Spotify returns 204 (empty body)
+// when nothing is playing, so an empty/absent item maps to { playing: false }.
+module.exports.getNowPlaying = (req, res, next) => {
+    spotifyGet('https://api.spotify.com/v1/me/player/currently-playing', res.locals.userId, function(err, data) {
+        if (err) {
+            if (err.message === 'Spotify not connected') return res.status(401).json({ message: 'Spotify not connected' });
+            return res.status(500).json({ message: 'Failed to get now playing' });
+        }
+        if (!data || !data.item || data.currently_playing_type !== 'track') {
+            return res.status(200).json({ playing: false });
+        }
+        res.status(200).json({
+            playing:     true,
+            is_playing:  !!data.is_playing,
+            progress_ms: data.progress_ms || 0,
+            duration_ms: data.item.duration_ms || 0,
+            track:       trackToObj(data.item)
+        });
     });
 };

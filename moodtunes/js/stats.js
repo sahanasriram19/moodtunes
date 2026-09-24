@@ -78,7 +78,7 @@ function render(data) {
     html += '</div>'; // close stats-grid
 
     // mood activity graph placeholder
-    html += '<div class="stats-card" id="mood-graph-container" style="margin-bottom:16px;"><div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div><p style="color:#555;font-size:13px;">loading...</p></div>';
+    html += '<div class="stats-card" id="mood-graph-container" style="margin-bottom:16px;"><div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div>' + MoodFX.skeleton('block') + '</div>';
 
     // top songs
     if (topSongs.length > 0) {
@@ -182,6 +182,11 @@ function buildLineGraph(logs) {
 }
 
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
+
+document.getElementById('stats-content').innerHTML =
+    MoodFX.skeleton('stats', 4) +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">' + MoodFX.skeleton('block') + MoodFX.skeleton('block') + '</div>' +
+    MoodFX.skeleton('block');
 
 apiCall('/logs/stats', 'GET', null, function(err, result) {
     if (err || !result.data) {
