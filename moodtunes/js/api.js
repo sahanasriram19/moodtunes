@@ -56,6 +56,12 @@ function clearApiCache() {
     } catch (e) {}
 }
 
+// update the saved copy of a GET response after we change the data ourselves,
+// so the next page load shows the new version straight away
+function apiCacheSet(endpoint, data) {
+    try { localStorage.setItem(apiCacheKey(endpoint), JSON.stringify({ status: 200, data: data })); } catch (e) {}
+}
+
 function apiCallCached(endpoint, callback) {
     var cachedText = null;
     try { cachedText = localStorage.getItem(apiCacheKey(endpoint)); } catch (e) {}

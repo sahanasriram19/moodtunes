@@ -12,23 +12,72 @@ apiCall('/moods', 'GET', null, function(err, result) {
 });
 
 // ── playlist order persistence ─────────────────────────
+// the order you arrange songs in is saved to your account (/api/playlists/order),
+// so every device shows the same playlist. orders that were only saved on this
+// device (the old way) are moved up to your account the first time you open this page
+var playlistOrders = {};                    // { mood: [songId, songId, ...] }
+var LEGACY_ORDER_PREFIX = 'moodtunes_order_';
+
 function saveOrder(mood, songIds) {
-    localStorage.setItem('moodtunes_order_' + mood, JSON.stringify(songIds));
+    playlistOrders[mood] = songIds;
+    apiCacheSet('/playlists/order', playlistOrders);
+    apiCall('/playlists/order/' + encodeURIComponent(mood), 'PUT', { song_ids: songIds }, function(err, res) {
+        if (err || !res || res.status >= 400) MoodFX.toast('couldn’t sync this order — it will still show on this device');
+    });
+    try { localStorage.removeItem(LEGACY_ORDER_PREFIX + mood); } catch (e) {}
+}
+
+function savedOrderFor(mood) {
+    if (playlistOrders[mood]) return playlistOrders[mood];
+    // fall back to an order saved on this device before syncing existed
+    try {
+        var legacy = localStorage.getItem(LEGACY_ORDER_PREFIX + mood);
+        return legacy ? JSON.parse(legacy) : null;
+    } catch (e) { return null; }
+}
+
+// move any device-only orders up to the account (only for moods the account
+// doesn't have an order for yet — an order saved from another device wins)
+function migrateLegacyOrders() {
+    try {
+        Object.keys(localStorage).forEach(function(k) {
+            if (k.indexOf(LEGACY_ORDER_PREFIX) !== 0) return;
+            var mood = k.slice(LEGACY_ORDER_PREFIX.length);
+            if (!playlistOrders[mood]) {
+                var ids = JSON.parse(localStorage.getItem(k) || 'null');
+                if (Array.isArray(ids) && ids.length) saveOrder(mood, ids);
+            }
+            localStorage.removeItem(k);
+        });
+    } catch (e) {}
+}
+
+// newest additions first. a song's id comes from the first time it was logged
+// with this mood, so a higher id means it was added to the playlist more recently
+function newestFirst(songs) {
+    return songs.slice().sort(function(a, b) { return (b.id || 0) - (a.id || 0); });
 }
 
 function applyOrder(mood, songs) {
-    var saved = localStorage.getItem('moodtunes_order_' + mood);
-    if (!saved) return songs;
+    var ids = savedOrderFor(mood);
+    if (!ids) return songs;
     try {
-        var ids = JSON.parse(saved);
         var map = {};
         songs.forEach(function(s) { map[s.song_id] = s; });
         var ordered = [];
         ids.forEach(function(id) { if (map[id]) ordered.push(map[id]); });
-        // append any new songs not in saved order
-        songs.forEach(function(s) { if (ids.indexOf(s.song_id) === -1) ordered.push(s); });
-        return ordered;
+        // songs added since you last arranged this playlist go to the TOP, so the
+        // latest additions show on the cover (they used to be tacked onto the end)
+        var added = songs.filter(function(s) { return ids.indexOf(s.song_id) === -1; });
+        return added.concat(ordered);
     } catch(e) { return songs; }
+}
+
+// the one ordering used everywhere (grid cover, open playlist, big cover):
+// your arranged order if you've dragged songs around, newest first otherwise,
+// with any new songs on top either way
+function orderedSongs(mood, songs) {
+    return applyOrder(mood, newestFirst(songs));
 }
 
 var playlistsList = document.getElementById('playlists-list');
@@ -67,7 +116,7 @@ function renderGrid(grouped) {
 
     Object.keys(grouped).forEach(function(mood) {
         var songs = grouped[mood];
-        var sorted = applyOrder(mood, songs.slice().sort(function(a, b) { return b.play_count - a.play_count; }));
+        var sorted = orderedSongs(mood, songs);
         var card = document.createElement('div');
         card.classList.add('playlist-card');
         card.dataset.mood = mood;
@@ -88,11 +137,8 @@ function openPlaylist(mood, songs) {
     var view = document.getElementById('playlist-view');
     view.classList.add('active');
 
-    // list: apply saved order, fallback to play count
-    var listSongs = applyOrder(mood, songs.slice().sort(function(a, b) {
-        if (b.play_count !== a.play_count) return b.play_count - a.play_count;
-        return new Date(a.last_logged) - new Date(b.last_logged);
-    }));
+    // same order as the grid card, so both covers always match
+    var listSongs = orderedSongs(mood, songs);
 
     view.innerHTML =
         '<button class="back-btn" id="back-btn">← back to playlists</button>' +
@@ -101,7 +147,7 @@ function openPlaylist(mood, songs) {
             '<div class="playlist-view-info">' +
                 '<div class="playlist-view-title">' + MoodFX.esc(mood) + ' playlist</div>' +
                 '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' · built from your journal</div>' +
-                '<div style="font-size:12px;color:#555;margin-top:4px;">drag to reorder · cover shows top 4</div>' +
+                '<div style="font-size:12px;color:#555;margin-top:4px;">new songs go to the top · drag to reorder · cover shows the top 4</div>' +
             '</div>' +
             '<button class="playlist-play-btn" id="sync-btn" style="border:none;cursor:pointer;">▶</button>' +
         '</div>' +
@@ -308,16 +354,49 @@ document.addEventListener('click', function(e) {
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── boot ───────────────────────────────────────────────
-playlistsList.innerHTML = MoodFX.skeleton('rows', 4);
-apiCallCached('/logs', function(err, result, fromCache) {
-    // don't yank someone out of a playlist they've already opened
-    var openView = document.getElementById('playlist-view');
-    if (!fromCache && openView && openView.classList.contains('active')) return;
-    if (err) { playlistsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your playlists', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
-    var logs = Array.isArray(result.data) ? result.data : [];
-    if (logs.length === 0) {
+// the grid needs both your songs and your saved orders; it draws as soon as both
+// are known (instantly from saved data when available) and quietly redraws when
+// fresher data arrives — unless you've already opened a playlist
+var latestLogs = null;
+var ordersKnown = false;
+var logsError = false;
+
+function renderPlaylists() {
+    if (logsError) {
+        playlistsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your playlists', text: 'check your connection and try again', action: { label: 'try again', reload: true } });
+        return;
+    }
+    if (latestLogs === null || !ordersKnown) return;
+    if (latestLogs.length === 0) {
         playlistsList.innerHTML = MoodFX.emptyState({ title: 'no playlists yet', text: 'every mood gets its own playlist as soon as you log a song with it', action: { label: 'log your first song', href: 'index.html' } });
         return;
     }
-    renderGrid(groupByMood(logs));
+    renderGrid(groupByMood(latestLogs));
+}
+
+function playlistIsOpen() {
+    var openView = document.getElementById('playlist-view');
+    return !!(openView && openView.classList.contains('active'));
+}
+
+playlistsList.innerHTML = MoodFX.skeleton('rows', 4);
+
+apiCallCached('/playlists/order', function(err, result, fromCache) {
+    if (!err && result && result.status === 200 && result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
+        playlistOrders = result.data;
+        if (!fromCache) migrateLegacyOrders();   // only against the account's real, current orders
+    }
+    // an older backend without this route: fall back to orders saved on this device
+    var wasKnown = ordersKnown;
+    ordersKnown = true;
+    if (!wasKnown || !playlistIsOpen()) renderPlaylists();
+});
+
+apiCallCached('/logs', function(err, result, fromCache) {
+    // don't yank someone out of a playlist they've already opened
+    if (!fromCache && playlistIsOpen()) return;
+    if (err) { logsError = latestLogs === null; renderPlaylists(); return; }
+    logsError = false;
+    latestLogs = Array.isArray(result.data) ? result.data : [];
+    renderPlaylists();
 });

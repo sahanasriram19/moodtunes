@@ -6,5 +6,6 @@ router.use('/logs',     require('./logRoutes'));
 router.use('/sessions', require('./sessionRoutes'));
 router.use('/spotify',  require('./spotifyRoutes'));
 router.use('/moods',    require('./customMoodRoutes'));
+router.use('/playlists', require('./playlistRoutes'));
 
 module.exports = router;

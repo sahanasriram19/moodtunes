@@ -1,4 +1,3 @@
-schemasql
 CREATE TABLE IF NOT EXISTS User (
     id                    INT AUTO_INCREMENT PRIMARY KEY,
     username              VARCHAR(255) NOT NULL UNIQUE,
@@ -65,4 +64,15 @@ CREATE TABLE IF NOT EXISTS HiddenMood (
     hidden_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES User(id),
     UNIQUE KEY unique_user_hidden_mood (user_id, mood)
+);
+
+-- the song order a user has arranged in each mood playlist (same on every device)
+CREATE TABLE IF NOT EXISTS PlaylistOrder (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    mood       VARCHAR(50) NOT NULL,
+    song_ids   TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    UNIQUE KEY unique_user_playlist_order (user_id, mood)
 );
