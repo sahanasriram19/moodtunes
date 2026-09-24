@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="moodtunes" />
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="images/favicon.png" />
-  <title>Stats</title>
+  <title>Playlists</title>
   <!-- page transitions: declared here (not in motion.css) so Chrome sees the opt-in
        before the new page is shown — otherwise it sometimes skips the transition -->
   <style>
@@ -32,20 +32,20 @@
     { "prefetch": [{ "where": { "href_matches": "/*" }, "eagerness": "moderate" }] }
   </script>
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/stats.css" />
+  <link rel="stylesheet" href="css/playlists.css" />
   <link rel="stylesheet" href="css/mobile.css" />
   <link rel="stylesheet" href="css/motion.css" />
 </head>
 <body>
+
   <nav class="navbar">
       <img src="images/moodtunes_logo.png" class="logo" alt="moodtunes logo">
         <ul class="nav-links">
       <li><a href="index.html">journal</a></li>
-      <li><a href="playlists.html">playlists</a></li>
+      <li><a href="playlists.html" class="active">playlists</a></li>
       <li><a href="session.html">session</a></li>
       <li><a href="history.html">history</a></li>
-      <li><a href="stats.html" >stats</a></li>
-  
+      <li><a href="stats.html">stats</a></li>
     </ul>
     <div class="nav-right">
       <button class="session-btn" id="session-btn">▶ start session</button>
@@ -54,16 +54,18 @@
   </nav>
 
   <main class="container">
-    <div id="stats-content">
-      <p style="color:#555;font-size:14px;">loading your stats...</p>
-    </div>
+    <section class="playlists-section">
+      <p class="section-label">your mood playlists</p>
+      <div id="playlists-list"></div>
+    </section>
   </main>
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/mood.js"></script>
-  <script src="js/stats.js"></script>
+  <script src="js/playlists.js"></script>
   <script src="js/help.js"></script>
+
   <script src="js/profile.js"></script>
   <div id="mt-ready" hidden></div>
 </body>

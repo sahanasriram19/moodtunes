@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- installable app (PWA) -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="moodtunes" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="images/favicon.png" />
   <title>Login</title>
   <!-- fonts: connect early and load in parallel with the other stylesheets -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -55,6 +63,7 @@
       </div>
     </div>
   </div>
+  <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
 </body>
 </html>
