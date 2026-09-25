@@ -514,9 +514,11 @@ sessionBtn.addEventListener('click', function() {
 sessionEndBtn.addEventListener('click', endSession);
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
-// plays only count when a song is opened from moodtunes, so nothing is synced
-// from spotify's "recently played" any more. clear the old sync bookmark
+// plays count when a song is opened from moodtunes, plus repeats of that song while
+// spotify loops it (checked by syncLoopPlays in api.js). the old sync that counted
+// everything in spotify's "recently played" is gone; clear its bookmark
 try { localStorage.removeItem('moodtunes_last_sync'); } catch (e) {}
+window.addEventListener('moodtunes:plays-updated', function(e) { loadLogs(e.detail && e.detail.song_id); });
 
 // boot — sessions only start when you click the button
 // but if YOU started one this browser session, restore it across tab switches

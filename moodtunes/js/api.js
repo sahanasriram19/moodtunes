@@ -175,6 +175,36 @@ function recordPlay(songId, mood, callback) {
     });
 }
 
+// ── loops ──────────────────────────────────────────────
+// a song you open from moodtunes keeps counting while spotify repeats it (repeat /
+// loop), until a different song plays. the backend reads spotify's listening
+// history to count those repeats; the app asks it to check when you open
+// moodtunes, when you come back to it, and every 2 minutes while you're on it.
+// pages listen for 'moodtunes:plays-updated' to refresh their counts
+var loopCheckRunning = false;
+function syncLoopPlays() {
+    if (!getToken() || loopCheckRunning || document.hidden || document.prerendering) return;
+    loopCheckRunning = true;
+    apiCall('/logs/sync-loops', 'POST', {}, function(err, res) {
+        loopCheckRunning = false;
+        var added = !err && res && res.status === 200 && res.data ? res.data.added : 0;
+        if (!added) return;
+        if (window.MoodFX) MoodFX.toast('+' + added + ' play' + (added !== 1 ? 's' : '') + ' of “' + res.data.title + '” from your loop', res.data.mood);
+        window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: res.data }));
+    });
+}
+
+if (!/login\.html$/.test(location.pathname)) {
+    var startLoopChecks = function() {
+        syncLoopPlays();
+        document.addEventListener('visibilitychange', function() { if (!document.hidden) syncLoopPlays(); });
+        setInterval(syncLoopPlays, 120000);
+    };
+    // a page prepared in the background waits until it's really opened
+    if (document.prerendering) document.addEventListener('prerenderingchange', startLoopChecks, { once: true });
+    else setTimeout(startLoopChecks, 1500);   // after the page's own data has started loading
+}
+
 // opts.onOpen runs once, when a way to listen is picked (not on cancel)
 function openSpotify(spotifyUrl, opts) {
     // derive the spotify:// app URI from the web URL

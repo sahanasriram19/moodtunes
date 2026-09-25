@@ -1,4 +1,6 @@
-const model = require('../models/logModel');
+const model   = require('../models/logModel');
+const spotify = require('./spotifyController');
+const axios   = require('axios');
 
 // the browser sends its timezone with every request (X-Timezone-Offset header);
 // older app versions sent tz_offset in the body or query instead
@@ -69,6 +71,7 @@ module.exports.logSong = (req, res, next) => {
         log_date:    localDate(tzFrom(req))
     }, (err, result) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
+        if (req.body.played !== false) startLaunch(res.locals.userId, req, req.body.song_id, req.body.mood);
         // affectedRows: 1 = new row for today, 2 = today's row updated
         if (result.affectedRows === 1) return res.status(201).json({ message: 'Song logged successfully' });
         res.status(200).json({ message: 'Play count updated' });
@@ -90,7 +93,116 @@ module.exports.playSong = (req, res, next) => {
             note: '', plays: 1, log_date: localDate(tzFrom(req))
         }), (err2) => {
             if (err2) return res.status(500).json({ message: 'Internal server error' });
+            startLaunch(res.locals.userId, req, key.song_id, key.mood);
             res.status(200).json({ message: 'Play counted' });
+        });
+    });
+};
+
+// ── loops ─────────────────────────────────────────────────────────────────
+// a song opened from moodtunes keeps counting while spotify repeats it
+function startLaunch(userId, req, songId, mood) {
+    let tz = parseInt(tzFrom(req), 10);
+    if (isNaN(tz) || Math.abs(tz) > 14 * 60) tz = -model.DEFAULT_OFFSET_SECONDS / 60;
+    model.startLaunch({ user_id: userId, song_id: songId, mood: mood, tz_offset: tz, launched_ms: Date.now() }, (err) => {
+        if (err) console.error('could not record launch:', err.message);
+    });
+}
+
+// spotify's listening history after `afterMs` (up to 50 plays), oldest first
+function recentPlays(userId, afterMs, callback) {
+    const url = 'https://api.spotify.com/v1/me/player/recently-played?limit=50&after=' + Math.floor(afterMs);
+    spotify.getUserToken(userId, (err, token) => {
+        if (err) return callback(err);
+        const get = (t, retried) => axios.get(url, { headers: { 'Authorization': 'Bearer ' + t } })
+            .then((r) => {
+                const items = (r.data && r.data.items) || [];
+                items.sort((a, b) => Date.parse(a.played_at) - Date.parse(b.played_at));
+                callback(null, items);
+            })
+            .catch((e) => {
+                if (!retried && e.response && e.response.status === 401) {
+                    return spotify.refreshToken(userId, (e2, fresh) => e2 ? callback(e2) : get(fresh, true));
+                }
+                callback(e);
+            });
+        get(token, false);
+    });
+}
+
+const STARTS_WITHIN_MS = 15 * 60000;       // the song you opened should start playing within 15 min
+const LOOP_EXPIRES_MS  = 12 * 3600000;     // stop watching a loop after 12 quiet hours
+
+// works out how many repeats spotify played since the last check.
+// the first play of the song after you opened it is the play the app already
+// counted; every play of the same song after that, with nothing else in between,
+// is one more play. the first different song ends the run.
+function walkLoop(launch, items, now) {
+    const songId = launch.song_id;
+    const launched = Number(launch.launched_ms);
+    let until = Number(launch.counted_until_ms);
+    let started = !!launch.started;
+    let open = true;
+    const repeats = [];
+    for (const it of items) {
+        const t = Date.parse(it.played_at);
+        if (!(t > until) || !it.track) continue;
+        const same = it.track.id === songId || (it.track.linked_from && it.track.linked_from.id === songId);
+        until = t;
+        if (!started) {
+            if (same) { started = true; continue; }            // the listen the app already counted
+            if (t - launched > STARTS_WITHIN_MS) { open = false; break; }
+            continue;                                           // the song that was playing before you switched
+        }
+        if (same) repeats.push(t);
+        else { open = false; break; }
+    }
+    if (open && !started && now - launched > STARTS_WITHIN_MS) open = false;
+    if (open && now - Math.max(until, launched) > LOOP_EXPIRES_MS) open = false;
+    return { until, started, open, repeats };
+}
+module.exports._walkLoop = walkLoop;   // exported for tests
+
+// POST /logs/sync-loops — called by the app when it opens / comes back into view
+module.exports.syncLoops = (req, res, next) => {
+    const userId = res.locals.userId;
+    model.getOpenLaunch({ user_id: userId }, (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Internal server error' });
+        if (!rows.length) return res.status(200).json({ added: 0 });
+        const launch = rows[0];
+        const now = Date.now();
+        recentPlays(userId, Number(launch.counted_until_ms), (err2, items) => {
+            // spotify not connected or unavailable: try again next time
+            if (err2) return res.status(200).json({ added: 0 });
+            const w = walkLoop(launch, items, now);
+            const changed = w.until !== Number(launch.counted_until_ms) || w.started !== !!launch.started || !w.open;
+            if (!changed) return res.status(200).json({ added: 0 });
+            model.advanceLaunch({
+                id: launch.id, old_until_ms: Number(launch.counted_until_ms), old_started: !!launch.started,
+                until_ms: w.until, started: w.started, is_open: w.open
+            }, (err3, r) => {
+                // another check already counted these, or nothing to add
+                if (err3 || r.affectedRows !== 1 || !w.repeats.length) return res.status(200).json({ added: 0 });
+                const key = { user_id: userId, song_id: launch.song_id, mood: launch.mood };
+                model.selectLatestForSong(key, (err4, songRows) => {
+                    if (err4 || !songRows.length) return res.status(200).json({ added: 0 });
+                    // group repeats by the calendar day they were played on
+                    const byDay = {};
+                    w.repeats.forEach((t) => {
+                        const day = new Date(t - Number(launch.tz_offset) * 60000).toISOString().slice(0, 10);
+                        byDay[day] = (byDay[day] || 0) + 1;
+                    });
+                    const days = Object.keys(byDay);
+                    let pending = days.length;
+                    days.forEach((day) => {
+                        model.recordPlay(Object.assign({}, key, songRows[0], { note: '', plays: byDay[day], log_date: day }), () => {
+                            if (--pending === 0) {
+                                res.status(200).json({ added: w.repeats.length, song_id: launch.song_id, mood: launch.mood, title: songRows[0].title });
+                            }
+                        });
+                    });
+                });
+            });
         });
     });
 };

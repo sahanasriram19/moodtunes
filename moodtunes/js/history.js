@@ -353,6 +353,9 @@ function refreshHistory() {
     });
 }
 
+// repeats from a loop were just counted
+window.addEventListener('moodtunes:plays-updated', refreshHistory);
+
 apiCallCached('/logs/perday', function(err, result) {
     if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your history', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
     allLogs = Array.isArray(result.data) ? result.data : [];

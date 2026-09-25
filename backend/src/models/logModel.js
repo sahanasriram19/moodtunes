@@ -155,6 +155,50 @@ module.exports.selectLatestForSong = (data, callback) => {
     );
 };
 
+// ── loops: repeats of a song you opened from moodtunes ─────────────────────
+// opening a song from the app starts a "launch". afterwards, each time spotify
+// plays that same song again in an unbroken run (repeat / loop), it counts as one
+// more play. the run ends at the first different song. one open launch per user.
+pool.query(
+    `CREATE TABLE IF NOT EXISTS PlayLaunch (
+        id               INT AUTO_INCREMENT PRIMARY KEY,
+        user_id          INT NOT NULL,
+        song_id          VARCHAR(255) NOT NULL,
+        mood             VARCHAR(50) NOT NULL,
+        tz_offset        INT NOT NULL DEFAULT 0,
+        launched_ms      BIGINT NOT NULL,
+        counted_until_ms BIGINT NOT NULL,
+        started          TINYINT NOT NULL DEFAULT 0,
+        is_open          TINYINT NOT NULL DEFAULT 1,
+        FOREIGN KEY (user_id) REFERENCES User(id),
+        KEY launch_user_open (user_id, is_open)
+    )`,
+    (err) => { if (err) console.error('PlayLaunch table setup failed:', err.message); }
+);
+
+// a new launch ends any earlier one (you've moved on to another song)
+module.exports.startLaunch = (data, callback) => {
+    pool.query('UPDATE PlayLaunch SET is_open = 0 WHERE user_id = ? AND is_open = 1', [data.user_id], (err) => {
+        if (err) return callback(err);
+        pool.query(
+            'INSERT INTO PlayLaunch (user_id, song_id, mood, tz_offset, launched_ms, counted_until_ms) VALUES (?, ?, ?, ?, ?, ?)',
+            [data.user_id, data.song_id, data.mood, data.tz_offset, data.launched_ms, data.launched_ms], callback);
+    });
+};
+
+module.exports.getOpenLaunch = (data, callback) => {
+    pool.query('SELECT * FROM PlayLaunch WHERE user_id = ? AND is_open = 1 ORDER BY id DESC LIMIT 1', [data.user_id], callback);
+};
+
+// moves a launch forward. only succeeds if nobody else moved it first
+// (e.g. two open tabs syncing at once), so a repeat can't be counted twice
+module.exports.advanceLaunch = (data, callback) => {
+    pool.query(
+        'UPDATE PlayLaunch SET counted_until_ms = ?, started = ?, is_open = ? WHERE id = ? AND counted_until_ms = ? AND started = ?',
+        [data.until_ms, data.started ? 1 : 0, data.is_open ? 1 : 0, data.id, data.old_until_ms, data.old_started ? 1 : 0],
+        callback);
+};
+
 // ── update note ──────────────────────────────────────────────────────────────
 
 module.exports.updateNote = (data, callback) => {

@@ -405,6 +405,23 @@ function playlistIsOpen() {
 
 playlistsList.innerHTML = MoodFX.skeleton('rows', 4);
 
+// repeats from a loop were just counted: refresh the totals
+window.addEventListener('moodtunes:plays-updated', function(e) {
+    var d = e.detail || {};
+    if (playlistIsOpen()) {
+        var label = document.querySelector('#log-' + CSS.escape(d.song_id + '-' + d.mood) + ' .plays-text');
+        if (label) label.textContent = playsLabel((parseInt(label.textContent, 10) || 0) + (d.added || 0));
+        return;
+    }
+    apiCall('/logs', 'GET', null, function(err, result) {
+        if (err || !result || result.status !== 200 || !Array.isArray(result.data)) return;
+        latestLogs = result.data;
+        apiCacheSet('/logs', latestLogs);
+        window.__mtQuietUntil = performance.now() + 100;
+        renderPlaylists();
+    });
+});
+
 apiCallCached('/playlists/order', function(err, result, fromCache) {
     if (!err && result && result.status === 200 && result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
         playlistOrders = result.data;
