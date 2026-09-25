@@ -133,16 +133,33 @@ module.exports.selectRecentTwoDays = (data, callback) => {
 // adds `plays` (1, or 0 when a song is only added to the journal) to that song's
 // row for the given day, creating the row if it's the first time that day.
 // one atomic statement, so a quick double tap can't create two rows.
+//
+// listening time for the day: first_logged = when the first play started,
+// last_logged = when the latest listen ended (or started, until spotify reports
+// it finished). first_ms / last_ms default to now.
 module.exports.recordPlay = (data, callback) => {
+    const firstSec = (data.first_ms || Date.now()) / 1000;
+    const lastSec  = (data.last_ms  || Date.now()) / 1000;
     dailyLogsReady.then(() => pool.query(
-        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, log_date, last_logged)' +
-        ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())' +
+        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, log_date, first_logged, last_logged)' +
+        ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?))' +
         ' ON DUPLICATE KEY UPDATE' +
+        '  first_logged = IF(VALUES(play_count) > 0, LEAST(COALESCE(first_logged, VALUES(first_logged)), VALUES(first_logged)), first_logged),' +
+        '  last_logged = IF(VALUES(play_count) > 0, GREATEST(COALESCE(last_logged, VALUES(last_logged)), VALUES(last_logged)), last_logged),' +
         '  play_count = play_count + VALUES(play_count),' +
-        '  last_logged = IF(VALUES(play_count) > 0, NOW(), last_logged),' +
         "  note = IF(VALUES(note) <> '', VALUES(note), note)",
         [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood,
-         data.plays, data.note || '', data.log_date],
+         data.plays, data.note || '', data.log_date, firstSec, lastSec],
+        callback
+    ));
+};
+
+// when spotify reports that a listen finished, stretch that day's listening time to its end
+module.exports.extendLastPlayed = (data, callback) => {
+    dailyLogsReady.then(() => pool.query(
+        'UPDATE Log SET last_logged = GREATEST(COALESCE(last_logged, FROM_UNIXTIME(?)), FROM_UNIXTIME(?))' +
+        ' WHERE user_id = ? AND song_id = ? AND mood = ? AND log_date = ?',
+        [data.end_ms / 1000, data.end_ms / 1000, data.user_id, data.song_id, data.mood, data.log_date],
         callback
     ));
 };

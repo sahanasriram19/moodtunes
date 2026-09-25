@@ -143,23 +143,24 @@ function walkLoop(launch, items, now) {
     let until = Number(launch.counted_until_ms);
     let started = !!launch.started;
     let open = true;
-    const repeats = [];
+    let firstListenEnd = null;          // when the listen started from the app finished
+    const repeats = [];                 // [{ start, end }] of each counted repeat
     for (const it of items) {
-        const t = Date.parse(it.played_at);
+        const t = Date.parse(it.played_at);             // spotify's played_at = when the listen finished
         if (!(t > until) || !it.track) continue;
         const same = it.track.id === songId || (it.track.linked_from && it.track.linked_from.id === songId);
         until = t;
         if (!started) {
-            if (same) { started = true; continue; }            // the listen the app already counted
+            if (same) { started = true; firstListenEnd = t; continue; }   // the listen the app already counted
             if (t - launched > STARTS_WITHIN_MS) { open = false; break; }
             continue;                                           // the song that was playing before you switched
         }
-        if (same) repeats.push(t);
+        if (same) repeats.push({ start: t - (Number(it.track.duration_ms) || 0), end: t });
         else { open = false; break; }
     }
     if (open && !started && now - launched > STARTS_WITHIN_MS) open = false;
     if (open && now - Math.max(until, launched) > LOOP_EXPIRES_MS) open = false;
-    return { until, started, open, repeats };
+    return { until, started, open, repeats, firstListenEnd };
 }
 module.exports._walkLoop = walkLoop;   // exported for tests
 
@@ -181,27 +182,42 @@ module.exports.syncLoops = (req, res, next) => {
                 id: launch.id, old_until_ms: Number(launch.counted_until_ms), old_started: !!launch.started,
                 until_ms: w.until, started: w.started, is_open: w.open
             }, (err3, r) => {
-                // another check already counted these, or nothing to add
-                if (err3 || r.affectedRows !== 1 || !w.repeats.length) return res.status(200).json({ added: 0 });
+                // another check already handled these
+                if (err3 || r.affectedRows !== 1) return res.status(200).json({ added: 0 });
+                if (!w.repeats.length && !w.firstListenEnd) return res.status(200).json({ added: 0 });
                 const key = { user_id: userId, song_id: launch.song_id, mood: launch.mood };
-                model.selectLatestForSong(key, (err4, songRows) => {
-                    if (err4 || !songRows.length) return res.status(200).json({ added: 0 });
-                    // group repeats by the calendar day they were played on
-                    const byDay = {};
-                    w.repeats.forEach((t) => {
-                        const day = new Date(t - Number(launch.tz_offset) * 60000).toISOString().slice(0, 10);
-                        byDay[day] = (byDay[day] || 0) + 1;
-                    });
-                    const days = Object.keys(byDay);
-                    let pending = days.length;
-                    days.forEach((day) => {
-                        model.recordPlay(Object.assign({}, key, songRows[0], { note: '', plays: byDay[day], log_date: day }), () => {
-                            if (--pending === 0) {
-                                res.status(200).json({ added: w.repeats.length, song_id: launch.song_id, mood: launch.mood, title: songRows[0].title });
-                            }
+                const dayOf = (ms) => new Date(ms - Number(launch.tz_offset) * 60000).toISOString().slice(0, 10);
+                const tasks = [];
+                // the listen started from the app finished: that day's time now runs to its end
+                if (w.firstListenEnd) {
+                    tasks.push((done) => model.extendLastPlayed(Object.assign({}, key, {
+                        log_date: dayOf(Number(launch.launched_ms)), end_ms: w.firstListenEnd }), done));
+                }
+                if (w.repeats.length) {
+                    tasks.push((done) => model.selectLatestForSong(key, (err4, songRows) => {
+                        if (err4 || !songRows.length) return done();
+                        // group repeats by the calendar day they finished on
+                        const byDay = {};
+                        w.repeats.forEach((p) => {
+                            const day = dayOf(p.end);
+                            const d = byDay[day] || (byDay[day] = { plays: 0, first: p.start, last: p.end });
+                            d.plays++; d.first = Math.min(d.first, p.start); d.last = Math.max(d.last, p.end);
                         });
-                    });
-                });
+                        const days = Object.keys(byDay);
+                        let left = days.length;
+                        days.forEach((day) => model.recordPlay(Object.assign({}, key, songRows[0], {
+                            note: '', plays: byDay[day].plays, log_date: day, first_ms: byDay[day].first, last_ms: byDay[day].last
+                        }), () => { if (--left === 0) done(songRows[0].title); }));
+                    }));
+                }
+                let left = tasks.length, title = null;
+                tasks.forEach((task) => task((t) => {
+                    if (t) title = t;
+                    if (--left === 0) {
+                        // updated: listening times changed, so the app refreshes even with no new plays
+                        res.status(200).json({ added: w.repeats.length, updated: true, song_id: launch.song_id, mood: launch.mood, title: title });
+                    }
+                }));
             });
         });
     });

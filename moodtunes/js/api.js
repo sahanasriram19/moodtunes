@@ -187,10 +187,10 @@ function syncLoopPlays() {
     loopCheckRunning = true;
     apiCall('/logs/sync-loops', 'POST', {}, function(err, res) {
         loopCheckRunning = false;
-        var added = !err && res && res.status === 200 && res.data ? res.data.added : 0;
-        if (!added) return;
-        if (window.MoodFX) MoodFX.toast('+' + added + ' play' + (added !== 1 ? 's' : '') + ' of “' + res.data.title + '” from your loop', res.data.mood);
-        window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: res.data }));
+        var data = !err && res && res.status === 200 && res.data ? res.data : null;
+        if (!data || !(data.added || data.updated)) return;
+        if (data.added && window.MoodFX) MoodFX.toast('+' + data.added + ' play' + (data.added !== 1 ? 's' : '') + ' of “' + data.title + '” from your loop', data.mood);
+        window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: data }));
     });
 }
 
@@ -257,6 +257,27 @@ function openSpotify(spotifyUrl, opts) {
             setTimeout(function() { overlay.remove(); }, 300);
         });
     });
+}
+
+// listening time for a day's log: "1:50 am", or "1:50 – 2:00 am" once you've listened
+// for a while (first play that day → end of the latest listen)
+function formatPlayRange(firstLogged, lastLogged) {
+    function parse(v) {
+        if (!v) return null;
+        var d = typeof v === 'string' && v.indexOf('T') === -1 ? new Date(v.replace(' ', 'T') + 'Z') : new Date(v);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    function time(d) {
+        return d.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+    }
+    var first = parse(firstLogged), last = parse(lastLogged);
+    if (!last) return first ? time(first) : '';
+    if (!first || last - first < 60000) return time(last);
+    if (first > last) { var t = first; first = last; last = t; }
+    var a = time(first), b = time(last);
+    var ap = a.slice(-2), bp = b.slice(-2);
+    // "1:50 – 2:00 am" when both are am (or pm), otherwise "11:50 pm – 12:10 am"
+    return (ap === bp ? a.slice(0, -2).trim() : a) + ' – ' + b;
 }
 
 function formatDateOnly(isoString) {

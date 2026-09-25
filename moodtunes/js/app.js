@@ -375,7 +375,7 @@ function loadLogs(highlightSongId) {
                             '<div class="log-meta">' +
                                 '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                                 '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
-                                '<span class="date-text">' + formatTimestamp(log.last_logged) + '</span>' +
+                                '<span class="date-text">' + formatPlayRange(log.first_logged, log.last_logged) + '</span>' +
                             '</div>' +
                         '</div>' +
                         '<button class="play-btn log-play-btn" data-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-title="' + MoodFX.esc(log.title) + '" data-artist="' + MoodFX.esc(log.artist) + '" data-art="' + MoodFX.esc(log.album_art) + '" data-url="' + MoodFX.esc(log.spotify_url) + '">▶</button>';
