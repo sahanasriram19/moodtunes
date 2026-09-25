@@ -17,7 +17,9 @@ function apiCall(endpoint, method, body, callback) {
         method: method,
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + getToken()
+            'Authorization': 'Bearer ' + getToken(),
+            // your timezone, so plays land on the right calendar day
+            'X-Timezone-Offset': String(tzOffset())
         }
     };
     if (body) options.body = JSON.stringify(body);
@@ -69,8 +71,24 @@ function apiCallCached(endpoint, callback) {
         try { callback(null, JSON.parse(cachedText), true); }
         catch (e) { cachedText = null; }      // bad cache entry — fall through to a normal load
     }
-    apiCall(endpoint, 'GET', null, function(err, result) {
-        if (err || !result || result.status !== 200) {
+    // the backend sleeps when it isn't used for a while and can take up to a minute
+    // to wake up. with nothing saved to show yet, keep trying instead of giving up
+    var attempt = 0;
+    var RETRY_DELAYS = [2000, 4000, 8000, 15000, 25000];
+
+    function load() {
+        apiCall(endpoint, 'GET', null, handle);
+    }
+
+    function handle(err, result) {
+        var failed = err || !result || result.status !== 200;
+        var serverTrouble = err || (result && result.status >= 500);
+        if (failed && serverTrouble && !cachedText && attempt < RETRY_DELAYS.length) {
+            if (attempt === 0 && window.MoodFX) MoodFX.toast('waking up the server — this can take up to a minute');
+            setTimeout(load, RETRY_DELAYS[attempt++]);
+            return;
+        }
+        if (failed) {
             if (!cachedText) callback(err, result, false);   // keep showing cached data if the refresh fails
             return;
         }
@@ -80,7 +98,9 @@ function apiCallCached(endpoint, callback) {
         // the page is already showing cached content: update it quietly, no entrance animations
         if (cachedText) window.__mtQuietUntil = performance.now() + 100;
         callback(null, result, false);
-    });
+    }
+
+    load();
 }
 
 function logout() {

@@ -1,7 +1,16 @@
 const model = require('../models/logModel');
 
+// the browser sends its timezone with every request (X-Timezone-Offset header);
+// older app versions sent tz_offset in the body or query instead
+function tzFrom(req) {
+    const h = req.get('X-Timezone-Offset');
+    if (h !== undefined && h !== '') return h;
+    if (req.body && req.body.tz_offset !== undefined) return req.body.tz_offset;
+    return req.query ? req.query.tz_offset : undefined;
+}
+
 // the user's local calendar date (YYYY-MM-DD), `daysAgo` days back.
-// tz_offset comes from the browser's getTimezoneOffset(): minutes BEHIND utc,
+// the offset is the browser's getTimezoneOffset(): minutes BEHIND utc,
 // so Singapore (UTC+8) sends -480
 function localDate(tzOffset, daysAgo) {
     let offsetMin = parseInt(tzOffset, 10);
@@ -27,7 +36,7 @@ module.exports.getAllLogsPerDay = (req, res, next) => {
 
 // Today + yesterday — for journal recently played
 module.exports.getRecentTwoDays = (req, res, next) => {
-    model.selectRecentTwoDays({ user_id: res.locals.userId, since_date: localDate(req.query.tz_offset, 1) }, (err, results) => {
+    model.selectRecentTwoDays({ user_id: res.locals.userId, since_date: localDate(tzFrom(req), 1) }, (err, results) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         res.status(200).json(results);
     });
@@ -57,7 +66,7 @@ module.exports.logSong = (req, res, next) => {
         spotify_url: req.body.spotify_url,
         note:        req.body.note || '',
         plays:       req.body.played === false ? 0 : 1,
-        log_date:    localDate(req.body.tz_offset)
+        log_date:    localDate(tzFrom(req))
     }, (err, result) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         // affectedRows: 1 = new row for today, 2 = today's row updated
@@ -78,7 +87,7 @@ module.exports.playSong = (req, res, next) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         if (!rows.length) return res.status(404).json({ message: 'Song not found in your journal' });
         model.recordPlay(Object.assign({}, key, rows[0], {
-            note: '', plays: 1, log_date: localDate(req.body.tz_offset)
+            note: '', plays: 1, log_date: localDate(tzFrom(req))
         }), (err2) => {
             if (err2) return res.status(500).json({ message: 'Internal server error' });
             res.status(200).json({ message: 'Play counted' });

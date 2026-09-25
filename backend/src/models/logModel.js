@@ -19,23 +19,27 @@ function offsetSeconds(tz) {
 }
 module.exports.DEFAULT_OFFSET_SECONDS = offsetSeconds(DEFAULT_TZ_OFFSET);
 
+// shown at /api/health, so you can check the upgrade without digging through logs
+module.exports.dailyLogsStatus = 'upgrading';
+
 async function upgradeToDailyLogs() {
     const db = pool.promise();
+    // (LOWER() because some MySQL hosts store table names in lower case)
     const [[col]] = await db.query(
-        "SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Log' AND COLUMN_NAME = 'log_date'");
+        "SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND COLUMN_NAME = 'log_date'");
     if (!col.n) {
-        await db.query('ALTER TABLE Log ADD COLUMN log_date DATE NULL AFTER note');
+        await db.query('ALTER TABLE Log ADD COLUMN log_date DATE NULL');
         console.log('Log: added log_date column');
     }
     // date existing rows by their last play, in DEFAULT_TZ_OFFSET. worked out from
     // the raw unix time so the database's own timezone setting doesn't matter
     await db.query(
-        "UPDATE Log SET log_date = DATE(DATE_ADD('1970-01-01 00:00:00', INTERVAL (UNIX_TIMESTAMP(last_logged) + ?) SECOND)) WHERE log_date IS NULL",
+        "UPDATE Log SET log_date = DATE(DATE_ADD('1970-01-01 00:00:00', INTERVAL (UNIX_TIMESTAMP(COALESCE(last_logged, first_logged, NOW())) + ?) SECOND)) WHERE log_date IS NULL",
         [module.exports.DEFAULT_OFFSET_SECONDS]);
 
     const indexExists = async (name) => {
         const [[r]] = await db.query(
-            "SELECT COUNT(*) AS n FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Log' AND INDEX_NAME = ?", [name]);
+            "SELECT COUNT(*) AS n FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND INDEX_NAME = ?", [name]);
         return r.n > 0;
     };
 
@@ -64,7 +68,10 @@ async function upgradeToDailyLogs() {
     }
 }
 
-const dailyLogsReady = upgradeToDailyLogs().catch((err) => {
+const dailyLogsReady = upgradeToDailyLogs().then(() => {
+    module.exports.dailyLogsStatus = 'ready';
+}).catch((err) => {
+    module.exports.dailyLogsStatus = 'failed: ' + err.message;
     console.error('Log table upgrade failed:', err.message);
 });
 
@@ -109,7 +116,16 @@ module.exports.selectAllByUserPerDay = (data, callback) => {
 module.exports.selectRecentTwoDays = (data, callback) => {
     dailyLogsReady.then(() => pool.query(
         'SELECT * FROM Log WHERE user_id = ? AND log_date >= ? ORDER BY last_logged DESC, id DESC',
-        [data.user_id, data.since_date], callback
+        [data.user_id, data.since_date],
+        (err, rows) => {
+            // if the upgrade couldn't run, still show the journal (last 48 hours)
+            if (err && err.code === 'ER_BAD_FIELD_ERROR') {
+                return pool.query(
+                    'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 48 HOUR ORDER BY last_logged DESC, id DESC',
+                    [data.user_id], callback);
+            }
+            callback(err, rows);
+        }
     ));
 };
 
