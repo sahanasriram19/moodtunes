@@ -134,7 +134,29 @@ function formatTimestamp(isoString) {
 }
 
 // ── spotify open popup ─────────────────────────────────
-function openSpotify(spotifyUrl) {
+// ── play counting ──────────────────────────────────────
+// a play is counted only when a song is opened in spotify FROM moodtunes (tapping
+// "open in spotify app" / "open in browser"). plays made in spotify itself are
+// never added. each day gets its own log, so the backend needs the local timezone.
+function tzOffset() {
+    return new Date().getTimezoneOffset();
+}
+
+function playsLabel(n) {
+    n = Number(n) || 0;
+    return n === 0 ? 'not played yet' : n + ' play' + (n !== 1 ? 's' : '');
+}
+
+// +1 play for a song that's already in the journal (today's log for it)
+function recordPlay(songId, mood, callback) {
+    apiCall('/logs/play', 'POST', { song_id: songId, mood: mood, tz_offset: tzOffset() }, function(err, res) {
+        var ok = !err && res && res.status < 400;
+        if (callback) callback(ok);
+    });
+}
+
+// opts.onOpen runs once, when a way to listen is picked (not on cancel)
+function openSpotify(spotifyUrl, opts) {
     // derive the spotify:// app URI from the web URL
     var parts   = spotifyUrl.split('/track/');
     var trackId = parts[1] ? parts[1].split('?')[0] : null;
@@ -176,10 +198,12 @@ function openSpotify(spotifyUrl) {
         if (e.target === overlay) overlay.remove();
     });
 
-    // close after clicking app or browser link
+    // close after clicking app or browser link — that's when the song is really played
+    var opened = false;
     ['open-app-btn', 'open-browser-btn'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener('click', function() {
+            if (!opened && opts && opts.onOpen) { opened = true; opts.onOpen(); }
             setTimeout(function() { overlay.remove(); }, 300);
         });
     });

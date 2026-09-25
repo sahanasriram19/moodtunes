@@ -52,7 +52,7 @@ function searchSongHistory(query) {
             return '<div class="song-history-entry">' +
                 '<span class="mood-badge">' + MoodFX.esc(e.mood) + '</span>' +
                 '<span class="song-history-date">' + dateStr + '</span>' +
-                '<span class="song-history-plays">' + e.play_count + ' play' + (e.play_count !== 1 ? 's' : '') + '</span>' +
+                '<span class="song-history-plays">' + playsLabel(e.play_count) + '</span>' +
                 (e.note ? '<span class="log-note" style="display:block;margin-top:4px;margin-left:0;">"' + MoodFX.esc(e.note) + '"</span>' : '') +
             '</div>';
         }).join('');
@@ -67,7 +67,7 @@ function searchSongHistory(query) {
                     '<div class="song-history-artist">' + MoodFX.esc(song.artist) + '</div>' +
                     '<div class="song-history-total">' + totalPlays + ' total plays across ' + song.entries.length + ' day' + (song.entries.length !== 1 ? 's' : '') + '</div>' +
                 '</div>' +
-                '<button class="play-btn search-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '">▶</button>' +
+                '<button class="play-btn search-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '" data-song-id="' + MoodFX.esc(song.entries[0].song_id) + '" data-mood="' + MoodFX.esc(song.entries[0].mood) + '">▶</button>' +
             '</div>' +
             '<div class="song-history-entries">' + entryRows + '</div>';
 
@@ -156,11 +156,11 @@ function renderTimeline(logs) {
                         '</div>' +
                         '<div class="log-meta">' +
                             '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
-                            '<span class="plays-text">' + log.play_count + ' play' + (log.play_count !== 1 ? 's' : '') + '</span>' +
+                            '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
                             '<span class="date-text">' + formatTimestamp(log.last_logged) + '</span>' +
                         '</div>' +
                     '</div>' +
-                    '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '">▶</button>' +
+                    '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '" data-song-id="' + MoodFX.esc(log.song_id) + '" data-mood="' + MoodFX.esc(log.mood) + '">▶</button>' +
                     '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>';
                 group.appendChild(card);
             });
@@ -279,7 +279,18 @@ document.getElementById('tab-sessions').addEventListener('click', function() {
 
 // ── delegated click handlers ───────────────────────────
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('timeline-play-btn') || e.target.classList.contains('search-play-btn') || e.target.classList.contains('session-thumb-play')) {
+    // ▶ on a logged song: +1 play on TODAY's log once it's opened (a new log if it was last played another day)
+    if (e.target.classList.contains('timeline-play-btn') || e.target.classList.contains('search-play-btn')) {
+        var playBtn = e.target;
+        openSpotify(playBtn.dataset.url, { onOpen: function() {
+            recordPlay(playBtn.dataset.songId, playBtn.dataset.mood, function(ok) {
+                if (ok) refreshHistory();
+                else MoodFX.toast('couldn’t count that play — try again');
+            });
+        } });
+    }
+    // songs from a past session aren't journal logs, so they just open
+    if (e.target.classList.contains('session-thumb-play')) {
         openSpotify(e.target.dataset.url);
     }
     if (e.target.classList.contains('add-note-btn') || e.target.classList.contains('edit-note-btn')) {
@@ -328,6 +339,20 @@ var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('
 // ── boot ───────────────────────────────────────────────
 statsGrid.innerHTML = MoodFX.skeleton('stats', 3).replace('sk-stats', 'sk-stats sk-3');
 timeline.innerHTML  = MoodFX.skeleton('rows', 5);
+// reload after a play so today's log (and the totals) show the new count
+function refreshHistory() {
+    apiCall('/logs/perday', 'GET', null, function(err, result) {
+        if (err || !result || result.status !== 200 || !Array.isArray(result.data)) return;
+        allLogs = result.data;
+        apiCacheSet('/logs/perday', allLogs);
+        window.__mtQuietUntil = performance.now() + 100;    // swap in place, no entrance animation
+        renderStats(allLogs);
+        renderTimeline(allLogs);
+        var q = songSearchInput ? songSearchInput.value.trim().toLowerCase() : '';
+        if (q) searchSongHistory(q);
+    });
+}
+
 apiCallCached('/logs/perday', function(err, result) {
     if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your history', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }
     allLogs = Array.isArray(result.data) ? result.data : [];

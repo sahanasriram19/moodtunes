@@ -236,9 +236,11 @@ document.addEventListener('click', function(e) {
     if (e.target.classList.contains('session-add-btn')) {
         var btn = e.target;
         btn.textContent = '...'; btn.disabled = true;
+        // adding isn't playing: the song goes into today's journal with no play counted
         apiCall('/logs', 'POST', {
             song_id: btn.dataset.id, title: btn.dataset.title, artist: btn.dataset.artist,
-            album_art: btn.dataset.art, spotify_url: btn.dataset.url, mood: btn.dataset.mood
+            album_art: btn.dataset.art, spotify_url: btn.dataset.url, mood: btn.dataset.mood,
+            played: false, tz_offset: tzOffset()
         }, function(err) {
             if (err) { btn.textContent = '+ add'; btn.disabled = false; return; }
             btn.textContent = '✓ added'; btn.style.color = '#1DB954'; btn.style.borderColor = '#1DB954';

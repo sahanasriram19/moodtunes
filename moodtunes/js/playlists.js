@@ -186,11 +186,11 @@ function openPlaylist(mood, songs) {
                 '</div>' +
                 '<div class="log-meta">' +
                     '<span class="mood-badge">' + MoodFX.esc(song.mood) + '</span>' +
-                    '<span class="plays-text">' + song.play_count + ' play' + (song.play_count !== 1 ? 's' : '') + '</span>' +
+                    '<span class="plays-text">' + playsLabel(song.play_count) + '</span>' +
                     '<span class="date-text">' + formatTimestamp(song.last_logged) + '</span>' +
                 '</div>' +
             '</div>' +
-            '<button class="play-btn song-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '">▶</button>' +
+            '<button class="play-btn song-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '" data-song-id="' + MoodFX.esc(song.song_id) + '" data-mood="' + MoodFX.esc(mood) + '">▶</button>' +
             '<button class="delete-btn playlist-remove-btn" data-songid="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" title="remove from view">✕</button>';
         block.appendChild(card);
     });
@@ -309,15 +309,30 @@ function openPlaylist(mood, songs) {
 
     document.getElementById('sync-btn').addEventListener('click', function() {
         var first = block.querySelector('.draggable-card');
-        if (first) openSpotify(songMap[first.dataset.songId].spotify_url);
+        if (first) playFromPlaylist(songMap[first.dataset.songId].spotify_url, first.dataset.songId, mood);
     });
 }
 
 // ── song play buttons ──────────────────────────────────
+// a play counts once the song is opened in spotify; the card's total goes up by one
+function playFromPlaylist(url, songId, mood) {
+    openSpotify(url, { onOpen: function() {
+        recordPlay(songId, mood, function(ok) {
+            if (!ok) { MoodFX.toast('couldn’t count that play — try again'); return; }
+            var card = document.getElementById('log-' + songId + '-' + mood);
+            var label = card && card.querySelector('.plays-text');
+            if (label) {
+                var n = (parseInt(label.textContent, 10) || 0) + 1;
+                label.textContent = playsLabel(n);
+            }
+        });
+    } });
+}
+
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('song-play-btn')) {
         e.stopPropagation();
-        openSpotify(e.target.dataset.url);
+        playFromPlaylist(e.target.dataset.url, e.target.dataset.songId, e.target.dataset.mood);
     }
 });
 

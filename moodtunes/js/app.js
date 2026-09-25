@@ -293,19 +293,24 @@ function showResults(tracks) {
 
             if (selectedMood) document.getElementById('search-note-input').focus();
 
+            // the song is logged (and its play counted) once it's opened in spotify.
+            // cancelling the "open in spotify" popup logs nothing and keeps your note here
+            function playFromSearch(note) {
+                var mood = selectedMood;
+                openSpotify(track.external_urls.spotify, { onOpen: function() {
+                    panel.remove();
+                    logSong(track.id, track.name, artists, art, track.external_urls.spotify, mood, note);
+                } });
+            }
+
             document.getElementById('just-play-btn').addEventListener('click', function() {
                 if (!selectedMood) { MoodFX.nudgeMoods(panel); return; }
-                panel.remove();
-                logSong(track.id, track.name, artists, art, track.external_urls.spotify, selectedMood, '');
-                openSpotify(track.external_urls.spotify);
+                playFromSearch('');
             });
 
             document.getElementById('play-with-note-btn').addEventListener('click', function() {
                 if (!selectedMood) { MoodFX.nudgeMoods(panel); return; }
-                var note = document.getElementById('search-note-input').value.trim();
-                panel.remove();
-                logSong(track.id, track.name, artists, art, track.external_urls.spotify, selectedMood, note);
-                openSpotify(track.external_urls.spotify);
+                playFromSearch(document.getElementById('search-note-input').value.trim());
             });
         });
 
@@ -315,7 +320,7 @@ function showResults(tracks) {
 
 // ── log song ───────────────────────────────────────────
 function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
-    apiCall('/logs', 'POST', { song_id: songId, title: title, artist: artist, album_art: albumArt, spotify_url: spotifyUrl, mood: mood, note: note || '' }, function(err) {
+    apiCall('/logs', 'POST', { song_id: songId, title: title, artist: artist, album_art: albumArt, spotify_url: spotifyUrl, mood: mood, note: note || '', tz_offset: tzOffset() }, function(err) {
         if (err) { console.error('log error:', err); MoodFX.toast('couldn’t log that song — try again'); return; }
         searchResults.innerHTML = '';
         songSearch.value = '';
@@ -328,7 +333,7 @@ function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
 function loadLogs(highlightSongId) {
     if (!logsList.children.length) logsList.innerHTML = MoodFX.skeleton('rows', 4);
     var highlighted = false;
-    apiCallCached('/logs/recent', function(err, result) {
+    apiCallCached('/logs/recent?tz_offset=' + tzOffset(), function(err, result) {
         if (err) { logsList.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your journal', text: 'check your connection and give it another go', action: { label: 'try again', reload: true } }); return; }
         var logs = Array.isArray(result.data) ? result.data : [];
         logsList.innerHTML = '';
@@ -369,7 +374,7 @@ function loadLogs(highlightSongId) {
                             (log.note ? '<div class="log-note">"' + MoodFX.esc(log.note) + '"</div>' : '') +
                             '<div class="log-meta">' +
                                 '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
-                                '<span class="plays-text">' + log.play_count + ' play' + (log.play_count !== 1 ? 's' : '') + '</span>' +
+                                '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
                                 '<span class="date-text">' + formatTimestamp(log.last_logged) + '</span>' +
                             '</div>' +
                         '</div>' +
@@ -383,7 +388,13 @@ function loadLogs(highlightSongId) {
 // ── click handlers ─────────────────────────────────────
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('log-play-btn')) {
-        openSpotify(e.target.dataset.url);
+        var playBtn = e.target;
+        openSpotify(playBtn.dataset.url, { onOpen: function() {
+            recordPlay(playBtn.dataset.songId, playBtn.dataset.mood, function(ok) {
+                if (ok) loadLogs(playBtn.dataset.songId);
+                else MoodFX.toast('couldn’t count that play — try again');
+            });
+        } });
     }
     if (e.target.classList.contains('journal-delete-btn')) {
         var logId = e.target.dataset.id;
@@ -503,68 +514,9 @@ sessionBtn.addEventListener('click', function() {
 sessionEndBtn.addEventListener('click', endSession);
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
-// ── sync play counts from spotify recently played ──────
-function syncSpotifyPlays() {
-    var lastSync = parseInt(localStorage.getItem('moodtunes_last_sync') || '0', 10);
-    var now = Date.now();
-
-    apiCall('/spotify/recently-played', 'GET', null, function(err, result) {
-        if (err || !result || !result.data || !Array.isArray(result.data)) return;
-
-        // only count plays that happened after the last sync point
-        var newPlays = result.data.filter(function(item) {
-            return new Date(item.played_at).getTime() > lastSync;
-        });
-
-        // stamp immediately so a rapid re-sync doesn't recount the same plays
-        localStorage.setItem('moodtunes_last_sync', now.toString());
-
-        if (newPlays.length === 0) return;
-
-        // count how many times each track was played since last sync
-        var playCounts = {};
-        newPlays.forEach(function(item) {
-            var tid = item.track.id;
-            playCounts[tid] = (playCounts[tid] || 0) + 1;
-        });
-
-        apiCall('/logs/recent', 'GET', null, function(err2, logsResult) {
-            if (err2 || !logsResult || !Array.isArray(logsResult.data)) return;
-            var logs = logsResult.data;
-            var pending = [];
-
-            logs.forEach(function(log) {
-                var parts = log.spotify_url ? log.spotify_url.split('/track/') : [];
-                var trackId = parts[1] ? parts[1].split('?')[0] : null;
-                if (!trackId || !playCounts[trackId]) return;
-                pending.push({ log: log, count: playCounts[trackId] });
-            });
-
-            if (pending.length === 0) return;
-
-            var done = 0;
-            var total = pending.reduce(function(sum, p) { return sum + p.count; }, 0);
-
-            pending.forEach(function(p) {
-                for (var i = 0; i < p.count; i++) {
-                    apiCall('/logs', 'POST', {
-                        song_id: p.log.song_id, title: p.log.title, artist: p.log.artist,
-                        album_art: p.log.album_art, spotify_url: p.log.spotify_url,
-                        mood: p.log.mood, note: p.log.note || ''
-                    }, function() {
-                        done++;
-                        if (done >= total) loadLogs();
-                    });
-                }
-            });
-        });
-    });
-}
-
-// sync when tab becomes visible again
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) syncSpotifyPlays();
-});
+// plays only count when a song is opened from moodtunes, so nothing is synced
+// from spotify's "recently played" any more. clear the old sync bookmark
+try { localStorage.removeItem('moodtunes_last_sync'); } catch (e) {}
 
 // boot — sessions only start when you click the button
 // but if YOU started one this browser session, restore it across tab switches
@@ -599,11 +551,5 @@ if (savedSession) {
         });
     } catch(e) { localStorage.removeItem('moodtunes_session'); }
 }
-
-// the play-count sync writes to your journal, so it waits until the page is really open
-MoodFX.whenActive(function() {
-    syncSpotifyPlays();
-    setInterval(syncSpotifyPlays, 120000);
-});
 
 // help modal is handled by js/help.js

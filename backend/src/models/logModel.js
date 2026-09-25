@@ -1,5 +1,73 @@
 const pool = require('../services/db');
 
+// ── one log per song + mood + day ────────────────────────────────────────────
+// every day gets its own row (log_date = the user's local calendar day), and
+// play_count only goes up when a song is played from moodtunes.
+//
+// this upgrades the Log table automatically the first time the backend starts:
+//  1. adds the log_date column and fills it in for existing rows
+//  2. merges any duplicate rows for the same song + mood + day
+//  3. swaps the old one-row-per-song rule for one-row-per-song-per-day
+// DEFAULT_TZ_OFFSET (e.g. +08:00) is only used to date the existing rows and for
+// requests that don't say which timezone they're in.
+const DEFAULT_TZ_OFFSET = process.env.DEFAULT_TZ_OFFSET || '+08:00';
+
+function offsetSeconds(tz) {
+    const m = /^([+-])(\d{2}):?(\d{2})$/.exec(String(tz).trim());
+    if (!m) return 8 * 3600;
+    return (m[1] === '-' ? -1 : 1) * (parseInt(m[2], 10) * 3600 + parseInt(m[3], 10) * 60);
+}
+module.exports.DEFAULT_OFFSET_SECONDS = offsetSeconds(DEFAULT_TZ_OFFSET);
+
+async function upgradeToDailyLogs() {
+    const db = pool.promise();
+    const [[col]] = await db.query(
+        "SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Log' AND COLUMN_NAME = 'log_date'");
+    if (!col.n) {
+        await db.query('ALTER TABLE Log ADD COLUMN log_date DATE NULL AFTER note');
+        console.log('Log: added log_date column');
+    }
+    // date existing rows by their last play, in DEFAULT_TZ_OFFSET. worked out from
+    // the raw unix time so the database's own timezone setting doesn't matter
+    await db.query(
+        "UPDATE Log SET log_date = DATE(DATE_ADD('1970-01-01 00:00:00', INTERVAL (UNIX_TIMESTAMP(last_logged) + ?) SECOND)) WHERE log_date IS NULL",
+        [module.exports.DEFAULT_OFFSET_SECONDS]);
+
+    const indexExists = async (name) => {
+        const [[r]] = await db.query(
+            "SELECT COUNT(*) AS n FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Log' AND INDEX_NAME = ?", [name]);
+        return r.n > 0;
+    };
+
+    if (!(await indexExists('unique_user_song_day'))) {
+        // merge duplicates (same song + mood + day) into the oldest row first
+        await db.query(
+            'UPDATE Log l JOIN (' +
+            '  SELECT MIN(id) AS keep_id, SUM(play_count) AS plays, MIN(first_logged) AS first_at, MAX(last_logged) AS last_at, MAX(note) AS any_note' +
+            '  FROM Log GROUP BY user_id, song_id, mood, log_date HAVING COUNT(*) > 1' +
+            ') d ON l.id = d.keep_id' +
+            " SET l.play_count = d.plays, l.first_logged = d.first_at, l.last_logged = d.last_at, l.note = IF(l.note IS NULL OR l.note = '', d.any_note, l.note)");
+        const [del] = await db.query(
+            'DELETE l FROM Log l JOIN (' +
+            '  SELECT MIN(id) AS keep_id, user_id, song_id, mood, log_date' +
+            '  FROM Log GROUP BY user_id, song_id, mood, log_date HAVING COUNT(*) > 1' +
+            ') d ON l.user_id = d.user_id AND l.song_id = d.song_id AND l.mood = d.mood AND l.log_date = d.log_date AND l.id <> d.keep_id');
+        if (del.affectedRows) console.log('Log: merged ' + del.affectedRows + ' duplicate same-day rows');
+        await db.query('ALTER TABLE Log MODIFY log_date DATE NOT NULL');
+        await db.query('ALTER TABLE Log ADD UNIQUE KEY unique_user_song_day (user_id, song_id, mood, log_date)');
+        console.log('Log: one row per song + mood + day');
+    }
+    // the old rule allowed only ONE row per song + mood ever, which blocked a new day's log
+    if (await indexExists('unique_user_song_mood')) {
+        await db.query('ALTER TABLE Log DROP INDEX unique_user_song_mood');
+        console.log('Log: removed the one-row-per-song rule');
+    }
+}
+
+const dailyLogsReady = upgradeToDailyLogs().catch((err) => {
+    console.error('Log table upgrade failed:', err.message);
+});
+
 // ── grouped: one row per unique song+mood, total plays summed ───────────────
 // used by: journal recently played, playlists, discover, session recs
 
@@ -39,36 +107,34 @@ module.exports.selectAllByUserPerDay = (data, callback) => {
 
 // ── today and yesterday only — for journal recently played ───────────────────
 module.exports.selectRecentTwoDays = (data, callback) => {
-    pool.query(
-        'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 48 HOUR ORDER BY last_logged DESC, id DESC',
-        [data.user_id], callback
-    );
+    dailyLogsReady.then(() => pool.query(
+        'SELECT * FROM Log WHERE user_id = ? AND log_date >= ? ORDER BY last_logged DESC, id DESC',
+        [data.user_id, data.since_date], callback
+    ));
 };
 
-// ── check if logged today ────────────────────────────────────────────────────
-
-module.exports.selectTodayLog = (data, callback) => {
-    pool.query(
-        'SELECT * FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR LIMIT 1',
-        [data.user_id, data.song_id, data.mood], callback
-    );
-};
-
-// ── insert ───────────────────────────────────────────────────────────────────
-
-module.exports.insertLog = (data, callback) => {
-    pool.query(
-        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, last_logged) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())',
-        [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood, data.note || ''],
+// ── record a play ────────────────────────────────────────────────────────────
+// adds `plays` (1, or 0 when a song is only added to the journal) to that song's
+// row for the given day, creating the row if it's the first time that day.
+// one atomic statement, so a quick double tap can't create two rows.
+module.exports.recordPlay = (data, callback) => {
+    dailyLogsReady.then(() => pool.query(
+        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, log_date, last_logged)' +
+        ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())' +
+        ' ON DUPLICATE KEY UPDATE' +
+        '  play_count = play_count + VALUES(play_count),' +
+        '  last_logged = IF(VALUES(play_count) > 0, NOW(), last_logged),' +
+        "  note = IF(VALUES(note) <> '', VALUES(note), note)",
+        [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood,
+         data.plays, data.note || '', data.log_date],
         callback
-    );
+    ));
 };
 
-// ── increment today's count ──────────────────────────────────────────────────
-
-module.exports.incrementPlayCount = (data, callback) => {
+// the most recent log of a song + mood — used to replay a song that's already in the journal
+module.exports.selectLatestForSong = (data, callback) => {
     pool.query(
-        'UPDATE Log SET play_count = play_count + 1 WHERE user_id = ? AND song_id = ? AND mood = ? AND last_logged >= NOW() - INTERVAL 24 HOUR',
+        'SELECT title, artist, album_art, spotify_url FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? ORDER BY last_logged DESC, id DESC LIMIT 1',
         [data.user_id, data.song_id, data.mood], callback
     );
 };
