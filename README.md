@@ -1,4 +1,4 @@
-# moodtunes 🎵
+# moodtunes
 
 A music mood journal that connects to your Spotify account. Log songs by how they make you feel, build mood-based playlists, track your listening history, and discover new music based on your taste.
 
