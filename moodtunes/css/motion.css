@@ -2627,18 +2627,25 @@ body {
   left: 0;
   right: 0;
   top: 50%;
-  height: 72vh;
+  height: 92vh;
   transform: translateY(-50%);
   opacity: 0;
-  transition: opacity 1.4s ease;
+  visibility: hidden;
+  /* disappear quickly when the music stops… */
+  transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
 }
 
+/* …and fade in gently when it starts. paused or nothing playing = no waves */
 :root.np-live .mt-waves {
   opacity: 0.7;
+  visibility: visible;
+  transition: opacity 1s ease, visibility 0s;
 }
 
-:root.np-paused .mt-waves {
-  opacity: 0.28;
+/* freeze the motion the moment playback stops */
+:root:not(.np-live) .mt-waves .wave,
+:root:not(.np-live) .mt-waves path {
+  animation-play-state: paused;
 }
 
 .mt-waves .wave {
@@ -2659,7 +2666,7 @@ body {
   transform-box: fill-box;
   transform-origin: center;
   transform: scaleY(0.06);
-  transition: transform 1.2s var(--ease-out);
+  transition: transform 0.3s var(--ease-out);
 }
 
 :root.np-live .mt-waves .wave-amp {
@@ -2683,21 +2690,21 @@ body {
   opacity: calc(var(--o) * 0.22);
 }
 
-/* the waves swell with the beat while playing */
+/* no tempo known and not listening: a slow, calm swell (not pretending to be the beat) */
 :root.np-live .mt-waves .wave-line,
 :root.np-live .mt-waves .wave-glow {
   transform-box: fill-box;
   transform-origin: center;
-  animation: wave-swell calc(var(--mood-tempo) * 2) ease-in-out infinite;
+  animation: wave-swell 7s ease-in-out infinite;
 }
 
 :root.np-live .mt-waves .wave-2 path {
-  animation-delay: calc(var(--mood-tempo) * -0.7);
+  animation-delay: -2.5s;
 }
 
 /* on the beat: each hit stretches the waves taller and brighter for a moment */
 :root.np-beat .mt-waves .wave-amp {
-  transform: scaleY(calc(0.78 + var(--pulse, 0) * 0.45 * var(--pk, 1)));
+  transform: scaleY(calc(var(--base, 0.78) + var(--pulse, 0) * 0.45 * var(--pk, 1)));
   transition: transform 0.05s linear;
 }
 
@@ -2723,7 +2730,49 @@ body {
 
 @media (max-width: 768px) {
   .mt-waves {
-    height: 60vh;
+    height: 78vh;
+  }
+}
+
+/* "sync waves to sound" toggle on the now-playing card */
+.np-sync {
+  flex-shrink: 0;
+  margin-left: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid #ffffff1f;
+  background: transparent;
+  color: var(--text-muted, #888);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.np-sync:hover {
+  color: var(--text-primary, #fff);
+  border-color: color-mix(in srgb, var(--np-color, var(--mood)) 60%, transparent);
+}
+
+.np-sync.on {
+  color: var(--np-color, var(--mood));
+  border-color: color-mix(in srgb, var(--np-color, var(--mood)) 55%, transparent);
+  background: color-mix(in srgb, var(--np-color, var(--mood)) 12%, transparent);
+}
+
+.np-idle .np-sync {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .np-progress {
+    flex-wrap: wrap;
+  }
+
+  .np-sync {
+    margin-left: 0;
   }
 }
 

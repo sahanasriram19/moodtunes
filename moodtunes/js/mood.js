@@ -209,9 +209,9 @@ function wavePath(amp) {
 }
 function wavesHTML() {
     var layers = [
-        { amp: 88, h: 46, y: 14, k: 14, o: 0.34, p: 1.0 },
-        { amp: 64, h: 38, y: 20, k: 10, o: 0.22, p: 0.7 },
-        { amp: 96, h: 60, y: 6,  k: 20, o: 0.14, p: 1.3 }
+        { amp: 92, h: 64, y: 14, k: 14, o: 0.34, p: 1.0 },
+        { amp: 70, h: 52, y: 20, k: 10, o: 0.22, p: 0.7 },
+        { amp: 98, h: 84, y: 4,  k: 20, o: 0.14, p: 1.3 }
     ];
     return '<div class="mt-waves">' + layers.map(function(l, i) {
         var d = wavePath(l.amp);
@@ -239,7 +239,7 @@ function setLiveState(st, trackColor) {
 function restoreLiveState() {
     try {
         var v = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null');
-        if (!v || Date.now() - v.at > 60000) return;
+        if (!v || Date.now() - v.at > 20000) return;
         root.classList.toggle('np-live', v.state === 'playing');
         root.classList.toggle('np-paused', v.state === 'paused');
         if (v.color) setTrackColor(v.color);
@@ -247,98 +247,230 @@ function restoreLiveState() {
 }
  
 // ── waves on the beat ──────────────────────────────────
-// moodtunes can't hear the audio (it plays in spotify), so it looks up the
-// song's tempo (BPM) through the backend and pulses the waves on that beat,
-// lined up with how far into the song spotify says you are. songs without a
-// known tempo keep the slow swell.
+// two ways to move the waves with the music:
+//  1. tempo: the backend looks up the song's BPM (spotify no longer shares
+//     tempo with new apps, so it asks deezer) and the waves kick on that beat,
+//     timed from how far into the song spotify says you are. it keeps the
+//     right speed, but it can't know exactly where the song's beats fall.
+//  2. "sync to sound" (opt-in, from the now-playing card): the browser listens
+//     through the mic and the waves react to what your speakers are actually
+//     playing — real kicks and loudness. the mic is only used while spotify is
+//     playing, and nothing is recorded or sent anywhere.
+// songs with neither just drift slowly.
 var Beat = (function() {
+    var LISTEN_KEY = 'moodtunes_wave_listen';
     var bpmCache = {};                   // track id → bpm | null
     var cur = { id: null, bpm: null, base: 0, at: 0, playing: false };
-    var raf = null, wavesEl = null;
+    var raf = null, wavesEl = null, listeners = [];
+    var mic = { want: false, stream: null, ctx: null, src: null, an: null, freq: null, wave: null,
+                bassAvg: 0, peak: 0.05, level: 0, kick: 0, lastKick: 0, lastT: 0, starting: false, denied: false };
     try { bpmCache = JSON.parse(sessionStorage.getItem('moodtunes_bpm') || '{}') || {}; } catch (e) {}
+    try { mic.want = localStorage.getItem(LISTEN_KEY) === '1'; } catch (e) {}
  
     function save() { try { sessionStorage.setItem('moodtunes_bpm', JSON.stringify(bpmCache)); } catch (e) {} }
+ 
+    function info() {
+        return { bpm: cur.bpm, trackId: cur.id, listening: listening(), wantListen: mic.want, denied: mic.denied };
+    }
+    function emit() { var i = info(); listeners.forEach(function(fn) { try { fn(i); } catch (e) {} }); }
  
     function fetchBpm(track, cb) {
         if (Object.prototype.hasOwnProperty.call(bpmCache, track.id)) return cb(bpmCache[track.id]);
         if (typeof apiCall !== 'function') return cb(null);
         apiCall('/tempo?title=' + encodeURIComponent(track.title || '') + '&artist=' + encodeURIComponent(track.artist || ''),
             'GET', null, function(err, res) {
-                if (err || !res || res.status >= 400) return cb(null);   // not cached, try again next song
+                if (err || !res || res.status >= 400) return cb(null);   // not cached, try again next time
                 var bpm = res.data && res.data.bpm ? Number(res.data.bpm) : null;
                 bpmCache[track.id] = bpm; save();
+                if (window.console) console.info('[moodtunes] waves: ' + (bpm ? bpm + ' bpm' : 'no tempo found') + ' for “' + track.title + '”');
                 cb(bpm);
             });
     }
  
-    function frame() {
-        raf = null;
-        if (!cur.playing || !cur.bpm || document.hidden) { setPulse(0); return; }
-        var pos = cur.base + (performance.now() - cur.at);           // ms into the song
+    // ── mic ──
+    function listening() { return !!(mic.stream && mic.ctx && mic.ctx.state === 'running'); }
+ 
+    function startMic() {
+        if (mic.stream || mic.starting || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        mic.starting = true;
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+            .then(function(stream) {
+                mic.starting = false;
+                if (!mic.want || !cur.playing) { stream.getTracks().forEach(function(t) { t.stop(); }); return; }
+                mic.denied = false;
+                mic.stream = stream;
+                var AC = window.AudioContext || window.webkitAudioContext;
+                if (!mic.ctx) mic.ctx = new AC();
+                mic.src = mic.ctx.createMediaStreamSource(stream);
+                mic.an = mic.ctx.createAnalyser();
+                mic.an.fftSize = 1024;
+                mic.an.smoothingTimeConstant = 0.2;
+                mic.src.connect(mic.an);
+                mic.freq = new Uint8Array(mic.an.frequencyBinCount);
+                mic.wave = new Uint8Array(mic.an.fftSize);
+                if (mic.ctx.state !== 'running') mic.ctx.resume().catch(function() {});
+                if (mic.ctx.state !== 'running') resumeOnGesture();
+                mic.ctx.onstatechange = function() { run(); emit(); };
+                run(); emit();
+            })
+            .catch(function() {
+                mic.starting = false;
+                mic.denied = true;
+                setWant(false);
+                if (typeof toast === 'function') toast('the mic is blocked, so the waves follow the song’s tempo instead');
+                emit();
+            });
+    }
+    function stopMic() {
+        if (mic.stream) mic.stream.getTracks().forEach(function(t) { t.stop(); });
+        if (mic.src) { try { mic.src.disconnect(); } catch (e) {} }
+        mic.stream = mic.src = mic.an = null;
+        mic.level = mic.kick = 0;
+    }
+    function resumeOnGesture() {
+        function go() {
+            document.removeEventListener('pointerdown', go, true);
+            document.removeEventListener('keydown', go, true);
+            if (mic.ctx) mic.ctx.resume().catch(function() {});
+        }
+        document.addEventListener('pointerdown', go, true);
+        document.addEventListener('keydown', go, true);
+    }
+    function setWant(on) {
+        mic.want = on;
+        try { if (on) localStorage.setItem(LISTEN_KEY, '1'); else localStorage.removeItem(LISTEN_KEY); } catch (e) {}
+    }
+    // only hold the mic while spotify is actually playing
+    function syncMic() {
+        if (mic.want && cur.playing && !document.hidden) startMic();
+        else if (mic.stream) { stopMic(); emit(); }
+    }
+ 
+    function micFrame(now) {
+        var dt = mic.lastT ? Math.min(now - mic.lastT, 100) : 16;
+        mic.lastT = now;
+        mic.an.getByteFrequencyData(mic.freq);
+        mic.an.getByteTimeDomainData(mic.wave);
+        // loudness (RMS), normalised against a slowly-falling peak so it works at any volume
+        var sum = 0;
+        for (var i = 0; i < mic.wave.length; i++) { var v = (mic.wave[i] - 128) / 128; sum += v * v; }
+        var rms = Math.sqrt(sum / mic.wave.length);
+        mic.peak = Math.max(rms, mic.peak * Math.exp(-dt / 4000), 0.02);
+        var lvl = Math.min(1, rms / mic.peak);
+        mic.level += (lvl - mic.level) * Math.min(1, dt / 90);
+        // kicks: bass energy jumping well above its recent average
+        var binHz = mic.ctx.sampleRate / mic.an.fftSize, hi = Math.max(2, Math.round(160 / binHz)), bass = 0;
+        for (var b = 1; b <= hi; b++) bass += mic.freq[b];
+        bass /= hi;
+        if (bass > mic.bassAvg * 1.25 + 6 && bass > 40 && now - mic.lastKick > 230) { mic.kick = 1; mic.lastKick = now; }
+        mic.bassAvg += (bass - mic.bassAvg) * Math.min(1, dt / 250);
+        mic.kick *= Math.exp(-dt / 140);
+        return { base: 0.25 + mic.level * 0.7, pulse: mic.kick };
+    }
+ 
+    function bpmFrame(now) {
+        var pos = cur.base + (now - cur.at);                   // ms into the song
         var period = 60000 / cur.bpm;
         var beats = pos / period;
         var phase = beats - Math.floor(beats);
         var downbeat = Math.floor(beats) % 4 === 0;
-        var kick = Math.exp(-phase * 4) * (downbeat ? 1 : 0.62);      // quick hit, soft tail
-        var swell = 0.8 + 0.2 * Math.sin(pos / (period * 16) * Math.PI * 2);   // rises and falls every 4 bars
-        setPulse(kick * swell);
+        var kick = Math.exp(-phase * 4) * (downbeat ? 1 : 0.62);
+        var swell = 0.8 + 0.2 * Math.sin(pos / (period * 16) * Math.PI * 2);
+        return { base: 0.78, pulse: kick * swell };
+    }
+ 
+    function frame(now) {
+        raf = null;
+        if (!cur.playing || document.hidden) { setPulse(null); return; }
+        var f = listening() && mic.an ? micFrame(now) : cur.bpm ? bpmFrame(now) : null;
+        if (!f) { setPulse(null); return; }
+        setPulse(f);
         raf = requestAnimationFrame(frame);
     }
  
-    function setPulse(v) {
+    function setPulse(f) {
         if (!wavesEl) wavesEl = document.querySelector('.mt-waves');
-        if (wavesEl) wavesEl.style.setProperty('--pulse', v.toFixed(3));
+        if (!wavesEl) return;
+        wavesEl.style.setProperty('--pulse', f ? f.pulse.toFixed(3) : '0');
+        wavesEl.style.setProperty('--base', f ? f.base.toFixed(3) : '0.78');
     }
  
     function run() {
-        var on = cur.playing && !!cur.bpm && !reduceMotion;
+        var on = cur.playing && !reduceMotion && (!!cur.bpm || listening());
         root.classList.toggle('np-beat', on);
+        root.classList.toggle('np-listen', on && listening());
         if (on && !raf) raf = requestAnimationFrame(frame);
-        if (!on) { if (raf) cancelAnimationFrame(raf); raf = null; setPulse(0); }
+        if (!on) { if (raf) cancelAnimationFrame(raf); raf = null; setPulse(null); }
     }
  
     // track: {id, title, artist}; progress in ms; playing: bool
     function update(track, progress, playing) {
-        if (!track || !track.id) { cur.id = null; cur.bpm = null; cur.playing = false; run(); return; }
+        if (!track || !track.id) { cur.id = null; cur.bpm = null; cur.playing = false; syncMic(); run(); emit(); return; }
         cur.base = progress || 0;
         cur.at = performance.now();
         cur.playing = !!playing;
         if (track.id !== cur.id) {
             cur.id = track.id; cur.bpm = null;
             var id = track.id;
-            fetchBpm(track, function(bpm) { if (cur.id === id) { cur.bpm = bpm; run(); } });
+            fetchBpm(track, function(bpm) { if (cur.id === id) { cur.bpm = bpm; run(); emit(); } });
         }
-        run();
+        syncMic(); run(); emit();
     }
     function stop() { update(null); }
  
-    document.addEventListener('visibilitychange', function() { if (!document.hidden) run(); });
-    return { update: update, stop: stop };
+    // called from a click, so the browser allows the mic prompt and the audio
+    function toggleListen() {
+        if (mic.want) { setWant(false); stopMic(); run(); emit(); return; }
+        setWant(true);
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!mic.ctx && AC) mic.ctx = new AC();
+        if (mic.ctx && mic.ctx.state !== 'running') mic.ctx.resume().catch(function() {});
+        if (cur.playing) startMic();
+        emit();
+    }
+ 
+    // don't pop a mic prompt on page load — only resume if it was already allowed
+    if (mic.want && navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'microphone' }).then(function(p) {
+            if (p.state !== 'granted') setWant(false);
+            emit();
+        }).catch(function() {});
+    }
+ 
+    document.addEventListener('visibilitychange', function() { syncMic(); run(); });
+    return { update: update, stop: stop, toggleListen: toggleListen, info: info,
+             onChange: function(fn) { listeners.push(fn); fn(info()); } };
 })();
  
-// pages without a now-playing card: a light check every 20 seconds
+// pages without a now-playing card: checks every 4 seconds while a song plays
+// (so the waves stop soon after you pause) and every 20 seconds otherwise
 function watchPlayback() {
-    var stopped = false, lastTrack = null, timer = null;
+    var stopped = false, lastTrack = null, timer = null, playing = false;
+    function next() { return playing ? 3000 : 8000; }
     function check() {
         clearTimeout(timer);
         if (stopped || document.hidden) return;
+        var t0 = performance.now();
         apiCall('/spotify/now-playing', 'GET', null, function(err, res) {
+            var halfTrip = Math.min((performance.now() - t0) / 2, 1500);
             if (err || !res) { timer = setTimeout(check, 20000); return; }
+            playing = !!(res.data && res.data.playing && res.data.is_playing);
             if (res.status === 401 || res.status === 404) { stopped = true; setLiveState('idle'); return; }
             var d = res.data || {};
             if (!d.playing || !d.track) { lastTrack = null; setTrackColor(null); setLiveState('idle', null); Beat.stop(); }
             else {
                 setLiveState(d.is_playing ? 'playing' : 'paused');
-                Beat.update(d.track, d.progress_ms, d.is_playing);
+                Beat.update(d.track, (d.progress_ms || 0) + (d.is_playing ? halfTrip : 0), d.is_playing);
                 if (d.track.id !== lastTrack) {
                     lastTrack = d.track.id;
                     artColor(d.track.albumArt, function(c) { setTrackColor(c); setLiveState(d.is_playing ? 'playing' : 'paused', c); });
                 }
             }
-            timer = setTimeout(check, 20000);
+            timer = setTimeout(check, next());
         });
     }
     document.addEventListener('visibilitychange', function() { if (!document.hidden) check(); });
+    window.addEventListener('focus', function() { if (!document.hidden) check(); });
     check();
 }
  
@@ -440,7 +572,6 @@ function skeleton(kind, n) {
     }
     return '';
 }
- 
 // ── toast ──────────────────────────────────────────────
 // opts: { action: 'undo', onAction: fn, duration: ms }
 var toastTimer = null;
@@ -825,9 +956,9 @@ function nowPlaying(container, opts) {
     opts = opts || {};
     if (!container) return null;
  
-    var POLL_MS = 5000;
+    var POLL_MS = 5000, POLL_PLAYING_MS = 3000;   // check more often while music plays, so stopping shows quickly
     var state = { track: null, playing: false, base: 0, duration: 0, at: 0 };
-    var pollTimer = null, raf = null, failures = 0, stopped = false;
+    var pollTimer = null, raf = null, failures = 0, stopped = false, halfTrip = 0;
  
     container.classList.add('np-mount');
     container.innerHTML =
@@ -837,7 +968,8 @@ function nowPlaying(container, opts) {
                 '<div class="np-label"><span class="np-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-status">listening for spotify…</span><span class="np-added" aria-live="polite"></span></div>' +
                 '<div class="np-title"></div>' +
                 '<div class="np-artist"></div>' +
-                '<div class="np-progress"><div class="np-bar"><div class="np-fill"></div></div><span class="np-time"></span></div>' +
+                '<div class="np-progress"><div class="np-bar"><div class="np-fill"></div></div><span class="np-time"></span>' +
+                    '<button class="np-sync" type="button" title="make the background waves react to the music your speakers are playing (uses the mic, nothing is recorded)"></button></div>' +
             '</div>' +
             '<div class="np-controls">' +
                 '<button class="np-btn np-prev" aria-label="previous song">' + icon('prev') + '</button>' +
@@ -855,6 +987,15 @@ function nowPlaying(container, opts) {
     var time   = container.querySelector('.np-time');
     var added  = container.querySelector('.np-added');
     var toggle = container.querySelector('.np-toggle');
+    var syncBtn = container.querySelector('.np-sync');
+    syncBtn.addEventListener('click', function() { Beat.toggleListen(); });
+    Beat.onChange(function(i) {
+        syncBtn.classList.toggle('on', i.wantListen);
+        syncBtn.classList.toggle('live', i.listening);
+        syncBtn.setAttribute('aria-pressed', i.wantListen ? 'true' : 'false');
+        syncBtn.textContent = i.wantListen ? (i.listening ? '● synced to sound' : 'sync to sound…')
+            : (i.bpm ? '♪ ' + Math.round(i.bpm) + ' bpm · sync to sound' : 'sync waves to sound');
+    });
  
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
  
@@ -923,7 +1064,7 @@ function nowPlaying(container, opts) {
         var changed = !state.track || state.track.id !== t.id;
  
         state.playing  = !!data.is_playing;
-        state.base     = data.progress_ms || 0;
+        state.base     = (data.progress_ms || 0) + (data.is_playing ? halfTrip : 0);   // spotify's position, plus the trip back to us
         state.duration = data.duration_ms || 0;
         state.at       = performance.now();
  
@@ -1010,13 +1151,15 @@ function nowPlaying(container, opts) {
     function schedule() {
         clearTimeout(pollTimer);
         if (stopped || document.hidden) return;
-        pollTimer = setTimeout(poll, POLL_MS);
+        pollTimer = setTimeout(poll, state.playing ? POLL_PLAYING_MS : POLL_MS);
     }
  
     function poll(immediate) {
         if (stopped) return;
         if (immediate === true) clearTimeout(pollTimer);
+        var t0 = performance.now();
         apiCall('/spotify/now-playing', 'GET', null, function(err, res) {
+            halfTrip = Math.min((performance.now() - t0) / 2, 1500);
             if (err || !res) {
                 failures++;
                 // backend without the /now-playing route (or offline) — give up quietly
@@ -1035,6 +1178,8 @@ function nowPlaying(container, opts) {
         if (document.hidden) { clearTimeout(pollTimer); }
         else if (!stopped && !document.prerendering) { poll(true); }
     });
+    // coming back from the spotify app (e.g. after pausing there) — check straight away
+    window.addEventListener('focus', function() { if (!stopped && !document.hidden && !document.prerendering) poll(true); });
  
     whenActive(poll);   // (auto-logging songs must not happen from a background-prepared page)
  
