@@ -265,10 +265,10 @@ var Beat = (function() {
     var mic = { want: false, stream: null, ctx: null, src: null, an: null, freq: null, wave: null,
                 prev: null, floor: 0, peak: 0, fluxAvg: 0, fluxVar: 0, heardAt: 0, silent: false,
                 level: 0, kick: 0, lastKick: 0, lastT: 0, starting: false, denied: false };
-    try { bpmCache = JSON.parse(sessionStorage.getItem('moodtunes_bpm') || '{}') || {}; } catch (e) {}
+    try { bpmCache = JSON.parse(sessionStorage.getItem('moodtunes_bpm2') || '{}') || {}; } catch (e) {}
     try { mic.want = localStorage.getItem(LISTEN_KEY) === '1'; } catch (e) {}
  
-    function save() { try { sessionStorage.setItem('moodtunes_bpm', JSON.stringify(bpmCache)); } catch (e) {} }
+    function save() { try { sessionStorage.setItem('moodtunes_bpm2', JSON.stringify(bpmCache)); } catch (e) {} }
  
     function info() {
         return { bpm: cur.bpm, trackId: cur.id, listening: listening(), hearing: listening() && !mic.silent, wantListen: mic.want, denied: mic.denied };
@@ -278,12 +278,12 @@ var Beat = (function() {
     function fetchBpm(track, cb) {
         if (Object.prototype.hasOwnProperty.call(bpmCache, track.id)) return cb(bpmCache[track.id]);
         if (typeof apiCall !== 'function') return cb(null);
-        apiCall('/tempo?title=' + encodeURIComponent(track.title || '') + '&artist=' + encodeURIComponent(track.artist || ''),
+        apiCall('/tempo?id=' + encodeURIComponent(track.id || '') + '&title=' + encodeURIComponent(track.title || '') + '&artist=' + encodeURIComponent(track.artist || ''),
             'GET', null, function(err, res) {
                 if (err || !res || res.status >= 400) return cb(null);   // not cached, try again next time
                 var bpm = res.data && res.data.bpm ? Number(res.data.bpm) : null;
                 bpmCache[track.id] = bpm; save();
-                if (window.console) console.info('[moodtunes] waves: ' + (bpm ? bpm + ' bpm' : 'no tempo found') + ' for “' + track.title + '”');
+                if (window.console) console.info('[moodtunes] waves: ' + (bpm ? bpm + ' bpm (' + (res.data.via === 'isrc' ? 'exact match' : 'found by name') + ')' : 'no tempo found') + ' for “' + track.title + '”');
                 cb(bpm);
             });
     }
@@ -736,6 +736,7 @@ function applyHidden() {
     }).join(',\n') + (hiddenMoods.length ? ' { display: none !important; }' : '');
     renderRestore();
 }
+ 
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
  
 function hideMood(m) {
@@ -754,7 +755,6 @@ function unhideMood(m) {
     applyHidden();
     apiCall('/moods/hidden/' + encodeURIComponent(m), 'DELETE', null, function() {});
 }
- 
 function syncHidden() {
     apiCall('/moods/hidden', 'GET', null, function(err, res) {
         // older backend without the route: keep the local list
