@@ -263,14 +263,15 @@ var Beat = (function() {
     var cur = { id: null, bpm: null, base: 0, at: 0, playing: false };
     var raf = null, wavesEl = null, listeners = [];
     var mic = { want: false, stream: null, ctx: null, src: null, an: null, freq: null, wave: null,
-                bassAvg: 0, peak: 0.05, level: 0, kick: 0, lastKick: 0, lastT: 0, starting: false, denied: false };
+                prev: null, floor: 0, peak: 0, fluxAvg: 0, fluxVar: 0, heardAt: 0, silent: false,
+                level: 0, kick: 0, lastKick: 0, lastT: 0, starting: false, denied: false };
     try { bpmCache = JSON.parse(sessionStorage.getItem('moodtunes_bpm') || '{}') || {}; } catch (e) {}
     try { mic.want = localStorage.getItem(LISTEN_KEY) === '1'; } catch (e) {}
  
     function save() { try { sessionStorage.setItem('moodtunes_bpm', JSON.stringify(bpmCache)); } catch (e) {} }
  
     function info() {
-        return { bpm: cur.bpm, trackId: cur.id, listening: listening(), wantListen: mic.want, denied: mic.denied };
+        return { bpm: cur.bpm, trackId: cur.id, listening: listening(), hearing: listening() && !mic.silent, wantListen: mic.want, denied: mic.denied };
     }
     function emit() { var i = info(); listeners.forEach(function(fn) { try { fn(i); } catch (e) {} }); }
  
@@ -304,10 +305,12 @@ var Beat = (function() {
                 mic.src = mic.ctx.createMediaStreamSource(stream);
                 mic.an = mic.ctx.createAnalyser();
                 mic.an.fftSize = 1024;
-                mic.an.smoothingTimeConstant = 0.2;
+                mic.an.smoothingTimeConstant = 0.1;
                 mic.src.connect(mic.an);
-                mic.freq = new Uint8Array(mic.an.frequencyBinCount);
-                mic.wave = new Uint8Array(mic.an.fftSize);
+                mic.freq = new Float32Array(mic.an.frequencyBinCount);
+                mic.wave = new Float32Array(mic.an.fftSize);
+                mic.prev = new Float32Array(mic.an.frequencyBinCount);
+                mic.floor = 0; mic.peak = 0; mic.fluxAvg = 0; mic.fluxVar = 0; mic.heardAt = performance.now(); mic.silent = false;
                 if (mic.ctx.state !== 'running') mic.ctx.resume().catch(function() {});
                 if (mic.ctx.state !== 'running') resumeOnGesture();
                 mic.ctx.onstatechange = function() { run(); emit(); };
@@ -346,26 +349,64 @@ var Beat = (function() {
         else if (mic.stream) { stopMic(); emit(); }
     }
  
+    // listens to what the mic hears and turns it into two numbers:
+    //  level — how loud the music is right now, compared with how loud it has
+    //          been lately (so a soft song moves the waves as much as a loud one)
+    //  kick  — a hit whenever a new beat/note lands (a sudden jump in the
+    //          spectrum, measured in decibels, so it works at any volume)
     function micFrame(now) {
         var dt = mic.lastT ? Math.min(now - mic.lastT, 100) : 16;
         mic.lastT = now;
-        mic.an.getByteFrequencyData(mic.freq);
-        mic.an.getByteTimeDomainData(mic.wave);
-        // loudness (RMS), normalised against a slowly-falling peak so it works at any volume
+        mic.an.getFloatTimeDomainData(mic.wave);
+        mic.an.getFloatFrequencyData(mic.freq);
+ 
         var sum = 0;
-        for (var i = 0; i < mic.wave.length; i++) { var v = (mic.wave[i] - 128) / 128; sum += v * v; }
+        for (var i = 0; i < mic.wave.length; i++) sum += mic.wave[i] * mic.wave[i];
         var rms = Math.sqrt(sum / mic.wave.length);
-        mic.peak = Math.max(rms, mic.peak * Math.exp(-dt / 4000), 0.02);
-        var lvl = Math.min(1, rms / mic.peak);
-        mic.level += (lvl - mic.level) * Math.min(1, dt / 90);
-        // kicks: bass energy jumping well above its recent average
-        var binHz = mic.ctx.sampleRate / mic.an.fftSize, hi = Math.max(2, Math.round(160 / binHz)), bass = 0;
-        for (var b = 1; b <= hi; b++) bass += mic.freq[b];
-        bass /= hi;
-        if (bass > mic.bassAvg * 1.25 + 6 && bass > 40 && now - mic.lastKick > 230) { mic.kick = 1; mic.lastKick = now; }
-        mic.bassAvg += (bass - mic.bassAvg) * Math.min(1, dt / 250);
-        mic.kick *= Math.exp(-dt / 140);
-        return { base: 0.25 + mic.level * 0.7, pulse: mic.kick };
+ 
+        // room noise floor (follows quiet moments quickly, loud ones slowly) and recent peak
+        if (!mic.floor) mic.floor = rms;
+        mic.floor += (rms - mic.floor) * Math.min(1, dt / (rms < mic.floor ? 300 : 12000));
+        mic.peak = Math.max(rms, mic.peak * Math.exp(-dt / 5000));
+        var span = mic.peak - mic.floor;
+        var lvl = Math.max(0, Math.min(1, (rms - mic.floor) / Math.max(span, 0.0008)));
+        mic.level += (lvl - mic.level) * Math.min(1, dt / (lvl > mic.level ? 50 : 220));
+ 
+        // can the mic actually hear music? (with headphones on it can't)
+        var hearing = span > 0.0012 && rms > mic.floor * 1.3;
+        if (hearing) mic.heardAt = now;
+        var silent = now - (mic.heardAt || 0) > 2500;
+        if (silent !== mic.silent) { mic.silent = silent; setTimeout(emit, 0); }
+ 
+        // onsets: rise in dB across 40 Hz – 3 kHz (bass counts double)
+        var binHz = mic.ctx.sampleRate / mic.an.fftSize;
+        var lo = Math.max(1, Math.round(40 / binHz)), bassHi = Math.round(180 / binHz), hi = Math.round(3000 / binHz);
+        var flux = 0;
+        for (var k = lo; k <= hi; k++) {
+            var db = Math.max(mic.freq[k], -110);
+            var d = db - (mic.prev[k] || db);
+            if (d > 0) flux += k <= bassHi ? d * 2 : d;
+            mic.prev[k] = db;
+        }
+        flux /= (hi - lo + 1);
+        var dev = flux - mic.fluxAvg;
+        var sd = Math.sqrt(mic.fluxVar) + 0.05;
+        if (hearing && dev > sd * 1.5 && now - mic.lastKick > 180) {
+            mic.kick = Math.max(mic.kick, Math.min(1, 0.55 + (dev / sd - 1.5) * 0.25));
+            mic.lastKick = now;
+        }
+        var w = Math.min(1, dt / 500);
+        mic.fluxAvg += dev * w;
+        mic.fluxVar += (dev * dev - mic.fluxVar) * w;
+        mic.kick *= Math.exp(-dt / 170);
+ 
+        if (silent) return null;
+        return { base: 0.5 + mic.level * 0.65, pulse: mic.kick };
+    }
+ 
+    // nothing to follow: a slow breathing motion, so the waves never freeze while music plays
+    function idleFrame(now) {
+        return { base: 0.8 + 0.12 * Math.sin(now / 1400), pulse: 0 };
     }
  
     function bpmFrame(now) {
@@ -382,8 +423,8 @@ var Beat = (function() {
     function frame(now) {
         raf = null;
         if (!cur.playing || document.hidden) { setPulse(null); return; }
-        var f = listening() && mic.an ? micFrame(now) : cur.bpm ? bpmFrame(now) : null;
-        if (!f) { setPulse(null); return; }
+        var f = listening() && mic.an ? micFrame(now) : null;
+        if (!f) f = cur.bpm ? bpmFrame(now) : idleFrame(now);
         setPulse(f);
         raf = requestAnimationFrame(frame);
     }
@@ -572,6 +613,7 @@ function skeleton(kind, n) {
     }
     return '';
 }
+ 
 // ── toast ──────────────────────────────────────────────
 // opts: { action: 'undo', onAction: fn, duration: ms }
 var toastTimer = null;
@@ -694,7 +736,6 @@ function applyHidden() {
     }).join(',\n') + (hiddenMoods.length ? ' { display: none !important; }' : '');
     renderRestore();
 }
- 
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
  
 function hideMood(m) {
@@ -993,7 +1034,11 @@ function nowPlaying(container, opts) {
         syncBtn.classList.toggle('on', i.wantListen);
         syncBtn.classList.toggle('live', i.listening);
         syncBtn.setAttribute('aria-pressed', i.wantListen ? 'true' : 'false');
-        syncBtn.textContent = i.wantListen ? (i.listening ? '● synced to sound' : 'sync to sound…')
+        syncBtn.classList.toggle('deaf', i.listening && !i.hearing);
+        syncBtn.title = i.listening && !i.hearing
+            ? 'the mic can’t hear the music (headphones?) — following the song’s tempo for now. tap to turn syncing off'
+            : 'make the background waves react to the music your speakers are playing (uses the mic, nothing is recorded)';
+        syncBtn.textContent = i.wantListen ? (i.listening ? (i.hearing ? '● synced to sound' : '○ can’t hear it') : 'sync to sound…')
             : (i.bpm ? '♪ ' + Math.round(i.bpm) + ' bpm · sync to sound' : 'sync waves to sound');
     });
  
