@@ -247,184 +247,274 @@ function restoreLiveState() {
 }
  
 // ── waves on the beat ──────────────────────────────────
-// two ways to move the waves with the music:
-//  1. tempo: the backend looks up the song's BPM (spotify no longer shares
-//     tempo with new apps, so it asks deezer) and the waves kick on that beat,
-//     timed from how far into the song spotify says you are. it keeps the
-//     right speed, but it can't know exactly where the song's beats fall.
-//  2. "sync to sound" (opt-in, from the now-playing card): the browser listens
-//     through the mic and the waves react to what your speakers are actually
-//     playing — real kicks and loudness. the mic is only used while spotify is
-//     playing, and nothing is recorded or sent anywhere.
-// songs with neither just drift slowly.
+// the waves follow the music in one of three ways, best first:
+//  1. live sound — "sync to sound" on the now-playing card. the browser listens
+//     either through the mic (music on speakers) or to the computer's own sound
+//     (chrome/edge on a computer — works with headphones). the waves hit on the
+//     real drums and grow with the volume. nothing is recorded or sent anywhere.
+//  2. spotify's beat map — the exact time of every beat and how loud each
+//     moment is, lined up with where spotify says you are in the song. spotify
+//     only shares this with apps made before late 2024, so it may be unavailable.
+//  3. neither: the waves breathe slowly while music plays.
 var Beat = (function() {
-    var LISTEN_KEY = 'moodtunes_wave_listen';
-    var bpmCache = {};                   // track id → bpm | null
-    var cur = { id: null, bpm: null, base: 0, at: 0, playing: false };
+    var SYNC_KEY = 'moodtunes_wave_sync';          // 'mic' | 'system' | (none)
+    var BLOCKED_KEY = 'moodtunes_beatmap_off';
+    var cur = { id: null, base: 0, at: 0, playing: false, map: null };
+    var maps = {};                                 // track id → beat map | false
     var raf = null, wavesEl = null, listeners = [];
-    var mic = { want: false, stream: null, ctx: null, src: null, an: null, freq: null, wave: null,
-                prev: null, floor: 0, peak: 0, fluxAvg: 0, fluxVar: 0, heardAt: 0, silent: false,
-                level: 0, kick: 0, lastKick: 0, lastT: 0, starting: false, denied: false };
-    try { bpmCache = JSON.parse(sessionStorage.getItem('moodtunes_bpm2') || '{}') || {}; } catch (e) {}
-    try { mic.want = localStorage.getItem(LISTEN_KEY) === '1'; } catch (e) {}
+    var live = { want: null, mode: null, stream: null, ctx: null, src: null, an: null,
+                 freq: null, wave: null, prev: null, floor: 0, peak: 0, fluxAvg: 0, fluxVar: 0,
+                 heardAt: 0, silent: false, level: 0, kick: 0, lastKick: 0, lastT: 0,
+                 starting: false };
+    try {
+        live.want = localStorage.getItem(SYNC_KEY) || (localStorage.getItem('moodtunes_wave_listen') === '1' ? 'mic' : null);
+        localStorage.removeItem('moodtunes_wave_listen');
+    } catch (e) {}
  
-    function save() { try { sessionStorage.setItem('moodtunes_bpm2', JSON.stringify(bpmCache)); } catch (e) {} }
+    var canShareSound = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) &&
+        !/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
  
     function info() {
-        return { bpm: cur.bpm, trackId: cur.id, listening: listening(), hearing: listening() && !mic.silent, wantListen: mic.want, denied: mic.denied };
+        return {
+            trackId: cur.id, hasMap: !!cur.map, want: live.want, mode: live.mode,
+            listening: listening(), hearing: listening() && !live.silent, starting: live.starting,
+            canShareSound: canShareSound
+        };
     }
     function emit() { var i = info(); listeners.forEach(function(fn) { try { fn(i); } catch (e) {} }); }
+    function log(msg) { if (window.console) console.info('[moodtunes] waves: ' + msg); }
  
-    function fetchBpm(track, cb) {
-        if (Object.prototype.hasOwnProperty.call(bpmCache, track.id)) return cb(bpmCache[track.id]);
-        if (typeof apiCall !== 'function') return cb(null);
-        apiCall('/tempo?id=' + encodeURIComponent(track.id || '') + '&title=' + encodeURIComponent(track.title || '') + '&artist=' + encodeURIComponent(track.artist || ''),
-            'GET', null, function(err, res) {
-                if (err || !res || res.status >= 400) return cb(null);   // not cached, try again next time
-                var bpm = res.data && res.data.bpm ? Number(res.data.bpm) : null;
-                bpmCache[track.id] = bpm; save();
-                if (window.console) console.info('[moodtunes] waves: ' + (bpm ? bpm + ' bpm (' + (res.data.via === 'isrc' ? 'exact match' : 'found by name') + ')' : 'no tempo found') + ' for “' + track.title + '”');
-                cb(bpm);
-            });
+    // ── spotify beat map ──
+    function beatmapBlocked() {
+        try { return Date.now() - Number(sessionStorage.getItem(BLOCKED_KEY) || 0) < 6 * 3600000; } catch (e) { return false; }
+    }
+    function fetchMap(track, cb) {
+        if (maps[track.id] !== undefined) return cb(maps[track.id]);
+        if (typeof apiCall !== 'function' || beatmapBlocked()) return cb(false);
+        apiCall('/beatmap?id=' + encodeURIComponent(track.id), 'GET', null, function(err, res) {
+            if (err || !res || res.status >= 400 || !res.data) return cb(false);
+            var d = res.data;
+            if (!d.available) {
+                if (d.reason === 'blocked') {
+                    try { sessionStorage.setItem(BLOCKED_KEY, String(Date.now())); } catch (e) {}
+                    log('spotify doesn’t share beat maps with this app — use “sync to sound” to follow the drums');
+                } else log('no beat map for “' + track.title + '”');
+                maps[track.id] = false;
+                return cb(false);
+            }
+            maps[track.id] = prepareMap(d);
+            log('following spotify’s beat map for “' + track.title + '” (' + d.beats.length + ' beats)');
+            cb(maps[track.id]);
+        });
+    }
+    function prepareMap(d) {
+        var loud = d.loud || [];
+        var dbs = loud.map(function(p) { return p[1]; }).sort(function(a, b) { return a - b; });
+        var lo = dbs.length ? dbs[Math.floor(dbs.length * 0.1)] : -30;
+        var hi = dbs.length ? dbs[dbs.length - 1] : -5;
+        var down = {};
+        (d.down || []).forEach(function(i) { down[i] = true; });
+        var gaps = [];
+        for (var i = 1; i < d.beats.length; i++) gaps.push(d.beats[i] - d.beats[i - 1]);
+        gaps.sort(function(a, b) { return a - b; });
+        return { beats: d.beats, down: down, loud: loud, lo: lo, span: Math.max(hi - lo, 3),
+                 gap: gaps.length ? gaps[Math.floor(gaps.length / 2)] : 500 };
+    }
+    // last index in a sorted list whose value (or value[0]) is ≤ t
+    function findAt(list, t, pick) {
+        var a = 0, b = list.length - 1, r = -1;
+        while (a <= b) {
+            var m = (a + b) >> 1, v = pick ? list[m][0] : list[m];
+            if (v <= t) { r = m; a = m + 1; } else b = m - 1;
+        }
+        return r;
+    }
+    function mapFrame(now) {
+        var m = cur.map, pos = cur.base + (now - cur.at);
+        var i = findAt(m.beats, pos);
+        var kick = 0;
+        if (i >= 0) {
+            var since = pos - m.beats[i];
+            if (since < m.gap * 2) kick = Math.exp(-since / 160) * (m.down[i] ? 1 : 0.7);
+        }
+        var level = 0.5, j = findAt(m.loud, pos, true);
+        if (j >= 0) {
+            var db = m.loud[j][1];
+            if (j + 1 < m.loud.length) {             // ease between moments
+                var t = (pos - m.loud[j][0]) / Math.max(1, m.loud[j + 1][0] - m.loud[j][0]);
+                db += (m.loud[j + 1][1] - db) * Math.min(1, Math.max(0, t));
+            }
+            level = Math.max(0, Math.min(1, (db - m.lo) / m.span));
+        }
+        return { base: 0.5 + level * 0.65, pulse: kick };
     }
  
-    // ── mic ──
-    function listening() { return !!(mic.stream && mic.ctx && mic.ctx.state === 'running'); }
+    // ── live sound (mic or the computer's sound) ──
+    function listening() { return !!(live.stream && live.ctx && live.ctx.state === 'running' && live.an); }
  
-    function startMic() {
-        if (mic.stream || mic.starting || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-        mic.starting = true;
-        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
-            .then(function(stream) {
-                mic.starting = false;
-                if (!mic.want || !cur.playing) { stream.getTracks().forEach(function(t) { t.stop(); }); return; }
-                mic.denied = false;
-                mic.stream = stream;
-                var AC = window.AudioContext || window.webkitAudioContext;
-                if (!mic.ctx) mic.ctx = new AC();
-                mic.src = mic.ctx.createMediaStreamSource(stream);
-                mic.an = mic.ctx.createAnalyser();
-                mic.an.fftSize = 1024;
-                mic.an.smoothingTimeConstant = 0.1;
-                mic.src.connect(mic.an);
-                mic.freq = new Float32Array(mic.an.frequencyBinCount);
-                mic.wave = new Float32Array(mic.an.fftSize);
-                mic.prev = new Float32Array(mic.an.frequencyBinCount);
-                mic.floor = 0; mic.peak = 0; mic.fluxAvg = 0; mic.fluxVar = 0; mic.heardAt = performance.now(); mic.silent = false;
-                if (mic.ctx.state !== 'running') mic.ctx.resume().catch(function() {});
-                if (mic.ctx.state !== 'running') resumeOnGesture();
-                mic.ctx.onstatechange = function() { run(); emit(); };
-                run(); emit();
-            })
-            .catch(function() {
-                mic.starting = false;
-                mic.denied = true;
-                setWant(false);
-                if (typeof toast === 'function') toast('the mic is blocked, so the waves follow the song’s tempo instead');
-                emit();
-            });
-    }
-    function stopMic() {
-        if (mic.stream) mic.stream.getTracks().forEach(function(t) { t.stop(); });
-        if (mic.src) { try { mic.src.disconnect(); } catch (e) {} }
-        mic.stream = mic.src = mic.an = null;
-        mic.level = mic.kick = 0;
+    function audioCtx() {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!live.ctx && AC) {
+            live.ctx = new AC();
+            live.ctx.onstatechange = function() { run(); emit(); };
+        }
+        if (live.ctx && live.ctx.state !== 'running') {
+            live.ctx.resume().catch(function() {});
+            resumeOnGesture();
+        }
+        return live.ctx;
     }
     function resumeOnGesture() {
         function go() {
             document.removeEventListener('pointerdown', go, true);
             document.removeEventListener('keydown', go, true);
-            if (mic.ctx) mic.ctx.resume().catch(function() {});
+            if (live.ctx) live.ctx.resume().catch(function() {});
         }
         document.addEventListener('pointerdown', go, true);
         document.addEventListener('keydown', go, true);
     }
-    function setWant(on) {
-        mic.want = on;
-        try { if (on) localStorage.setItem(LISTEN_KEY, '1'); else localStorage.removeItem(LISTEN_KEY); } catch (e) {}
+    function attach(stream, mode) {
+        stopLive();
+        var ctx = audioCtx();
+        if (!ctx) { stream.getTracks().forEach(function(t) { t.stop(); }); return; }
+        live.stream = stream;
+        live.mode = mode;
+        live.src = ctx.createMediaStreamSource(stream);
+        live.an = ctx.createAnalyser();
+        live.an.fftSize = 1024;
+        live.an.smoothingTimeConstant = 0.1;
+        live.src.connect(live.an);
+        live.freq = new Float32Array(live.an.frequencyBinCount);
+        live.wave = new Float32Array(live.an.fftSize);
+        live.prev = new Float32Array(live.an.frequencyBinCount);
+        live.floor = live.peak = live.fluxAvg = live.fluxVar = live.level = live.kick = 0;
+        live.heardAt = performance.now(); live.silent = false; live.lastT = 0;
+        run(); emit();
     }
-    // only hold the mic while spotify is actually playing
-    function syncMic() {
-        if (mic.want && cur.playing && !document.hidden) startMic();
-        else if (mic.stream) { stopMic(); emit(); }
+    function stopLive() {
+        if (live.stream) live.stream.getTracks().forEach(function(t) { t.onended = null; t.stop(); });
+        if (live.src) { try { live.src.disconnect(); } catch (e) {} }
+        live.stream = live.src = live.an = null;
+        live.mode = null;
+    }
+    function setWant(mode) {
+        live.want = mode;
+        try { if (mode) localStorage.setItem(SYNC_KEY, mode); else localStorage.removeItem(SYNC_KEY); } catch (e) {}
     }
  
-    // listens to what the mic hears and turns it into two numbers:
-    //  level — how loud the music is right now, compared with how loud it has
-    //          been lately (so a soft song moves the waves as much as a loud one)
-    //  kick  — a hit whenever a new beat/note lands (a sudden jump in the
-    //          spectrum, measured in decibels, so it works at any volume)
-    function micFrame(now) {
-        var dt = mic.lastT ? Math.min(now - mic.lastT, 100) : 16;
-        mic.lastT = now;
-        mic.an.getFloatTimeDomainData(mic.wave);
-        mic.an.getFloatFrequencyData(mic.freq);
+    function startMic() {
+        if (live.mode === 'mic' || live.starting || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        live.starting = true; emit();
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+            .then(function(stream) {
+                live.starting = false;
+                if (live.want !== 'mic' || !cur.playing) { stream.getTracks().forEach(function(t) { t.stop(); }); emit(); return; }
+                attach(stream, 'mic');
+            })
+            .catch(function() {
+                live.starting = false;
+                setWant(null);
+                if (typeof toast === 'function') toast('the mic is blocked, so syncing is off');
+                emit();
+            });
+    }
+ 
+    // the computer's own sound (needs a click every time — the browser insists)
+    function startSystem() {
+        if (live.starting) return;
+        live.starting = true; emit();
+        audioCtx();
+        navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+            systemAudio: 'include', selfBrowserSurface: 'exclude', surfaceSwitching: 'exclude'
+        }).then(function(stream) {
+            live.starting = false;
+            var audio = stream.getAudioTracks();
+            stream.getVideoTracks().forEach(function(t) { t.stop(); });   // only the sound is needed
+            if (!audio.length) {
+                stream.getTracks().forEach(function(t) { t.stop(); });
+                if (typeof toast === 'function') toast('no sound was shared — choose “Entire screen” and switch on “Share system audio”');
+                emit();
+                return;
+            }
+            setWant('system');
+            attach(new MediaStream(audio), 'system');
+            // "stop sharing" in the browser bar turns syncing off
+            audio[0].onended = function() { stopLive(); setWant(null); run(); emit(); };
+        }).catch(function() {
+            live.starting = false;
+            emit();
+        });
+    }
+ 
+    // the mic is only held while spotify is playing; shared computer sound stays until turned off
+    function syncLive() {
+        if (live.want === 'mic') {
+            if (cur.playing && !document.hidden) startMic();
+            else if (live.mode === 'mic') { stopLive(); emit(); }
+        }
+    }
+ 
+    // turns what we hear into:
+    //  level — how loud it is now compared with the last few seconds (soft songs move as much as loud ones)
+    //  kick  — a hit whenever a drum or note lands (a jump in the spectrum, in decibels, so any volume works)
+    function liveFrame(now) {
+        var dt = live.lastT ? Math.min(now - live.lastT, 100) : 16;
+        live.lastT = now;
+        live.an.getFloatTimeDomainData(live.wave);
+        live.an.getFloatFrequencyData(live.freq);
  
         var sum = 0;
-        for (var i = 0; i < mic.wave.length; i++) sum += mic.wave[i] * mic.wave[i];
-        var rms = Math.sqrt(sum / mic.wave.length);
+        for (var i = 0; i < live.wave.length; i++) sum += live.wave[i] * live.wave[i];
+        var rms = Math.sqrt(sum / live.wave.length);
  
-        // room noise floor (follows quiet moments quickly, loud ones slowly) and recent peak
-        if (!mic.floor) mic.floor = rms;
-        mic.floor += (rms - mic.floor) * Math.min(1, dt / (rms < mic.floor ? 300 : 12000));
-        mic.peak = Math.max(rms, mic.peak * Math.exp(-dt / 5000));
-        var span = mic.peak - mic.floor;
-        var lvl = Math.max(0, Math.min(1, (rms - mic.floor) / Math.max(span, 0.0008)));
-        mic.level += (lvl - mic.level) * Math.min(1, dt / (lvl > mic.level ? 50 : 220));
+        if (!live.floor) live.floor = rms;
+        live.floor += (rms - live.floor) * Math.min(1, dt / (rms < live.floor ? 300 : 12000));
+        live.peak = Math.max(rms, live.peak * Math.exp(-dt / 5000));
+        var span = live.peak - live.floor;
+        var lvl = Math.max(0, Math.min(1, (rms - live.floor) / Math.max(span, 0.0008)));
+        live.level += (lvl - live.level) * Math.min(1, dt / (lvl > live.level ? 50 : 220));
  
-        // can the mic actually hear music? (with headphones on it can't)
-        var hearing = span > 0.0012 && rms > mic.floor * 1.3;
-        if (hearing) mic.heardAt = now;
-        var silent = now - (mic.heardAt || 0) > 2500;
-        if (silent !== mic.silent) { mic.silent = silent; setTimeout(emit, 0); }
+        var hearing = span > 0.0012 && rms > live.floor * 1.3;
+        if (hearing) live.heardAt = now;
+        var silent = now - (live.heardAt || 0) > 2500;
+        if (silent !== live.silent) { live.silent = silent; setTimeout(emit, 0); }
  
-        // onsets: rise in dB across 40 Hz – 3 kHz (bass counts double)
-        var binHz = mic.ctx.sampleRate / mic.an.fftSize;
+        var binHz = live.ctx.sampleRate / live.an.fftSize;
         var lo = Math.max(1, Math.round(40 / binHz)), bassHi = Math.round(180 / binHz), hi = Math.round(3000 / binHz);
         var flux = 0;
         for (var k = lo; k <= hi; k++) {
-            var db = Math.max(mic.freq[k], -110);
-            var d = db - (mic.prev[k] || db);
+            var db = Math.max(live.freq[k], -110);
+            var d = db - (live.prev[k] || db);
             if (d > 0) flux += k <= bassHi ? d * 2 : d;
-            mic.prev[k] = db;
+            live.prev[k] = db;
         }
         flux /= (hi - lo + 1);
-        var dev = flux - mic.fluxAvg;
-        var sd = Math.sqrt(mic.fluxVar) + 0.05;
-        if (hearing && dev > sd * 1.5 && now - mic.lastKick > 180) {
-            mic.kick = Math.max(mic.kick, Math.min(1, 0.55 + (dev / sd - 1.5) * 0.25));
-            mic.lastKick = now;
+        var dev = flux - live.fluxAvg;
+        var sd = Math.sqrt(live.fluxVar) + 0.05;
+        if (hearing && dev > sd * 1.5 && now - live.lastKick > 180) {
+            live.kick = Math.max(live.kick, Math.min(1, 0.55 + (dev / sd - 1.5) * 0.25));
+            live.lastKick = now;
         }
         var w = Math.min(1, dt / 500);
-        mic.fluxAvg += dev * w;
-        mic.fluxVar += (dev * dev - mic.fluxVar) * w;
-        mic.kick *= Math.exp(-dt / 170);
+        live.fluxAvg += dev * w;
+        live.fluxVar += (dev * dev - live.fluxVar) * w;
+        live.kick *= Math.exp(-dt / 170);
  
         if (silent) return null;
-        return { base: 0.5 + mic.level * 0.65, pulse: mic.kick };
+        return { base: 0.5 + live.level * 0.65, pulse: live.kick };
     }
  
-    // nothing to follow: a slow breathing motion, so the waves never freeze while music plays
     function idleFrame(now) {
         return { base: 0.8 + 0.12 * Math.sin(now / 1400), pulse: 0 };
-    }
- 
-    function bpmFrame(now) {
-        var pos = cur.base + (now - cur.at);                   // ms into the song
-        var period = 60000 / cur.bpm;
-        var beats = pos / period;
-        var phase = beats - Math.floor(beats);
-        var downbeat = Math.floor(beats) % 4 === 0;
-        var kick = Math.exp(-phase * 4) * (downbeat ? 1 : 0.62);
-        var swell = 0.8 + 0.2 * Math.sin(pos / (period * 16) * Math.PI * 2);
-        return { base: 0.78, pulse: kick * swell };
     }
  
     function frame(now) {
         raf = null;
         if (!cur.playing || document.hidden) { setPulse(null); return; }
-        var f = listening() && mic.an ? micFrame(now) : null;
-        if (!f) f = cur.bpm ? bpmFrame(now) : idleFrame(now);
+        var f = listening() ? liveFrame(now) : null;
+        if (!f) f = cur.map ? mapFrame(now) : idleFrame(now);
         setPulse(f);
         raf = requestAnimationFrame(frame);
     }
@@ -437,49 +527,48 @@ var Beat = (function() {
     }
  
     function run() {
-        var on = cur.playing && !reduceMotion && (!!cur.bpm || listening());
+        var on = cur.playing && !reduceMotion;
         root.classList.toggle('np-beat', on);
         root.classList.toggle('np-listen', on && listening());
-        if (on && !raf) raf = requestAnimationFrame(frame);
+        if (on && !raf && !document.hidden) raf = requestAnimationFrame(frame);
         if (!on) { if (raf) cancelAnimationFrame(raf); raf = null; setPulse(null); }
     }
  
     // track: {id, title, artist}; progress in ms; playing: bool
     function update(track, progress, playing) {
-        if (!track || !track.id) { cur.id = null; cur.bpm = null; cur.playing = false; syncMic(); run(); emit(); return; }
+        if (!track || !track.id) { cur.id = null; cur.map = null; cur.playing = false; syncLive(); run(); emit(); return; }
         cur.base = progress || 0;
         cur.at = performance.now();
         cur.playing = !!playing;
         if (track.id !== cur.id) {
-            cur.id = track.id; cur.bpm = null;
+            cur.id = track.id; cur.map = null;
             var id = track.id;
-            fetchBpm(track, function(bpm) { if (cur.id === id) { cur.bpm = bpm; run(); emit(); } });
+            fetchMap(track, function(m) { if (cur.id === id) { cur.map = m || null; run(); emit(); } });
         }
-        syncMic(); run(); emit();
+        syncLive(); run(); emit();
     }
     function stop() { update(null); }
  
-    // called from a click, so the browser allows the mic prompt and the audio
-    function toggleListen() {
-        if (mic.want) { setWant(false); stopMic(); run(); emit(); return; }
-        setWant(true);
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if (!mic.ctx && AC) mic.ctx = new AC();
-        if (mic.ctx && mic.ctx.state !== 'running') mic.ctx.resume().catch(function() {});
+    // from the button (a click, so the browser allows the prompts)
+    function start(mode) {
+        audioCtx();
+        if (mode === 'system') return startSystem();
+        setWant('mic');
         if (cur.playing) startMic();
         emit();
     }
+    function turnOff() { setWant(null); stopLive(); run(); emit(); }
  
-    // don't pop a mic prompt on page load — only resume if it was already allowed
-    if (mic.want && navigator.permissions && navigator.permissions.query) {
+    // don't pop a mic prompt on page load — only carry on if it was already allowed
+    if (live.want === 'mic' && navigator.permissions && navigator.permissions.query) {
         navigator.permissions.query({ name: 'microphone' }).then(function(p) {
-            if (p.state !== 'granted') setWant(false);
+            if (p.state !== 'granted') setWant(null);
             emit();
         }).catch(function() {});
     }
  
-    document.addEventListener('visibilitychange', function() { syncMic(); run(); });
-    return { update: update, stop: stop, toggleListen: toggleListen, info: info,
+    document.addEventListener('visibilitychange', function() { syncLive(); run(); });
+    return { update: update, stop: stop, start: start, turnOff: turnOff, info: info,
              onChange: function(fn) { listeners.push(fn); fn(info()); } };
 })();
  
@@ -709,7 +798,7 @@ function isInView(el) {
     var r = el.getBoundingClientRect();
     return r.top >= 0 && r.bottom <= innerHeight;
 }
- 
+
 // ── hidden built-in moods ──────────────────────────────
 // users can remove any built-in mood from their page; the choice is saved to
 // the backend (with a local copy so the page doesn't flash hidden chips)
@@ -755,6 +844,7 @@ function unhideMood(m) {
     applyHidden();
     apiCall('/moods/hidden/' + encodeURIComponent(m), 'DELETE', null, function() {});
 }
+ 
 function syncHidden() {
     apiCall('/moods/hidden', 'GET', null, function(err, res) {
         // older backend without the route: keep the local list
@@ -1028,18 +1118,71 @@ function nowPlaying(container, opts) {
     var time   = container.querySelector('.np-time');
     var added  = container.querySelector('.np-added');
     var toggle = container.querySelector('.np-toggle');
+    // "sync to sound": on a computer, pick the mic or the computer's own sound;
+    // on a phone it's just the mic. tap again to turn it off.
     var syncBtn = container.querySelector('.np-sync');
-    syncBtn.addEventListener('click', function() { Beat.toggleListen(); });
+    var syncMenu = null;
+    function closeSyncMenu() { if (syncMenu) { syncMenu.remove(); syncMenu = null; } }
+    function openSyncMenu() {
+        closeSyncMenu();
+        syncMenu = document.createElement('div');
+        syncMenu.className = 'np-sync-menu';
+        syncMenu.innerHTML =
+            '<button type="button" data-mode="system"><b>computer sound</b><span>works with headphones · chrome or edge</span></button>' +
+            '<button type="button" data-mode="mic"><b>microphone</b><span>when music plays on speakers</span></button>';
+        // on the page itself (the card clips anything that sticks out), right under the button
+        var r = syncBtn.getBoundingClientRect();
+        syncMenu.style.top = (r.bottom + 8) + 'px';
+        syncMenu.style.left = Math.max(8, Math.min(r.right - 240, window.innerWidth - 248)) + 'px';
+        syncMenu.style.setProperty('--np-color', getComputedStyle(card).getPropertyValue('--np-color') || 'var(--mood)');
+        document.body.appendChild(syncMenu);
+        window.addEventListener('scroll', closeSyncMenu, { once: true, passive: true });
+        syncMenu.addEventListener('click', function(e) {
+            var b = e.target.closest('button[data-mode]');
+            if (!b) return;
+            if (b.dataset.mode === 'system') toast('in the pop-up, choose “Entire screen” and switch on “Share system audio”');
+            Beat.start(b.dataset.mode);
+            closeSyncMenu();
+        });
+    }
+    document.addEventListener('click', function(e) {
+        if (syncMenu && !syncMenu.contains(e.target) && e.target !== syncBtn) closeSyncMenu();
+    });
+    syncBtn.addEventListener('click', function() {
+        var i = Beat.info();
+        if (syncMenu) return closeSyncMenu();
+        if (i.want === 'system' && !i.listening) return Beat.start('system');   // resume after changing page
+        if (i.want || i.listening) return Beat.turnOff();
+        if (i.canShareSound) openSyncMenu(); else Beat.start('mic');
+    });
     Beat.onChange(function(i) {
-        syncBtn.classList.toggle('on', i.wantListen);
-        syncBtn.classList.toggle('live', i.listening);
-        syncBtn.setAttribute('aria-pressed', i.wantListen ? 'true' : 'false');
-        syncBtn.classList.toggle('deaf', i.listening && !i.hearing);
-        syncBtn.title = i.listening && !i.hearing
-            ? 'the mic can’t hear the music (headphones?) — following the song’s tempo for now. tap to turn syncing off'
-            : 'make the background waves react to the music your speakers are playing (uses the mic, nothing is recorded)';
-        syncBtn.textContent = i.wantListen ? (i.listening ? (i.hearing ? '● synced to sound' : '○ can’t hear it') : 'sync to sound…')
-            : (i.bpm ? '♪ ' + Math.round(i.bpm) + ' bpm · sync to sound' : 'sync waves to sound');
+        var on = !!(i.want || i.listening);
+        syncBtn.classList.toggle('on', on);
+        syncBtn.classList.toggle('map', !on && i.hasMap);
+        syncBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        var text, tip;
+        if (i.listening && !i.hearing) {
+            text = '○ can’t hear it';
+            tip = i.mode === 'mic' ? 'the mic can’t hear the music (headphones?). tap to turn syncing off'
+                                   : 'no sound is coming through. tap to turn syncing off';
+        } else if (i.listening) {
+            text = '● synced · ' + (i.mode === 'mic' ? 'mic' : 'computer sound');
+            tip = 'the waves are following the music. tap to turn syncing off';
+        } else if (i.starting) {
+            text = 'sync to sound…'; tip = '';
+        } else if (i.want === 'system') {
+            text = '▶ resume sync'; tip = 'the browser needs you to share your computer’s sound again on each page';
+        } else if (i.want === 'mic') {
+            text = 'sync to sound…'; tip = 'waiting for the music to play';
+        } else if (i.hasMap) {
+            text = '● on the beat · sync to sound';
+            tip = 'following spotify’s beat map. tap to follow the live sound instead';
+        } else {
+            text = 'sync waves to sound';
+            tip = 'make the background waves follow the drums and volume of what you’re playing (nothing is recorded)';
+        }
+        syncBtn.textContent = text;
+        syncBtn.title = tip;
     });
  
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
