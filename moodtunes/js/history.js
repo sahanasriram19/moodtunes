@@ -146,12 +146,11 @@ function renderTimeline(logs) {
                 card.innerHTML =
                     '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
                     '<div class="song-info">' +
-                        '<div class="song-title">' + MoodFX.esc(log.title) + '</div>' +
+                        titleRowHTML(log.title, log.note, 'note-text-' + log.id) +
                         '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
                         '<div class="log-note-area" id="note-area-' + log.id + '">' +
                             (log.note
-                                ? '<div class="log-note">"' + MoodFX.esc(log.note) + '"</div>' +
-                                  '<button class="edit-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-note="' + MoodFX.esc(log.note) + '">edit note</button>'
+                                ? '<button class="edit-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-note="' + MoodFX.esc(log.note) + '">edit note</button>'
                                 : '<button class="add-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '">+ add note</button>') +
                         '</div>' +
                         '<div class="log-meta">' +
@@ -183,15 +182,16 @@ function showInlineNoteHistory(logId, songId, mood, existingNote) {
     document.getElementById('save-note-' + logId).addEventListener('click', function() {
         var note = document.getElementById('inline-note-' + logId).value.trim();
         apiCall('/logs/' + logId, 'PUT', { note: note }, function() {
+            setTitleNote('note-text-' + logId, note);
             area.innerHTML = note
-                ? '<div class="log-note">"' + MoodFX.esc(note) + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(note) + '">edit note</button>'
+                ? '<button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(note) + '">edit note</button>'
                 : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '">+ add note</button>';
         });
     });
 
     document.getElementById('cancel-note-' + logId).addEventListener('click', function() {
         area.innerHTML = existingNote
-            ? '<div class="log-note">"' + MoodFX.esc(existingNote) + '"</div><button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(existingNote) + '">edit note</button>'
+            ? '<button class="edit-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(existingNote) + '">edit note</button>'
             : '<button class="add-note-btn" data-log-id="' + logId + '" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '">+ add note</button>';
     });
 }

@@ -177,11 +177,11 @@ function openPlaylist(mood, songs) {
             '<div class="drag-handle" title="drag to reorder">⠿</div>' +
             '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="album art" />' +
             '<div class="song-info">' +
-                '<div class="song-title">' + MoodFX.esc(song.title) + '</div>' +
+                titleRowHTML(song.title, song.note, 'pl-note-text-' + song.song_id + '-' + mood) +
                 '<div class="song-artist">' + MoodFX.esc(song.artist) + '</div>' +
                 '<div class="log-note-area" id="pl-note-area-' + song.song_id + '-' + MoodFX.esc(mood) + '">' +
                     (song.note
-                        ? '<div class="log-note">"' + MoodFX.esc(song.note) + '"</div><button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(song.note) + '" data-source="playlist">edit note</button>'
+                        ? '<button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(song.note) + '" data-source="playlist">edit note</button>'
                         : '<button class="add-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>') +
                 '</div>' +
                 '<div class="log-meta">' +
@@ -350,15 +350,16 @@ function showInlineNotePlaylist(songId, mood, existingNote) {
     document.getElementById('pl-save-' + songId).addEventListener('click', function() {
         var note = document.getElementById('pl-inline-note-' + songId).value.trim();
         apiCall('/logs/latest/' + songId + '/' + mood, 'PUT', { note: note }, function() {
+            setTitleNote('pl-note-text-' + songId + '-' + mood, note);
             area.innerHTML = note
-                ? '<div class="log-note">"' + MoodFX.esc(note) + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(note) + '" data-source="playlist">edit note</button>'
+                ? '<button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(note) + '" data-source="playlist">edit note</button>'
                 : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>';
         });
     });
 
     document.getElementById('pl-cancel-' + songId).addEventListener('click', function() {
         area.innerHTML = existingNote
-            ? '<div class="log-note">"' + MoodFX.esc(existingNote) + '"</div><button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(existingNote) + '" data-source="playlist">edit note</button>'
+            ? '<button class="edit-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(existingNote) + '" data-source="playlist">edit note</button>'
             : '<button class="add-note-btn" data-song-id="' + songId + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>';
     });
 }

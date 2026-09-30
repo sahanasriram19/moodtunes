@@ -259,6 +259,28 @@ function openSpotify(spotifyUrl, opts) {
     });
 }
 
+// ── song title + note on one line ──────────────────────
+// the note sits to the right of the title. long notes are cut off with "…";
+// tapping the note shows it in full (see mood.js)
+function titleRowHTML(title, note, noteId) {
+    var esc = MoodFX.esc;
+    return '<div class="title-row">' +
+        '<div class="song-title">' + esc(title) + '</div>' +
+        '<div class="log-note"' + (noteId ? ' id="' + esc(noteId) + '"' : '') + (note ? '' : ' hidden') +
+            ' title="' + esc(note || '') + '">' + (note ? '“' + esc(note) + '”' : '') + '</div>' +
+    '</div>';
+}
+
+// after a note is saved or cleared, update the note beside the title
+function setTitleNote(noteId, note) {
+    var el = document.getElementById(noteId);
+    if (!el) return;
+    el.hidden = !note;
+    el.title = note || '';
+    el.textContent = note ? '“' + note + '”' : '';
+    el.classList.remove('note-open');
+}
+
 // listening time for a day's log: "1:50 am", or "1:50 – 2:00 am" once you've listened
 // for a while (first play that day → end of the latest listen)
 function formatPlayRange(firstLogged, lastLogged) {

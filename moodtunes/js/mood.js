@@ -105,7 +105,7 @@ function moodIcon(mood, savedEmoji) {
 }
 
 var root = document.documentElement;
-var DEFAULT_PARTNER = '#e27fa8';   // rose pink — pairs with the purple accent when no mood is picked
+var DEFAULT_PARTNER = '#4a2a8a';   // deep purple — the background fades from purple into this when no mood is picked
 var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // custom moods get a stable colour derived from their name
@@ -160,8 +160,8 @@ function setMood(mood) {
     currentMood = mood || null;
     root.style.setProperty('--mood', color(mood));
     root.style.setProperty('--mood-ink', ink(color(mood)));
-    // second glow colour: the mood itself, or rose pink alongside purple when no mood is picked
-    root.style.setProperty('--mood-2', mood ? color(mood) : DEFAULT_PARTNER);
+    // second glow colour: a deeper shade of the mood, or deep purple when no mood is picked
+    root.style.setProperty('--mood-2', mood ? 'color-mix(in srgb, ' + color(mood) + ' 55%, #12061f)' : DEFAULT_PARTNER);
     root.style.setProperty('--mood-tempo', tempo(mood) + 's');
     if (mood) root.setAttribute('data-mood', mood); else root.removeAttribute('data-mood');
 }
@@ -178,8 +178,97 @@ function mountAmbient() {
     var amb = document.createElement('div');
     amb.id = 'mood-ambient';
     amb.setAttribute('aria-hidden', 'true');
-    amb.innerHTML = '<span class="blob blob-a"></span><span class="blob blob-b"></span><span class="blob blob-c"></span><span class="blob blob-d"></span>';
+    amb.innerHTML = '<span class="blob blob-a"></span><span class="blob blob-b"></span><span class="blob blob-c"></span><span class="blob blob-d"></span>' +
+        particlesHTML() + wavesHTML() +
+        '<span class="mt-vignette"></span><span class="mt-grain"></span>';
     document.body.insertBefore(amb, document.body.firstChild);
+    restoreLiveState();
+}
+
+// soft points of light drifting upward, like out-of-focus stage lights
+function particlesHTML() {
+    var html = '<div class="mt-particles">';
+    for (var i = 0; i < 14; i++) {
+        var size = 3 + Math.round(Math.random() * 7);
+        html += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;' +
+            '--size:' + size + 'px;' +
+            '--dur:' + (20 + Math.random() * 22).toFixed(1) + 's;' +
+            '--delay:-' + (Math.random() * 40).toFixed(1) + 's;' +
+            '--drift:' + (Math.random() * 16 - 8).toFixed(1) + 'vw;' +
+            '--glow:' + (0.25 + Math.random() * 0.45).toFixed(2) + '"></i>';
+    }
+    return html + '</div>';
+}
+
+// sound waves along the bottom of the screen while a song is playing on spotify.
+// each wave is 6 cycles long and slides left by half its width, so it loops seamlessly
+function wavePath(amp) {
+    var d = 'M0 100 Q100 ' + (100 - amp) + ' 200 100';
+    for (var x = 400; x <= 2400; x += 200) d += ' T' + x + ' 100';
+    return d;
+}
+function wavesHTML() {
+    var layers = [
+        { amp: 60, h: 34, y: 4,  k: 14, o: 0.55 },
+        { amp: 42, h: 28, y: 9,  k: 10, o: 0.35 },
+        { amp: 75, h: 40, y: 1,  k: 20, o: 0.22 }
+    ];
+    return '<div class="mt-waves">' + layers.map(function(l, i) {
+        var d = wavePath(l.amp);
+        return '<svg class="wave wave-' + (i + 1) + '" viewBox="0 0 2400 200" preserveAspectRatio="none" ' +
+            'style="--h:' + l.h + 'vh;--y:' + l.y + 'vh;--k:' + l.k + ';--o:' + l.o + '">' +
+            '<g class="wave-amp"><path class="wave-glow" d="' + d + '"/><path class="wave-line" d="' + d + '"/></g></svg>';
+    }).join('') + '</div>';
+}
+
+// ── is something playing? (drives the sound waves) ─────
+// 'playing' | 'paused' | 'idle'. the now-playing card reports it on the journal
+// and session pages; other pages check spotify now and then. the last state is
+// remembered for a minute so the waves don't blink off when you switch pages
+var LIVE_KEY = 'moodtunes_np_live';
+function setLiveState(st, trackColor) {
+    root.classList.toggle('np-live', st === 'playing');
+    root.classList.toggle('np-paused', st === 'paused');
+    try {
+        var prev = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null') || {};
+        sessionStorage.setItem(LIVE_KEY, JSON.stringify({
+            state: st, color: trackColor !== undefined ? trackColor : (st === 'idle' ? null : prev.color), at: Date.now()
+        }));
+    } catch (e) {}
+}
+function restoreLiveState() {
+    try {
+        var v = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null');
+        if (!v || Date.now() - v.at > 60000) return;
+        root.classList.toggle('np-live', v.state === 'playing');
+        root.classList.toggle('np-paused', v.state === 'paused');
+        if (v.color) setTrackColor(v.color);
+    } catch (e) {}
+}
+
+// pages without a now-playing card: a light check every 20 seconds
+function watchPlayback() {
+    var stopped = false, lastTrack = null, timer = null;
+    function check() {
+        clearTimeout(timer);
+        if (stopped || document.hidden) return;
+        apiCall('/spotify/now-playing', 'GET', null, function(err, res) {
+            if (err || !res) { timer = setTimeout(check, 20000); return; }
+            if (res.status === 401 || res.status === 404) { stopped = true; setLiveState('idle'); return; }
+            var d = res.data || {};
+            if (!d.playing || !d.track) { lastTrack = null; setTrackColor(null); setLiveState('idle', null); }
+            else {
+                setLiveState(d.is_playing ? 'playing' : 'paused');
+                if (d.track.id !== lastTrack) {
+                    lastTrack = d.track.id;
+                    artColor(d.track.albumArt, function(c) { setTrackColor(c); setLiveState(d.is_playing ? 'playing' : 'paused', c); });
+                }
+            }
+            timer = setTimeout(check, 20000);
+        });
+    }
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) check(); });
+    check();
 }
 
 // ── decorate chips + badges with their mood colour ─────
@@ -737,6 +826,7 @@ function nowPlaying(container, opts) {
         art.removeAttribute('src');
         if (opts.hideWhenIdle) container.classList.add('np-hidden');
         setTrackColor(null);
+        setLiveState('idle', null);
         if (opts.onIdle) opts.onIdle();
     }
 
@@ -783,6 +873,7 @@ function nowPlaying(container, opts) {
                 card.style.setProperty('--np-color', c || 'var(--mood)');
                 card.style.setProperty('--np-ink', c ? ink(c) : 'var(--mood-ink)');
                 setTrackColor(c);
+                setLiveState(state.playing ? 'playing' : 'paused', c);
             });
             if (opts.onTrack) opts.onTrack(t);
         }
@@ -796,6 +887,7 @@ function nowPlaying(container, opts) {
     function syncToggle() {
         toggle.innerHTML = icon(state.playing ? 'pause' : 'play');
         toggle.setAttribute('aria-label', state.playing ? 'pause' : 'play');
+        setLiveState(state.playing ? 'playing' : 'paused');
     }
 
     var PLAYBACK_ERRORS = {
@@ -1152,6 +1244,12 @@ function watchPage() {
         });
     }).observe(document.body, { childList: true, subtree: true });
 
+    // tap a note that's cut off next to the title to read it in full (tap again to fold it)
+    document.addEventListener('click', function(e) {
+        var note = e.target.closest && e.target.closest('.title-row .log-note');
+        if (note) note.classList.toggle('note-open');
+    });
+
     // selecting any mood chip re-tints the page. capture phase, so chips whose own
     // click handler stops the event (like the picker inside the search panel) still work
     document.addEventListener('click', function(e) {
@@ -1172,6 +1270,7 @@ function boot() {
     applyHidden();
     syncHidden();
     booted = true;
+    if (!document.querySelector('.np-mount')) whenActive(watchPlayback);
 
     if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }

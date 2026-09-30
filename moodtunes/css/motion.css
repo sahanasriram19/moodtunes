@@ -18,7 +18,7 @@
 @property --mood-2 {
   syntax: '<color>';
   inherits: true;
-  initial-value: #e27fa8;
+  initial-value: #4a2a8a;
 }
 
 :root {
@@ -44,9 +44,9 @@
   overflow: hidden;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--mood) 16%, transparent) 0%,
-    color-mix(in srgb, var(--mood) 7%, transparent) 45%,
-    color-mix(in srgb, var(--mood) 12%, transparent) 100%
+    color-mix(in srgb, var(--mood) 18%, transparent) 0%,
+    color-mix(in srgb, var(--mood) 7%, transparent) 40%,
+    color-mix(in srgb, var(--mood-2) 30%, transparent) 100%
   );
 }
 
@@ -2506,5 +2506,214 @@ body {
 @media (max-width: 420px) {
   .np-compact .np-prev {
     display: none;
+  }
+}
+
+/* === SONG TITLE + NOTE ON ONE LINE === */
+/* the note sits to the right of the title (api.js titleRowHTML). the note gives
+   way first when space is tight; tap it to read it in full */
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* let the text column shrink so a long note is cut off instead of stretching the card */
+.log-card .song-info,
+.song-history-card .song-history-info {
+  min-width: 0;
+}
+
+.title-row .song-title {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 70% !important;    /* the title keeps its space; only a very long one is cut off */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-row .log-note {
+  flex: 0 100 auto;
+  min-width: 4em;
+  margin: 0 !important;
+  font-size: 12px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.title-row .log-note[hidden] {
+  display: none;
+}
+
+.title-row .log-note.note-open {
+  white-space: normal;
+}
+
+.title-row:has(.note-open) {
+  align-items: flex-start;
+}
+
+/* === BACKGROUND: VIGNETTE + GRAIN === */
+/* darker edges pull the eye to the middle; a fine grain gives the colour texture */
+.mt-vignette,
+.mt-grain {
+  position: absolute;
+  inset: 0;
+}
+
+.mt-vignette {
+  background: radial-gradient(
+    ellipse 120% 90% at 50% 40%,
+    transparent 55%,
+    color-mix(in srgb, var(--bg-page, #0f0f0f) 45%, rgb(0 0 0 / 0.55)) 100%
+  );
+}
+
+.mt-grain {
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* === BACKGROUND: DRIFTING LIGHTS === */
+.mt-particles i {
+  position: absolute;
+  bottom: -20px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mood) 65%, #fff);
+  box-shadow: 0 0 calc(var(--size) * 2.5) color-mix(in srgb, var(--mood) 80%, transparent);
+  opacity: 0;
+  animation: drift-up var(--dur) linear var(--delay) infinite;
+  transition: background 0.9s, box-shadow 0.9s;
+}
+
+@keyframes drift-up {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: var(--glow);
+  }
+
+  85% {
+    opacity: var(--glow);
+  }
+
+  100% {
+    transform: translate(var(--drift), -110vh);
+    opacity: 0;
+  }
+}
+
+/* === BACKGROUND: SOUND WAVES === */
+/* flowing lines along the bottom while spotify is playing, in the song's colour
+   and at the mood's tempo. they flatten when paused and fade when nothing plays */
+.mt-waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50vh;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+:root.np-live .mt-waves {
+  opacity: 1;
+}
+
+:root.np-paused .mt-waves {
+  opacity: 0.45;
+}
+
+.mt-waves .wave {
+  position: absolute;
+  left: 0;
+  bottom: var(--y);
+  width: 200%;
+  height: var(--h);
+  overflow: visible;
+  animation: wave-slide calc(var(--mood-tempo) * var(--k)) linear infinite;
+}
+
+.mt-waves .wave-2 {
+  animation-direction: reverse;
+}
+
+.mt-waves .wave-amp {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleY(0.06);
+  transition: transform 1.2s var(--ease-out);
+}
+
+:root.np-live .mt-waves .wave-amp {
+  transform: scaleY(1);
+}
+
+.mt-waves path {
+  fill: none;
+  stroke: var(--np);
+  vector-effect: non-scaling-stroke;
+  transition: stroke 1.4s;
+}
+
+.mt-waves .wave-line {
+  stroke-width: 2;
+  opacity: var(--o);
+}
+
+.mt-waves .wave-glow {
+  stroke-width: 10;
+  opacity: calc(var(--o) * 0.22);
+}
+
+/* the waves swell with the beat while playing */
+:root.np-live .mt-waves .wave-line,
+:root.np-live .mt-waves .wave-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wave-swell calc(var(--mood-tempo) * 2) ease-in-out infinite;
+}
+
+:root.np-live .mt-waves .wave-2 path {
+  animation-delay: calc(var(--mood-tempo) * -0.7);
+}
+
+@keyframes wave-slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes wave-swell {
+  50% {
+    transform: scaleY(0.7);
+  }
+}
+
+@media (max-width: 768px) {
+  .mt-waves {
+    height: 38vh;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-particles {
+    display: none;
+  }
+
+  .mt-waves .wave,
+  .mt-waves path {
+    animation: none !important;
   }
 }
