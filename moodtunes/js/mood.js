@@ -209,9 +209,9 @@ function wavePath(amp) {
 }
 function wavesHTML() {
     var layers = [
-        { amp: 92, h: 64, y: 14, k: 14, o: 0.34, p: 1.0 },
-        { amp: 70, h: 52, y: 20, k: 10, o: 0.22, p: 0.7 },
-        { amp: 98, h: 84, y: 4,  k: 20, o: 0.14, p: 1.3 }
+        { amp: 92, h: 64, y: 14, k: 14, o: 0.55, p: 1.0 },
+        { amp: 70, h: 52, y: 20, k: 10, o: 0.38, p: 0.7 },
+        { amp: 98, h: 84, y: 4,  k: 20, o: 0.25, p: 1.3 }
     ];
     return '<div class="mt-waves">' + layers.map(function(l, i) {
         var d = wavePath(l.amp);
@@ -410,7 +410,9 @@ var Beat = (function() {
         live.starting = true; emit();
         audioCtx();
         navigator.mediaDevices.getDisplayMedia({
-            video: true,
+            // open the pop-up on "Entire screen" — sharing a single window
+            // (like the spotify app) never includes its sound in chrome/edge
+            video: { displaySurface: 'monitor' },
             audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
             systemAudio: 'include', selfBrowserSurface: 'exclude', surfaceSwitching: 'exclude'
         }).then(function(stream) {
@@ -766,6 +768,7 @@ function isInView(el) {
     var r = el.getBoundingClientRect();
     return r.top >= 0 && r.bottom <= innerHeight;
 }
+ 
 // ── hidden built-in moods ──────────────────────────────
 // users can remove any built-in mood from their page; the choice is saved to
 // the backend (with a local copy so the page doesn't flash hidden chips)
@@ -794,7 +797,6 @@ function applyHidden() {
 }
  
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
- 
 function hideMood(m) {
     if (!m || isHidden(m)) return;
     hiddenMoods.push(m);

@@ -2637,7 +2637,7 @@ body {
 
 /* …and fade in gently when it starts. paused or nothing playing = no waves */
 :root.np-live .mt-waves {
-  opacity: 0.7;
+  opacity: 0.9;
   visibility: visible;
   transition: opacity 1s ease, visibility 0s;
 }
@@ -2687,7 +2687,7 @@ body {
 
 .mt-waves .wave-glow {
   stroke-width: 10;
-  opacity: calc(var(--o) * 0.22);
+  opacity: calc(var(--o) * 0.3);
 }
 
 /* no tempo known and not listening: a slow, calm swell (not pretending to be the beat) */
