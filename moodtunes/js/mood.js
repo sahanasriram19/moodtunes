@@ -248,16 +248,17 @@ function restoreLiveState() {
  
 // ── waves on the beat ──────────────────────────────────
 // the waves follow the music in one of three ways, best first:
-//  1. live sound — "sync to sound" on the now-playing card. the browser listens
-//     either through the mic (music on speakers) or to the computer's own sound
-//     (chrome/edge on a computer — works with headphones). the waves hit on the
-//     real drums and grow with the volume. nothing is recorded or sent anywhere.
+//  1. live sound — "sync to sound" on the now-playing card (computers only). the
+//     browser listens to the computer's own sound (chrome/edge, works with
+//     headphones) and the waves hit on the real drums and grow with the volume.
+//     the browser asks every time — no site can do this silently. nothing is
+//     recorded or sent anywhere.
 //  2. spotify's beat map — the exact time of every beat and how loud each
 //     moment is, lined up with where spotify says you are in the song. spotify
 //     only shares this with apps made before late 2024, so it may be unavailable.
 //  3. neither: the waves breathe slowly while music plays.
 var Beat = (function() {
-    var SYNC_KEY = 'moodtunes_wave_sync';          // 'mic' | 'system' | (none)
+    var SYNC_KEY = 'moodtunes_wave_sync';          // 'system' | (none)
     var BLOCKED_KEY = 'moodtunes_beatmap_off';
     var cur = { id: null, base: 0, at: 0, playing: false, map: null };
     var maps = {};                                 // track id → beat map | false
@@ -267,7 +268,8 @@ var Beat = (function() {
                  heardAt: 0, silent: false, level: 0, kick: 0, lastKick: 0, lastT: 0,
                  starting: false };
     try {
-        live.want = localStorage.getItem(SYNC_KEY) || (localStorage.getItem('moodtunes_wave_listen') === '1' ? 'mic' : null);
+        live.want = localStorage.getItem(SYNC_KEY) === 'system' ? 'system' : null;
+        if (!live.want) localStorage.removeItem(SYNC_KEY);             // (old mic setting)
         localStorage.removeItem('moodtunes_wave_listen');
     } catch (e) {}
  
@@ -349,7 +351,7 @@ var Beat = (function() {
         return { base: 0.5 + level * 0.65, pulse: kick };
     }
  
-    // ── live sound (mic or the computer's sound) ──
+    // ── live sound (the computer's sound) ──
     function listening() { return !!(live.stream && live.ctx && live.ctx.state === 'running' && live.an); }
  
     function audioCtx() {
@@ -402,23 +404,6 @@ var Beat = (function() {
         try { if (mode) localStorage.setItem(SYNC_KEY, mode); else localStorage.removeItem(SYNC_KEY); } catch (e) {}
     }
  
-    function startMic() {
-        if (live.mode === 'mic' || live.starting || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-        live.starting = true; emit();
-        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
-            .then(function(stream) {
-                live.starting = false;
-                if (live.want !== 'mic' || !cur.playing) { stream.getTracks().forEach(function(t) { t.stop(); }); emit(); return; }
-                attach(stream, 'mic');
-            })
-            .catch(function() {
-                live.starting = false;
-                setWant(null);
-                if (typeof toast === 'function') toast('the mic is blocked, so syncing is off');
-                emit();
-            });
-    }
- 
     // the computer's own sound (needs a click every time — the browser insists)
     function startSystem() {
         if (live.starting) return;
@@ -435,6 +420,7 @@ var Beat = (function() {
             if (!audio.length) {
                 stream.getTracks().forEach(function(t) { t.stop(); });
                 if (typeof toast === 'function') toast('no sound was shared — choose “Entire screen” and switch on “Share system audio”');
+                setWant(null);
                 emit();
                 return;
             }
@@ -443,17 +429,10 @@ var Beat = (function() {
             // "stop sharing" in the browser bar turns syncing off
             audio[0].onended = function() { stopLive(); setWant(null); run(); emit(); };
         }).catch(function() {
-            live.starting = false;
+            live.starting = false;          // pop-up closed without sharing
+            setWant(null);
             emit();
         });
-    }
- 
-    // the mic is only held while spotify is playing; shared computer sound stays until turned off
-    function syncLive() {
-        if (live.want === 'mic') {
-            if (cur.playing && !document.hidden) startMic();
-            else if (live.mode === 'mic') { stopLive(); emit(); }
-        }
     }
  
     // turns what we hear into:
@@ -536,7 +515,7 @@ var Beat = (function() {
  
     // track: {id, title, artist}; progress in ms; playing: bool
     function update(track, progress, playing) {
-        if (!track || !track.id) { cur.id = null; cur.map = null; cur.playing = false; syncLive(); run(); emit(); return; }
+        if (!track || !track.id) { cur.id = null; cur.map = null; cur.playing = false; run(); emit(); return; }
         cur.base = progress || 0;
         cur.at = performance.now();
         cur.playing = !!playing;
@@ -545,29 +524,18 @@ var Beat = (function() {
             var id = track.id;
             fetchMap(track, function(m) { if (cur.id === id) { cur.map = m || null; run(); emit(); } });
         }
-        syncLive(); run(); emit();
+        run(); emit();
     }
     function stop() { update(null); }
  
-    // from the button (a click, so the browser allows the prompts)
-    function start(mode) {
-        audioCtx();
-        if (mode === 'system') return startSystem();
-        setWant('mic');
-        if (cur.playing) startMic();
-        emit();
+    // from the button (a click, so the browser allows the pop-up)
+    function start() {
+        if (!canShareSound) return;
+        startSystem();
     }
     function turnOff() { setWant(null); stopLive(); run(); emit(); }
  
-    // don't pop a mic prompt on page load — only carry on if it was already allowed
-    if (live.want === 'mic' && navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({ name: 'microphone' }).then(function(p) {
-            if (p.state !== 'granted') setWant(null);
-            emit();
-        }).catch(function() {});
-    }
- 
-    document.addEventListener('visibilitychange', function() { syncLive(); run(); });
+    document.addEventListener('visibilitychange', function() { run(); });
     return { update: update, stop: stop, start: start, turnOff: turnOff, info: info,
              onChange: function(fn) { listeners.push(fn); fn(info()); } };
 })();
@@ -798,7 +766,6 @@ function isInView(el) {
     var r = el.getBoundingClientRect();
     return r.top >= 0 && r.bottom <= innerHeight;
 }
-
 // ── hidden built-in moods ──────────────────────────────
 // users can remove any built-in mood from their page; the choice is saved to
 // the backend (with a local copy so the page doesn't flash hidden chips)
@@ -1100,7 +1067,7 @@ function nowPlaying(container, opts) {
                 '<div class="np-title"></div>' +
                 '<div class="np-artist"></div>' +
                 '<div class="np-progress"><div class="np-bar"><div class="np-fill"></div></div><span class="np-time"></span>' +
-                    '<button class="np-sync" type="button" title="make the background waves react to the music your speakers are playing (uses the mic, nothing is recorded)"></button></div>' +
+                    '<button class="np-sync" type="button" title="></button></div>' +
             '</div>' +
             '<div class="np-controls">' +
                 '<button class="np-btn np-prev" aria-label="previous song">' + icon('prev') + '</button>' +
@@ -1118,72 +1085,44 @@ function nowPlaying(container, opts) {
     var time   = container.querySelector('.np-time');
     var added  = container.querySelector('.np-added');
     var toggle = container.querySelector('.np-toggle');
-    // "sync to sound": on a computer, pick the mic or the computer's own sound;
-    // on a phone it's just the mic. tap again to turn it off.
+    // "sync to sound" (computers only): shares the computer's sound so the waves
+    // follow the real drums and volume. phones use spotify's beat map instead.
     var syncBtn = container.querySelector('.np-sync');
-    var syncMenu = null;
-    function closeSyncMenu() { if (syncMenu) { syncMenu.remove(); syncMenu = null; } }
-    function openSyncMenu() {
-        closeSyncMenu();
-        syncMenu = document.createElement('div');
-        syncMenu.className = 'np-sync-menu';
-        syncMenu.innerHTML =
-            '<button type="button" data-mode="system"><b>computer sound</b><span>works with headphones · chrome or edge</span></button>' +
-            '<button type="button" data-mode="mic"><b>microphone</b><span>when music plays on speakers</span></button>';
-        // on the page itself (the card clips anything that sticks out), right under the button
-        var r = syncBtn.getBoundingClientRect();
-        syncMenu.style.top = (r.bottom + 8) + 'px';
-        syncMenu.style.left = Math.max(8, Math.min(r.right - 240, window.innerWidth - 248)) + 'px';
-        syncMenu.style.setProperty('--np-color', getComputedStyle(card).getPropertyValue('--np-color') || 'var(--mood)');
-        document.body.appendChild(syncMenu);
-        window.addEventListener('scroll', closeSyncMenu, { once: true, passive: true });
-        syncMenu.addEventListener('click', function(e) {
-            var b = e.target.closest('button[data-mode]');
-            if (!b) return;
-            if (b.dataset.mode === 'system') toast('in the pop-up, choose “Entire screen” and switch on “Share system audio”');
-            Beat.start(b.dataset.mode);
-            closeSyncMenu();
+    if (!Beat.info().canShareSound) syncBtn.remove();
+    else {
+        syncBtn.addEventListener('click', function() {
+            var i = Beat.info();
+            if (i.listening) return Beat.turnOff();
+            toast('in the pop-up, choose “Entire screen” and switch on “Share system audio”');
+            Beat.start();
+        });
+        Beat.onChange(function(i) {
+            syncBtn.classList.toggle('on', i.listening || i.want === 'system');
+            syncBtn.classList.toggle('map', !i.listening && i.want !== 'system' && i.hasMap);
+            syncBtn.setAttribute('aria-pressed', i.listening ? 'true' : 'false');
+            var text, tip;
+            if (i.listening && !i.hearing) {
+                text = '○ no sound coming through';
+                tip = 'nothing is playing through the shared sound — check “Share system audio” was on. tap to stop syncing';
+            } else if (i.listening) {
+                text = '● synced to sound';
+                tip = 'the waves are following your computer’s sound. tap to stop syncing';
+            } else if (i.starting) {
+                text = 'sync to sound…'; tip = '';
+            } else if (i.want === 'system') {
+                text = '▶ resume sync';
+                tip = 'the browser asks again on each page — tap to share your computer’s sound';
+            } else if (i.hasMap) {
+                text = '● on the beat · sync to sound';
+                tip = 'following spotify’s beat map. tap to follow your computer’s sound instead';
+            } else {
+                text = 'sync waves to sound';
+                tip = 'make the background waves follow the drums and volume of what you’re playing (nothing is recorded)';
+            }
+            syncBtn.textContent = text;
+            syncBtn.title = tip;
         });
     }
-    document.addEventListener('click', function(e) {
-        if (syncMenu && !syncMenu.contains(e.target) && e.target !== syncBtn) closeSyncMenu();
-    });
-    syncBtn.addEventListener('click', function() {
-        var i = Beat.info();
-        if (syncMenu) return closeSyncMenu();
-        if (i.want === 'system' && !i.listening) return Beat.start('system');   // resume after changing page
-        if (i.want || i.listening) return Beat.turnOff();
-        if (i.canShareSound) openSyncMenu(); else Beat.start('mic');
-    });
-    Beat.onChange(function(i) {
-        var on = !!(i.want || i.listening);
-        syncBtn.classList.toggle('on', on);
-        syncBtn.classList.toggle('map', !on && i.hasMap);
-        syncBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-        var text, tip;
-        if (i.listening && !i.hearing) {
-            text = '○ can’t hear it';
-            tip = i.mode === 'mic' ? 'the mic can’t hear the music (headphones?). tap to turn syncing off'
-                                   : 'no sound is coming through. tap to turn syncing off';
-        } else if (i.listening) {
-            text = '● synced · ' + (i.mode === 'mic' ? 'mic' : 'computer sound');
-            tip = 'the waves are following the music. tap to turn syncing off';
-        } else if (i.starting) {
-            text = 'sync to sound…'; tip = '';
-        } else if (i.want === 'system') {
-            text = '▶ resume sync'; tip = 'the browser needs you to share your computer’s sound again on each page';
-        } else if (i.want === 'mic') {
-            text = 'sync to sound…'; tip = 'waiting for the music to play';
-        } else if (i.hasMap) {
-            text = '● on the beat · sync to sound';
-            tip = 'following spotify’s beat map. tap to follow the live sound instead';
-        } else {
-            text = 'sync waves to sound';
-            tip = 'make the background waves follow the drums and volume of what you’re playing (nothing is recorded)';
-        }
-        syncBtn.textContent = text;
-        syncBtn.title = tip;
-    });
  
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
  
