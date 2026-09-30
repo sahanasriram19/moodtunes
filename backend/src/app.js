@@ -21,6 +21,9 @@ app.get('/api/health', (req, res) => {
     res.json({ ok: true, dailyLogs: require('./models/logModel').dailyLogsStatus });
 });
 
+// song tempo for the background sound waves (looked up on Deezer)
+app.get('/api/tempo', require('./middlewares/jwtMiddleware').verifyToken, require('./controllers/tempoController').getTempo);
+
 const mainRoutes = require('./routes/mainRoutes');
 app.use('/api', mainRoutes);
 

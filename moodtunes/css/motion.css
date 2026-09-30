@@ -2092,7 +2092,12 @@ body {
   box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--mc) 85%, transparent);
 }
 
-.log-card.mood-card .log-note {
+.log-card.mood-card .log-note,
+.song-history-card.mood-card .log-note,
+.log-card.mood-card .edit-note-btn,
+.log-card.mood-card .add-note-btn,
+.song-history-card.mood-card .edit-note-btn,
+.song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 75%, #fff) !important;
 }
 
@@ -2614,24 +2619,26 @@ body {
 }
 
 /* === BACKGROUND: SOUND WAVES === */
-/* flowing lines along the bottom while spotify is playing, in the song's colour
-   and at the mood's tempo. they flatten when paused and fade when nothing plays */
+/* soft flowing lines across the middle of the screen, behind the cards, while
+   spotify is playing — in the song's colour. they pulse on the song's beat when
+   its tempo is known (js/mood.js), flatten when paused and fade when nothing plays */
 .mt-waves {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 50vh;
+  top: 50%;
+  height: 72vh;
+  transform: translateY(-50%);
   opacity: 0;
   transition: opacity 1.4s ease;
 }
 
 :root.np-live .mt-waves {
-  opacity: 1;
+  opacity: 0.7;
 }
 
 :root.np-paused .mt-waves {
-  opacity: 0.45;
+  opacity: 0.28;
 }
 
 .mt-waves .wave {
@@ -2688,6 +2695,20 @@ body {
   animation-delay: calc(var(--mood-tempo) * -0.7);
 }
 
+/* on the beat: each hit stretches the waves taller and brighter for a moment */
+:root.np-beat .mt-waves .wave-amp {
+  transform: scaleY(calc(0.78 + var(--pulse, 0) * 0.45 * var(--pk, 1)));
+  transition: transform 0.05s linear;
+}
+
+:root.np-beat .mt-waves path {
+  animation: none;
+}
+
+:root.np-beat .mt-waves .wave-line {
+  opacity: calc(var(--o) * (0.8 + var(--pulse, 0) * 0.7));
+}
+
 @keyframes wave-slide {
   to {
     transform: translateX(-50%);
@@ -2702,8 +2723,7 @@ body {
 
 @media (max-width: 768px) {
   .mt-waves {
-    height: 38vh;
-    bottom: calc(60px + env(safe-area-inset-bottom));
+    height: 60vh;
   }
 }
 

@@ -2,9 +2,9 @@
 // mood-reactive theming, entrance animations, skeleton loaders, toasts,
 // confetti, the live "now playing" card, and the animated session summary.
 // Load it right after api.js on each page; it exposes window.MoodFX.
-
+ 
 (function() {
-
+ 
 // ── mood palette ───────────────────────────────────────
 // colours match stats.js so the whole app speaks the same colour language
 // (happy is sunny yellow so it doesn't clash with focused's green; hype is a warm
@@ -68,17 +68,17 @@ var ICON_PATHS = {
     next:       '<path d="M5.5 5.5v13l9.5-6.5z" fill="currentColor" stroke="none"/><path d="M18.5 5.5v13" stroke-width="2.4"/>',
     prev:       '<path d="M18.5 5.5v13L9 12z" fill="currentColor" stroke="none"/><path d="M5.5 5.5v13" stroke-width="2.4"/>'
 };
-
+ 
 function icon(name, cls) {
     return '<svg class="mt-icon' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         (ICON_PATHS[name] || ICON_PATHS.note) + '</svg>';
 }
-
+ 
 var MOOD_ICON = {
     happy: 'smile', sad: 'rain', hype: 'flame', heartbreak: 'heartbreak',
     nostalgic: 'cassette', focused: 'target', chill: 'waves'
 };
-
+ 
 // custom moods are saved with an emoji (so the backend and existing moods keep
 // working); this is the icon each one is shown as. the picker offers these.
 var ICON_PICKER = [
@@ -94,7 +94,7 @@ ICON_PICKER.forEach(function(p) { EMOJI_ICON[p[0].replace(/\uFE0F/g, '')] = p[1]
 ['💜', '💙'].forEach(function(e) { EMOJI_ICON[e] = 'heart'; });
 EMOJI_ICON['💫'] = 'sparkles'; EMOJI_ICON['🎶'] = 'note'; EMOJI_ICON['🥺'] = 'rain';
 EMOJI_ICON['😤'] = 'flame'; EMOJI_ICON['🤩'] = 'star'; EMOJI_ICON['🌺'] = 'flower';
-
+ 
 // the icon name for a mood: built-in moods have their own; custom moods use the
 // icon matching the emoji they were saved with (or a music note)
 function moodIcon(mood, savedEmoji) {
@@ -103,32 +103,32 @@ function moodIcon(mood, savedEmoji) {
     if (savedEmoji) return EMOJI_ICON[String(savedEmoji).replace(/\uFE0F/g, '')] || 'note';
     return 'note';
 }
-
+ 
 var root = document.documentElement;
 var DEFAULT_PARTNER = '#4a2a8a';   // deep purple — the background fades from purple into this when no mood is picked
 var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+ 
 // custom moods get a stable colour derived from their name
 function hashHue(str) {
     var h = 0;
     for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
     return h;
 }
-
+ 
 function color(mood) {
     if (!mood) return accent();
     mood = String(mood).toLowerCase().trim();
     return COLORS[mood] || 'hsl(' + hashHue(mood) + ', 58%, 64%)';
 }
-
+ 
 function tempo(mood) {
     return TEMPO[(mood || '').toLowerCase()] || 1.2;
 }
-
+ 
 function hasMoodIcon(mood) {
     return !!MOOD_ICON[(mood || '').toLowerCase()];
 }
-
+ 
 // readable text colour on top of a mood colour: dark ink on light moods (e.g. happy yellow), white otherwise
 var inkCache = {};
 function ink(c) {
@@ -148,12 +148,12 @@ function ink(c) {
     inkCache[c] = out;
     return out;
 }
-
+ 
 function accent() {
     var a = getComputedStyle(root).getPropertyValue('--accent').trim();
     return a || '#9b6fc2';
 }
-
+ 
 // ── set the page mood ──────────────────────────────────
 var currentMood = null;
 function setMood(mood) {
@@ -165,13 +165,13 @@ function setMood(mood) {
     root.style.setProperty('--mood-tempo', tempo(mood) + 's');
     if (mood) root.setAttribute('data-mood', mood); else root.removeAttribute('data-mood');
 }
-
+ 
 // album-art colour — blended into the ambient glow by the now-playing card
 function setTrackColor(c) {
     root.style.setProperty('--np', c || 'var(--mood)');
     root.classList.toggle('has-np', !!c);
 }
-
+ 
 // ── ambient background glow ────────────────────────────
 function mountAmbient() {
     if (document.getElementById('mood-ambient')) return;
@@ -184,12 +184,12 @@ function mountAmbient() {
     document.body.insertBefore(amb, document.body.firstChild);
     restoreLiveState();
 }
-
+ 
 // soft points of light drifting upward, like out-of-focus stage lights
 function particlesHTML() {
     var html = '<div class="mt-particles">';
-    for (var i = 0; i < 14; i++) {
-        var size = 3 + Math.round(Math.random() * 7);
+    for (var i = 0; i < 24; i++) {
+        var size = 2 + Math.round(Math.random() * 3);
         html += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;' +
             '--size:' + size + 'px;' +
             '--dur:' + (20 + Math.random() * 22).toFixed(1) + 's;' +
@@ -199,8 +199,8 @@ function particlesHTML() {
     }
     return html + '</div>';
 }
-
-// sound waves along the bottom of the screen while a song is playing on spotify.
+ 
+// sound waves across the middle of the screen (behind everything) while a song plays on spotify.
 // each wave is 6 cycles long and slides left by half its width, so it loops seamlessly
 function wavePath(amp) {
     var d = 'M0 100 Q100 ' + (100 - amp) + ' 200 100';
@@ -209,18 +209,18 @@ function wavePath(amp) {
 }
 function wavesHTML() {
     var layers = [
-        { amp: 60, h: 34, y: 4,  k: 14, o: 0.55 },
-        { amp: 42, h: 28, y: 9,  k: 10, o: 0.35 },
-        { amp: 75, h: 40, y: 1,  k: 20, o: 0.22 }
+        { amp: 88, h: 46, y: 14, k: 14, o: 0.34, p: 1.0 },
+        { amp: 64, h: 38, y: 20, k: 10, o: 0.22, p: 0.7 },
+        { amp: 96, h: 60, y: 6,  k: 20, o: 0.14, p: 1.3 }
     ];
     return '<div class="mt-waves">' + layers.map(function(l, i) {
         var d = wavePath(l.amp);
         return '<svg class="wave wave-' + (i + 1) + '" viewBox="0 0 2400 200" preserveAspectRatio="none" ' +
-            'style="--h:' + l.h + 'vh;--y:' + l.y + 'vh;--k:' + l.k + ';--o:' + l.o + '">' +
+            'style="--h:' + l.h + 'vh;--y:' + l.y + 'vh;--k:' + l.k + ';--o:' + l.o + ';--pk:' + l.p + '">' +
             '<g class="wave-amp"><path class="wave-glow" d="' + d + '"/><path class="wave-line" d="' + d + '"/></g></svg>';
     }).join('') + '</div>';
 }
-
+ 
 // ── is something playing? (drives the sound waves) ─────
 // 'playing' | 'paused' | 'idle'. the now-playing card reports it on the journal
 // and session pages; other pages check spotify now and then. the last state is
@@ -245,7 +245,77 @@ function restoreLiveState() {
         if (v.color) setTrackColor(v.color);
     } catch (e) {}
 }
-
+ 
+// ── waves on the beat ──────────────────────────────────
+// moodtunes can't hear the audio (it plays in spotify), so it looks up the
+// song's tempo (BPM) through the backend and pulses the waves on that beat,
+// lined up with how far into the song spotify says you are. songs without a
+// known tempo keep the slow swell.
+var Beat = (function() {
+    var bpmCache = {};                   // track id → bpm | null
+    var cur = { id: null, bpm: null, base: 0, at: 0, playing: false };
+    var raf = null, wavesEl = null;
+    try { bpmCache = JSON.parse(sessionStorage.getItem('moodtunes_bpm') || '{}') || {}; } catch (e) {}
+ 
+    function save() { try { sessionStorage.setItem('moodtunes_bpm', JSON.stringify(bpmCache)); } catch (e) {} }
+ 
+    function fetchBpm(track, cb) {
+        if (Object.prototype.hasOwnProperty.call(bpmCache, track.id)) return cb(bpmCache[track.id]);
+        if (typeof apiCall !== 'function') return cb(null);
+        apiCall('/tempo?title=' + encodeURIComponent(track.title || '') + '&artist=' + encodeURIComponent(track.artist || ''),
+            'GET', null, function(err, res) {
+                if (err || !res || res.status >= 400) return cb(null);   // not cached, try again next song
+                var bpm = res.data && res.data.bpm ? Number(res.data.bpm) : null;
+                bpmCache[track.id] = bpm; save();
+                cb(bpm);
+            });
+    }
+ 
+    function frame() {
+        raf = null;
+        if (!cur.playing || !cur.bpm || document.hidden) { setPulse(0); return; }
+        var pos = cur.base + (performance.now() - cur.at);           // ms into the song
+        var period = 60000 / cur.bpm;
+        var beats = pos / period;
+        var phase = beats - Math.floor(beats);
+        var downbeat = Math.floor(beats) % 4 === 0;
+        var kick = Math.exp(-phase * 4) * (downbeat ? 1 : 0.62);      // quick hit, soft tail
+        var swell = 0.8 + 0.2 * Math.sin(pos / (period * 16) * Math.PI * 2);   // rises and falls every 4 bars
+        setPulse(kick * swell);
+        raf = requestAnimationFrame(frame);
+    }
+ 
+    function setPulse(v) {
+        if (!wavesEl) wavesEl = document.querySelector('.mt-waves');
+        if (wavesEl) wavesEl.style.setProperty('--pulse', v.toFixed(3));
+    }
+ 
+    function run() {
+        var on = cur.playing && !!cur.bpm && !reduceMotion;
+        root.classList.toggle('np-beat', on);
+        if (on && !raf) raf = requestAnimationFrame(frame);
+        if (!on) { if (raf) cancelAnimationFrame(raf); raf = null; setPulse(0); }
+    }
+ 
+    // track: {id, title, artist}; progress in ms; playing: bool
+    function update(track, progress, playing) {
+        if (!track || !track.id) { cur.id = null; cur.bpm = null; cur.playing = false; run(); return; }
+        cur.base = progress || 0;
+        cur.at = performance.now();
+        cur.playing = !!playing;
+        if (track.id !== cur.id) {
+            cur.id = track.id; cur.bpm = null;
+            var id = track.id;
+            fetchBpm(track, function(bpm) { if (cur.id === id) { cur.bpm = bpm; run(); } });
+        }
+        run();
+    }
+    function stop() { update(null); }
+ 
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) run(); });
+    return { update: update, stop: stop };
+})();
+ 
 // pages without a now-playing card: a light check every 20 seconds
 function watchPlayback() {
     var stopped = false, lastTrack = null, timer = null;
@@ -256,9 +326,10 @@ function watchPlayback() {
             if (err || !res) { timer = setTimeout(check, 20000); return; }
             if (res.status === 401 || res.status === 404) { stopped = true; setLiveState('idle'); return; }
             var d = res.data || {};
-            if (!d.playing || !d.track) { lastTrack = null; setTrackColor(null); setLiveState('idle', null); }
+            if (!d.playing || !d.track) { lastTrack = null; setTrackColor(null); setLiveState('idle', null); Beat.stop(); }
             else {
                 setLiveState(d.is_playing ? 'playing' : 'paused');
+                Beat.update(d.track, d.progress_ms, d.is_playing);
                 if (d.track.id !== lastTrack) {
                     lastTrack = d.track.id;
                     artColor(d.track.albumArt, function(c) { setTrackColor(c); setLiveState(d.is_playing ? 'playing' : 'paused', c); });
@@ -270,7 +341,7 @@ function watchPlayback() {
     document.addEventListener('visibilitychange', function() { if (!document.hidden) check(); });
     check();
 }
-
+ 
 // ── decorate chips + badges with their mood colour ─────
 function decorate(node) {
     if (!node || node.nodeType !== 1) return;
@@ -287,7 +358,7 @@ function decorate(node) {
             chip.insertBefore(span, chip.firstChild);
         }
     });
-
+ 
     var badges = node.matches && node.matches('.mood-badge') ? [node] : [];
     badges = badges.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.mood-badge') : []));
     badges.forEach(function(b) {
@@ -302,7 +373,7 @@ function decorate(node) {
         }
     });
 }
-
+ 
 // ── staggered entrance for anything list-like ──────────
 var ENTER_SEL = [
     '.log-card', '.result-item', '.session-rec-card', '.rec-tile', '.playlist-card',
@@ -310,7 +381,7 @@ var ENTER_SEL = [
     '.timeline-date', '.flashback-card', '.session-song-thumb', '.top-song-row'
 ].join(',');
 var batch = 0, batchReset = null;
-
+ 
 function stagger(node) {
     if (!node || node.nodeType !== 1 || reduceMotion) return;
     // background refreshes (see apiCallCached) swap content in place without replaying entrance animations
@@ -330,7 +401,7 @@ function stagger(node) {
         });
     }
 }
-
+ 
 // ── skeleton loaders ───────────────────────────────────
 function skeleton(kind, n) {
     var i, html = '';
@@ -369,7 +440,7 @@ function skeleton(kind, n) {
     }
     return '';
 }
-
+ 
 // ── toast ──────────────────────────────────────────────
 // opts: { action: 'undo', onAction: fn, duration: ms }
 var toastTimer = null;
@@ -413,7 +484,7 @@ function toast(text, mood, opts) {
     toastTimer = setTimeout(dismiss, opts.duration || 2600);
     return dismiss;
 }
-
+ 
 // ── delete with undo ───────────────────────────────────
 // hides the thing straight away, offers "undo" for 5s, then commits.
 // anything still pending when the page is left is committed immediately.
@@ -443,7 +514,7 @@ function undoable(o) {
 window.addEventListener('pagehide', function() {
     pending.slice().forEach(function(e) { if (!e.done) { e.done = true; e.commit(); } });
 });
-
+ 
 // ── "pick a mood first" nudge (replaces alert()) ───────
 function nudgeMoods(scope) {
     var targets = [];
@@ -465,7 +536,7 @@ function isInView(el) {
     var r = el.getBoundingClientRect();
     return r.top >= 0 && r.bottom <= innerHeight;
 }
-
+ 
 // ── hidden built-in moods ──────────────────────────────
 // users can remove any built-in mood from their page; the choice is saved to
 // the backend (with a local copy so the page doesn't flash hidden chips)
@@ -475,15 +546,15 @@ var hiddenMoods = (function() {
     try { var h = JSON.parse(localStorage.getItem(hiddenKey()) || '[]'); return Array.isArray(h) ? h : []; }
     catch (e) { return []; }
 })();
-
+ 
 var hiddenStyle = document.createElement('style');
 hiddenStyle.id = 'mt-hidden-moods';
 document.head.appendChild(hiddenStyle);
-
+ 
 function saveHidden() {
     try { localStorage.setItem(hiddenKey(), JSON.stringify(hiddenMoods)); } catch (e) {}
 }
-
+ 
 function applyHidden() {
     // CSS rather than DOM removal, so chips added later by other scripts are covered too
     hiddenStyle.textContent = hiddenMoods.map(function(m) {
@@ -492,9 +563,9 @@ function applyHidden() {
     }).join(',\n') + (hiddenMoods.length ? ' { display: none !important; }' : '');
     renderRestore();
 }
-
+ 
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
-
+ 
 function hideMood(m) {
     if (!m || isHidden(m)) return;
     hiddenMoods.push(m);
@@ -503,7 +574,7 @@ function hideMood(m) {
     if (currentMood === m) setMood(null);
     apiCall('/moods/hidden', 'POST', { mood: m }, function() {});
 }
-
+ 
 function unhideMood(m) {
     if (!isHidden(m)) return;
     hiddenMoods.splice(hiddenMoods.indexOf(m), 1);
@@ -511,7 +582,7 @@ function unhideMood(m) {
     applyHidden();
     apiCall('/moods/hidden/' + encodeURIComponent(m), 'DELETE', null, function() {});
 }
-
+ 
 function syncHidden() {
     apiCall('/moods/hidden', 'GET', null, function(err, res) {
         // older backend without the route: keep the local list
@@ -521,7 +592,7 @@ function syncHidden() {
         applyHidden();
     });
 }
-
+ 
 // the moods currently on the page: visible built-ins + the user's custom ones
 function visibleMoods() {
     var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
@@ -530,7 +601,7 @@ function visibleMoods() {
     });
     return list;
 }
-
+ 
 // "hidden moods — tap to bring back", shown inside the add-mood panel in manage mode
 function renderRestore() {
     var host = document.getElementById('add-mood-section');
@@ -563,9 +634,9 @@ function renderRestore() {
     });
     box.appendChild(row);
 }
-
+ 
 applyHidden();
-
+ 
 // ── ripple on chip / button press ──────────────────────
 function ripple(el, evt) {
     if (reduceMotion) return;
@@ -579,7 +650,7 @@ function ripple(el, evt) {
     el.appendChild(s);
     setTimeout(function() { s.remove(); }, 600);
 }
-
+ 
 // ── confetti ───────────────────────────────────────────
 function confetti(baseColor) {
     if (reduceMotion) return;
@@ -591,14 +662,14 @@ function confetti(baseColor) {
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-
+ 
     var palette = [baseColor, baseColor, '#ffffff', 'color-mix(in srgb, ' + baseColor + ' 50%, white)'];
     // canvas can't parse color-mix — resolve colours through a probe element
     var probe = document.createElement('span');
     document.body.appendChild(probe);
     palette = palette.map(function(c) { probe.style.color = c; return getComputedStyle(probe).color; });
     probe.remove();
-
+ 
     var parts = [];
     var cx = innerWidth / 2, cy = innerHeight * 0.38;
     for (var i = 0; i < 140; i++) {
@@ -630,7 +701,7 @@ function confetti(baseColor) {
         if (t < 2400) requestAnimationFrame(frame); else canvas.remove();
     })(start);
 }
-
+ 
 // ── count-up numbers ───────────────────────────────────
 function countUp(el, to, ms) {
     if (reduceMotion || !to) { el.textContent = to; return; }
@@ -642,25 +713,25 @@ function countUp(el, to, ms) {
         if (k < 1) requestAnimationFrame(tick);
     })(start);
 }
-
+ 
 // ── html escape (song titles come from third-party APIs) ──
 function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
 }
-
+ 
 // ── animated session summary ───────────────────────────
 function sessionSummary(mood, startTime, endTime, songs) {
     var mins = Math.max(0, Math.floor((endTime - startTime) / 60000));
     var fmt = function(d) { return d.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true }); };
     var c = color(mood);
-
+ 
     var overlay = document.createElement('div');
     overlay.className = 'session-summary mt-summary';
     overlay.style.setProperty('--mc', c);
     overlay.style.setProperty('--mc-ink', ink(c));
-
+ 
     var covers = songs.length > 0
         ? '<div class="sum-covers">' + songs.map(function(s, i) {
             return '<a class="sum-cover" style="--i:' + i + '" href="' + esc(s.spotify_url || '#') + '" target="_blank" rel="noopener" title="' + esc(s.title) + '">' +
@@ -669,7 +740,7 @@ function sessionSummary(mood, startTime, endTime, songs) {
             '</a>';
           }).join('') + '</div>'
         : '<p class="sum-empty">no songs logged during this session</p>';
-
+ 
     overlay.innerHTML =
         '<div class="session-summary-box" role="dialog" aria-modal="true" aria-labelledby="sum-title">' +
             '<div class="sum-glow" aria-hidden="true"></div>' +
@@ -683,14 +754,14 @@ function sessionSummary(mood, startTime, endTime, songs) {
             covers +
             '<button class="session-summary-close" id="close-summary">done</button>' +
         '</div>';
-
+ 
     document.body.appendChild(overlay);
     requestAnimationFrame(function() { overlay.classList.add('open'); });
     overlay.querySelectorAll('[data-count]').forEach(function(el) {
         setTimeout(function() { countUp(el, parseInt(el.dataset.count, 10), 900); }, 250);
     });
     setTimeout(function() { confetti(c); }, 200);
-
+ 
     function close() {
         overlay.classList.remove('open');
         overlay.classList.add('closing');
@@ -700,7 +771,7 @@ function sessionSummary(mood, startTime, endTime, songs) {
     overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
     return overlay;
 }
-
+ 
 // ── dominant colour of an album cover ──────────────────
 function artColor(url, cb) {
     if (!url) return cb(null);
@@ -730,7 +801,7 @@ function artColor(url, cb) {
     img.onerror = function() { cb(null); };
     img.src = url;
 }
-
+ 
 // ── session auto-log bookkeeping ───────────────────────
 function sessionSeen(sessionId) {
     try { return JSON.parse(localStorage.getItem('moodtunes_autolog_' + sessionId) || '[]'); }
@@ -747,17 +818,17 @@ function markSessionSong(sessionId, songId) {
 function sessionHasSong(sessionId, songId) {
     return sessionSeen(sessionId).indexOf(songId) !== -1;
 }
-
+ 
 // ── live now-playing card ──────────────────────────────
 // opts: { compact, hideWhenIdle, getSession() -> {id, mood} | null, onTrack(track), onIdle() }
 function nowPlaying(container, opts) {
     opts = opts || {};
     if (!container) return null;
-
+ 
     var POLL_MS = 5000;
     var state = { track: null, playing: false, base: 0, duration: 0, at: 0 };
     var pollTimer = null, raf = null, failures = 0, stopped = false;
-
+ 
     container.classList.add('np-mount');
     container.innerHTML =
         '<div class="np-card' + (opts.compact ? ' np-compact' : '') + ' np-idle">' +
@@ -774,7 +845,7 @@ function nowPlaying(container, opts) {
                 '<button class="np-btn np-next" aria-label="next song">' + icon('next') + '</button>' +
             '</div>' +
         '</div>';
-
+ 
     var card   = container.querySelector('.np-card');
     var art    = container.querySelector('.np-art');
     var status = container.querySelector('.np-status');
@@ -784,21 +855,21 @@ function nowPlaying(container, opts) {
     var time   = container.querySelector('.np-time');
     var added  = container.querySelector('.np-added');
     var toggle = container.querySelector('.np-toggle');
-
+ 
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
-
+ 
     function mmss(ms) {
         var s = Math.max(0, Math.floor(ms / 1000));
         return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
     }
-
+ 
     function flashAdded(text) {
         added.textContent = text;
         added.classList.remove('show');
         void added.offsetWidth;
         added.classList.add('show');
     }
-
+ 
     function tick() {
         raf = null;
         if (!state.track) return;
@@ -813,7 +884,7 @@ function nowPlaying(container, opts) {
         time.textContent = mmss(pos) + ' / ' + mmss(state.duration);
         if (state.playing) raf = requestAnimationFrame(tick);
     }
-
+ 
     function showIdle(msg) {
         state.track = null;
         card.classList.add('np-idle');
@@ -827,9 +898,10 @@ function nowPlaying(container, opts) {
         if (opts.hideWhenIdle) container.classList.add('np-hidden');
         setTrackColor(null);
         setLiveState('idle', null);
+        Beat.stop();
         if (opts.onIdle) opts.onIdle();
     }
-
+ 
     function autoLog(track) {
         var s = opts.getSession ? opts.getSession() : null;
         if (!s || !s.id || !track.id) return;
@@ -844,23 +916,23 @@ function nowPlaying(container, opts) {
             toast('“' + track.title + '” added to your ' + s.mood + ' session', s.mood);
         });
     }
-
+ 
     function apply(data) {
         if (!data || !data.playing || !data.track) { showIdle('nothing playing on spotify right now'); return; }
         var t = data.track;
         var changed = !state.track || state.track.id !== t.id;
-
+ 
         state.playing  = !!data.is_playing;
         state.base     = data.progress_ms || 0;
         state.duration = data.duration_ms || 0;
         state.at       = performance.now();
-
+ 
         container.classList.remove('np-hidden');
         card.classList.remove('np-idle');
         card.classList.toggle('np-paused', !state.playing);
         status.textContent = state.playing ? 'now playing' : 'paused';
         syncToggle();
-
+ 
         if (changed) {
             state.track = t;
             card.classList.remove('np-swap');
@@ -878,9 +950,10 @@ function nowPlaying(container, opts) {
             if (opts.onTrack) opts.onTrack(t);
         }
         if (state.playing) autoLog(t);
+        Beat.update(t, state.base, state.playing);
         if (!raf) raf = requestAnimationFrame(tick);
     }
-
+ 
     // ── playback controls ──
     // play/pause flips straight away, then asks spotify; if spotify says no
     // (not Premium, or nothing active to control) it flips back and explains
@@ -888,14 +961,15 @@ function nowPlaying(container, opts) {
         toggle.innerHTML = icon(state.playing ? 'pause' : 'play');
         toggle.setAttribute('aria-label', state.playing ? 'pause' : 'play');
         setLiveState(state.playing ? 'playing' : 'paused');
+        if (state.track) Beat.update(state.track, state.base + (state.playing ? performance.now() - state.at : 0), state.playing);
     }
-
+ 
     var PLAYBACK_ERRORS = {
         premium_required: 'controlling playback needs Spotify Premium',
         no_active_device: 'open Spotify on a device first — nothing is active to control',
         not_connected: 'connect Spotify to control playback'
     };
-
+ 
     function control(action, btn) {
         if (!state.track || btn.disabled) return;
         var before = { playing: state.playing, base: state.base, at: state.at };
@@ -928,17 +1002,17 @@ function nowPlaying(container, opts) {
             else setTimeout(function() { poll(true); }, 1500);
         });
     }
-
+ 
     toggle.addEventListener('click', function() { control(state.playing ? 'pause' : 'play', toggle); });
     container.querySelector('.np-next').addEventListener('click', function(e) { control('next', e.currentTarget); });
     container.querySelector('.np-prev').addEventListener('click', function(e) { control('previous', e.currentTarget); });
-
+ 
     function schedule() {
         clearTimeout(pollTimer);
         if (stopped || document.hidden) return;
         pollTimer = setTimeout(poll, POLL_MS);
     }
-
+ 
     function poll(immediate) {
         if (stopped) return;
         if (immediate === true) clearTimeout(pollTimer);
@@ -956,21 +1030,21 @@ function nowPlaying(container, opts) {
             schedule();
         });
     }
-
+ 
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) { clearTimeout(pollTimer); }
         else if (!stopped && !document.prerendering) { poll(true); }
     });
-
+ 
     whenActive(poll);   // (auto-logging songs must not happen from a background-prepared page)
-
+ 
     return {
         refresh: function() { poll(true); },
         markLogged: function(sessionId, songId) { markSessionSong(sessionId, songId); },
         get track() { return state.track; }
     };
 }
-
+ 
 // ── empty states ───────────────────────────────────────
 // emptyState({ art: 'vinyl'|'search'|'offline', title, text, compact,
 //              action: { label, href } | { label, focus: '#sel' } | { label, click: '#sel' } | { label, reload: true } })
@@ -998,7 +1072,7 @@ var EMPTY_ART = {
             '<path class="ea-slash" d="M44 90 L80 38"/></g>' +
         '</svg>'
 };
-
+ 
 function emptyState(o) {
     o = o || {};
     var a = o.action, btn = '';
@@ -1016,7 +1090,7 @@ function emptyState(o) {
         '</div>' +
     '</div>';
 }
-
+ 
 document.addEventListener('click', function(e) {
     var b = e.target.closest && e.target.closest('.mt-empty-btn');
     if (!b || b.getAttribute('href') !== '#') return;
@@ -1032,7 +1106,7 @@ document.addEventListener('click', function(e) {
         el.click();
     }
 });
-
+ 
 // ── keyboard shortcuts ─────────────────────────────────
 //   1–9  pick a mood        /  jump to search
 //   ?    open help          Esc close the top-most popup
@@ -1053,18 +1127,18 @@ function closeTopLayer() {
     }
     return false;
 }
-
+ 
 document.addEventListener('keydown', function(e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
     var t = e.target;
     var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-
+ 
     if (e.key === 'Escape') {
         if (!closeTopLayer() && typing) t.blur();
         return;
     }
     if (typing) return;
-
+ 
     if (e.key === '/') {
         var search = document.querySelector('#song-search, #song-history-search');
         if (search) { e.preventDefault(); search.focus(); search.select(); }
@@ -1081,7 +1155,7 @@ document.addEventListener('keydown', function(e) {
         if (chip) { e.preventDefault(); chip.click(); chip.focus({ preventScroll: true }); }
     }
 });
-
+ 
 // ── bottom tab bar (phones) ────────────────────────────
 // on phones the top nav links are hidden and this bar sits at the bottom where
 // thumbs reach. the highlight pill has a view-transition-name, so it slides
@@ -1093,7 +1167,7 @@ var TABS = [
     { href: 'history.html',   label: 'history',   icon: icon('history') },
     { href: 'stats.html',     label: 'stats',     icon: icon('stats') }
 ];
-
+ 
 function mountTabbar() {
     if (document.getElementById('tabbar') || !document.querySelector('.nav-links')) return;
     var here = location.pathname.split('/').pop() || 'index.html';
@@ -1115,7 +1189,7 @@ function mountTabbar() {
     }).join('');
     document.body.appendChild(nav);
 }
-
+ 
 function setSessionLive(on) {
     document.body.classList.toggle('session-live', !!on);
     var icon = document.querySelector('#tabbar a[href="session.html"] .tab-icon');
@@ -1130,17 +1204,17 @@ function setSessionLive(on) {
         dot.remove();
     }
 }
-
+ 
 // ── install as an app ──────────────────────────────────
 // android + desktop chrome/edge: the browser tells us when the app can be
 // installed (beforeinstallprompt) and we show an "install app" button.
 // iphone: safari has no install prompt, so we show a one-time hint instead.
 var isStandalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 var installPrompt = null;
-
+ 
 var DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>';
 var SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
-
+ 
 function showInstallButton() {
     if (isStandalone || !installPrompt || document.getElementById('install-btn')) return;
     var navRight = document.querySelector('.nav-right');
@@ -1159,33 +1233,33 @@ function showInstallButton() {
     });
     navRight.insertBefore(b, navRight.firstChild);
 }
-
+ 
 window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();          // keep chrome's mini-bar away; we show our own button
     installPrompt = e;
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showInstallButton);
     else showInstallButton();
 });
-
+ 
 window.addEventListener('appinstalled', function() {
     installPrompt = null;
     var b = document.getElementById('install-btn');
     if (b) b.remove();
     toast('moodtunes is installed — open it from your home screen');
 });
-
+ 
 function isIOS() {
     return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // iPadOS reports as a Mac
 }
-
+ 
 function maybeShowIOSHint() {
     if (isStandalone || !isIOS()) return;
     var KEY = 'moodtunes_ios_hint_dismissed';
     var last = 0;
     try { last = parseInt(localStorage.getItem(KEY) || '0', 10); } catch (e) {}
     if (Date.now() - last < 30 * 24 * 3600 * 1000) return;     // not again for 30 days
-
+ 
     var h = document.createElement('div');
     h.className = 'ios-hint';
     h.setAttribute('role', 'dialog');
@@ -1203,11 +1277,11 @@ function maybeShowIOSHint() {
         setTimeout(function() { h.remove(); }, 500);
     });
 }
-
+ 
 // ── connection status ──────────────────────────────────
 window.addEventListener('offline', function() { toast('you’re offline — showing what’s saved'); });
 window.addEventListener('online', function() { toast('back online'); });
-
+ 
 // ── prerendered pages ──────────────────────────────────
 // pages can be prepared in the background before you click (see the
 // speculationrules in each page's <head>). anything that writes data or talks to
@@ -1217,7 +1291,7 @@ function whenActive(fn) {
     if (document.prerendering) document.addEventListener('prerenderingchange', function() { fn(); }, { once: true });
     else fn();
 }
-
+ 
 // ── boot ───────────────────────────────────────────────
 function initialMood() {
     try {
@@ -1226,7 +1300,7 @@ function initialMood() {
     } catch (e) {}
     return null;
 }
-
+ 
 // watch the page for new content: colour mood badges/cards straight away and give
 // freshly loaded lists their entrance animation. this starts as soon as mood.js
 // runs (not at DOMContentLoaded) so content drawn from saved data is already
@@ -1243,13 +1317,13 @@ function watchPage() {
             });
         });
     }).observe(document.body, { childList: true, subtree: true });
-
+ 
     // tap a note that's cut off next to the title to read it in full (tap again to fold it)
     document.addEventListener('click', function(e) {
         var note = e.target.closest && e.target.closest('.title-row .log-note');
         if (note) note.classList.toggle('note-open');
     });
-
+ 
     // selecting any mood chip re-tints the page. capture phase, so chips whose own
     // click handler stops the event (like the picker inside the search panel) still work
     document.addEventListener('click', function(e) {
@@ -1262,7 +1336,7 @@ function watchPage() {
         chip.classList.add('mt-pop');
     }, true);
 }
-
+ 
 function boot() {
     mountAmbient();
     setMood(initialMood());      // again, now that profile.js has applied the theme accent
@@ -1271,17 +1345,17 @@ function boot() {
     syncHidden();
     booted = true;
     if (!document.querySelector('.np-mount')) whenActive(watchPlayback);
-
+ 
     if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }
-
+ 
 // set colour vars and create the glow layer immediately, so they're already there
 // when a page transition reveals this page; the rest waits for the DOM + profile.js
 setMood(initialMood());
 if (document.body) { mountAmbient(); mountTabbar(); watchPage(); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else setTimeout(boot, 0);
-
+ 
 window.MoodFX = {
     color: color, tempo: tempo, ink: ink,
     icon: icon, moodIcon: moodIcon, hasMoodIcon: hasMoodIcon, ICON_PICKER: ICON_PICKER,
@@ -1293,5 +1367,5 @@ window.MoodFX = {
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
     DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive
 };
-
+ 
 })();
