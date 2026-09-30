@@ -26,7 +26,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('journal') + 'journal</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by today and yesterday. you can add or edit notes on any log, or delete it. play count updates automatically based on what you open from moodtunes in spotify.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by today and yesterday. you can add or edit notes on any log, or delete it — notes sit beside the song title, tap a long one to read it all. play count updates automatically based on what you open from moodtunes in spotify, and each log shows the time you played it (e.g. 1:50 – 2:00 am).</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -47,6 +47,15 @@ function showHelpModal() {
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('session') + 'session</div>' +
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood then hit start session to begin a listening session. once started you\'ll get song recommendations based on your mood playlist and similar artists — click ▶ to open in spotify, or + add to log it to your journal. hit ↻ refresh for new recs. end session saves a summary to your history.</div>' +
+            '</div>' +
+
+            '<div style="margin-bottom:18px;">' +
+                '<div class="help-heading">' + helpIcon('note') + 'now playing &amp; sound waves</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. while a song plays, sound waves drift across the background in the colour of its album art — they disappear when you pause.' +
+                    (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+                        ? ' to make the waves follow the drums and volume, tap <b style="color:#ddd;">sync waves to sound</b> on the card. in the pop-up, pick <b style="color:#ddd;">entire screen</b> (or any window), switch on <b style="color:#ddd;">share with system audio</b> and press share — it works with headphones too. the browser asks again on each page, so tap <b style="color:#ddd;">▶ resume sync</b> after switching pages, and tap the button again to stop. moodtunes only reads the beat and loudness — nothing is recorded or seen.'
+                        : ' when spotify\'s beat map is available for a song, the waves hit on its beats and follow its volume automatically.') +
+                '</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
