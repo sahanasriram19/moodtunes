@@ -60,7 +60,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('queue') + 'playing songs &amp; play next</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">with spotify premium, ▶ starts the song straight away on whatever device you have spotify open on — your laptop, phone or speaker — no pop-up. tap the <b style="color:#ddd;">queue icon</b> beside ▶ to play a song next, after the one that\'s on now. on a free account, ▶ opens the song in spotify instead and the queue icon is hidden.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#ddd;">queue icon</b> beside ▶ to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -77,7 +77,6 @@ function showHelpModal() {
                     '<b style="color:#ddd;">needs spotify premium</b>' +
                     '<ul style="margin:4px 0 0 18px;padding:0;">' +
                         '<li>play, pause and skip on the now playing card</li>' +
-                        '<li>▶ starting songs and playlists straight on your device</li>' +
                         '<li>play next (adding songs to your spotify queue)</li>' +
                     '</ul>' +
                 '</div>' +

@@ -17,7 +17,6 @@ router.post('/player/:action',  jwt.verifyToken, spotify.controlPlayback);
 router.post('/sync-playlist',   jwt.verifyToken, spotify.syncPlaylist);
 router.get('/playlists',        jwt.verifyToken, require('../controllers/spotifyPlaylistController').listSaved);
 router.put('/playlists/:mood',  jwt.verifyToken, require('../controllers/spotifyPlaylistController').savePlaylist);
-router.post('/play',            jwt.verifyToken, require('../controllers/spotifyPlayerController').play);
 router.post('/play-next',       jwt.verifyToken, require('../controllers/spotifyPlayerController').playNext);
 router.post('/queue',           jwt.verifyToken, spotify.addToQueue);
 

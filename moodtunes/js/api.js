@@ -219,11 +219,9 @@ if (!/login\.html$/.test(location.pathname)) {
     else setTimeout(startLoopChecks, 1500);   // after the page's own data has started loading
 }
 
-// ── playing a song ─────────────────────────────────────
-// with spotify premium, ▶ starts the song (or playlist) straight away on the
-// device you have spotify open on — no pop-up. free accounts, or nothing to play
-// on, get the "open in spotify" pop-up instead. opts.onOpen runs once the song
-// is really playing / opened (that's what counts the play), not on cancel.
+// ── spotify free or premium ────────────────────────────
+// "play next" needs premium. once spotify says no, the queue buttons are hidden
+// for a few days (then it checks again, in case you've upgraded)
 var FREE_KEY = 'moodtunes_spotify_free';
 function spotifyIsFree() {
     try { return Date.now() - Number(localStorage.getItem(FREE_KEY) || 0) < 3 * 86400000; } catch (e) { return false; }
@@ -233,33 +231,6 @@ function markSpotifyFree() {
     document.documentElement.classList.add('spotify-free');
 }
 if (spotifyIsFree()) document.documentElement.classList.add('spotify-free');
-
-function openSpotify(spotifyUrl, opts) {
-    opts = opts || {};
-    var m = String(spotifyUrl).match(/\/(track|playlist|album)\/([A-Za-z0-9]+)/);
-    if (!m || spotifyIsFree() || opts.popup) return openSpotifyPopup(spotifyUrl, opts);
-
-    var btn = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
-    if (btn) btn.classList.add('is-starting');
-    apiCall('/spotify/play', 'POST', { uri: 'spotify:' + m[1] + ':' + m[2] }, function(err, res) {
-        if (btn) btn.classList.remove('is-starting');
-        if (!err && res && res.status === 200) {
-            if (window.MoodFX) MoodFX.toast('▶ playing' + (res.data && res.data.device ? ' on ' + res.data.device : ' in spotify'));
-            if (opts.onOpen) opts.onOpen();
-            window.dispatchEvent(new Event('moodtunes:playback-changed'));
-            return;
-        }
-        var reason = res && res.data && res.data.reason;
-        if (window.console) console.info('[moodtunes] play straight in spotify didn’t work:', res ? res.status : err, res && res.data);
-        if (reason === 'premium_required') markSpotifyFree();
-        openSpotifyPopup(spotifyUrl, Object.assign({}, opts, {
-            hint: reason === 'no_active_device' ? 'open spotify on any device and moodtunes can play songs there directly'
-                : reason === 'unavailable' ? 'spotify says this version of the song isn’t available in your country — the spotify app may find another copy'
-                : reason === 'didnt_start' ? 'spotify' + (res.data.device ? ' on ' + res.data.device : '') + ' didn’t start the song — open it here instead'
-                : null
-        }));
-    });
-}
 
 // "play next": adds a song to your spotify queue (premium)
 function playNextInSpotify(spotifyUrl, btn) {
@@ -279,8 +250,9 @@ function playNextInSpotify(spotifyUrl, btn) {
     });
 }
 
-// the "open in spotify" pop-up (free accounts, or when nothing can play the song directly)
-function openSpotifyPopup(spotifyUrl, opts) {
+// ── open a song or playlist in spotify ─────────────────
+// opts.onOpen runs once, when a way to listen is picked (not on cancel)
+function openSpotify(spotifyUrl, opts) {
     // derive the spotify:// app URI from the web URL
     var m       = String(spotifyUrl).match(/\/(track|playlist|album)\/([A-Za-z0-9]+)/);
     var appUri  = m ? 'spotify:' + m[1] + ':' + m[2] : null;
@@ -299,8 +271,7 @@ function openSpotifyPopup(spotifyUrl, opts) {
     overlay.innerHTML =
         '<div style="background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:28px 32px;width:320px;text-align:center;">' +
             '<div style="font-size:15px;font-weight:600;color:#f0f0f0;margin-bottom:6px;">open in spotify</div>' +
-            '<div style="font-size:13px;color:#666;margin-bottom:24px;">how would you like to listen?' +
-                (opts && opts.hint ? '<div style="margin-top:8px;font-size:12px;color:#8a8a8a;">' + opts.hint + '</div>' : '') + '</div>' +
+            '<div style="font-size:13px;color:#666;margin-bottom:24px;">how would you like to listen?</div>' +
             '<div style="display:flex;flex-direction:column;gap:10px;">' +
                 (appUri
                     ? '<a href="' + appUri + '" id="open-app-btn" style="display:block;padding:12px;border-radius:10px;background:#1DB954;color:#fff;font-size:14px;font-weight:500;text-decoration:none;transition:opacity 0.15s;">open in spotify app</a>'
