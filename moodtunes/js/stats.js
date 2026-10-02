@@ -232,7 +232,13 @@ var MoodCalendar = (function() {
             if (!first || k < first) first = k;
         });
         var t = new Date();
-        if (!view) view = { y: t.getFullYear(), m: t.getMonth() };
+        if (!view) {
+            view = { y: t.getFullYear(), m: t.getMonth() };
+            // early in a month with nothing logged yet: open on the latest month that has songs
+            var latest = Object.keys(days).sort().pop();
+            var thisMonth = keyOf(view.y, view.m, 1).slice(0, 7);
+            if (latest && latest.slice(0, 7) < thisMonth) view = { y: Number(latest.slice(0, 4)), m: Number(latest.slice(5, 7)) - 1 };
+        }
         draw();
     }
 

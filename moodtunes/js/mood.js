@@ -591,6 +591,11 @@ function decorate(node) {
         }
     });
  
+    // playlist cards glow in their mood's colour
+    var plCards = node.matches && node.matches('.playlist-card[data-mood]') ? [node] : [];
+    plCards = plCards.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.playlist-card[data-mood]') : []));
+    plCards.forEach(function(c) { c.style.setProperty('--mc', color(c.dataset.mood)); });
+ 
     var badges = node.matches && node.matches('.mood-badge') ? [node] : [];
     badges = badges.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.mood-badge') : []));
     badges.forEach(function(b) {
@@ -795,7 +800,6 @@ function applyHidden() {
     }).join(',\n') + (hiddenMoods.length ? ' { display: none !important; }' : '');
     renderRestore();
 }
- 
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
  
 function hideMood(m) {
@@ -882,6 +886,7 @@ function ripple(el, evt) {
     el.appendChild(s);
     setTimeout(function() { s.remove(); }, 600);
 }
+ 
 // ── confetti ───────────────────────────────────────────
 function confetti(baseColor) {
     if (reduceMotion) return;
@@ -1066,11 +1071,11 @@ function nowPlaying(container, opts) {
             '<div class="np-backdrop" aria-hidden="true"><img class="np-bg" alt="" /></div>' +
             '<div class="np-art-wrap"><img class="np-art" alt="" /><div class="np-art-fallback">' + icon('note') + '</div></div>' +
             '<div class="np-body">' +
-                '<div class="np-label"><span class="np-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-status">listening for spotify…</span><span class="np-added" aria-live="polite"></span></div>' +
+                '<div class="np-label"><span class="np-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-status">listening for spotify…</span><span class="np-added" aria-live="polite"></span>' +
+                    '<button class="np-sync" type="button"></button></div>' +
                 '<div class="np-title"></div>' +
                 '<div class="np-artist"></div>' +
-                '<div class="np-progress"><div class="np-bar"><div class="np-fill"></div></div><span class="np-time"></span>' +
-                    '<button class="np-sync" type="button" title="></button></div>' +
+                '<div class="np-progress"><div class="np-bar"><div class="np-fill"></div></div><span class="np-time"></span></div>' +
             '</div>' +
             '<div class="np-controls">' +
                 '<button class="np-btn np-prev" aria-label="previous song">' + icon('prev') + '</button>' +

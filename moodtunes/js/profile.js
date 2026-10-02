@@ -6,23 +6,24 @@
 var THEMES = {
     default: {
         label: 'default',
-        '--bg-page':        '#0f0f0f',
-        '--bg-card':        '#141414',
-        '--bg-input':       '#1a1a1a',
-        '--bg-hover':       '#1e1e1e',
-        '--border':         '#222',
-        '--border-mid':     '#333',
-        '--text-primary':   '#f0f0f0',
-        '--text-secondary': '#aaa',
-        '--text-muted':     '#555',
-        '--accent':         '#9b6fc2',
+        // night-sky purple: cards are see-through violet glass instead of black
+        '--bg-page':        '#120a20',
+        '--bg-card':        'rgba(46, 28, 80, 0.62)',
+        '--bg-input':       'rgba(56, 36, 96, 0.6)',
+        '--bg-hover':       'rgba(70, 46, 118, 0.62)',
+        '--border':         'rgba(196, 170, 255, 0.16)',
+        '--border-mid':     'rgba(196, 170, 255, 0.3)',
+        '--text-primary':   '#f6f1ff',
+        '--text-secondary': '#c9bde6',
+        '--text-muted':     '#9384b8',
+        '--accent':         '#b99cff',
         '--accent-bg':      '#4a2570',
         '--chip-bg':        'transparent',
         '--chip-border':    '#333',
         '--search-bg':      '#7a4aaa',
         '--search-border':  '#7a4aaa',
-        '--nav-bg':         '#0f0f0f',
-        '--nav-border':     '#222',
+        '--nav-bg':         '#1a0f2e',
+        '--nav-border':     'rgba(196, 170, 255, 0.14)',
         '--circle-bg':      '#4a2570',
         '--circle-border':  '#9b6fc2',
     },
@@ -98,6 +99,7 @@ var THEMES = {
 function applyTheme(key) {
     var t = THEMES[key] || THEMES.default;
     var root = document.documentElement;
+    root.setAttribute('data-theme', THEMES[key] ? key : 'default');   // lets the css style each theme
     Object.keys(t).forEach(function(prop) {
         if (prop === 'label') return;
         root.style.setProperty(prop, t[prop]);

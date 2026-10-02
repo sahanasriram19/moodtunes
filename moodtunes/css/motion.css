@@ -468,14 +468,14 @@
   width: 130%;
   height: 220%;
   object-fit: cover;
-  filter: blur(34px) saturate(1.5);
+  filter: blur(22px) saturate(1.6) brightness(1.05);
   transform: scale(1.1);
   opacity: 0;
   transition: opacity 0.9s ease;
 }
 
 .np-bg.on {
-  opacity: 0.55;
+  opacity: 0.9;
 }
 
 /* keep the words readable on bright covers */
@@ -483,11 +483,11 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #0f0f0f73 0%, #0f0f0fa6 55%, #0f0f0fbf 100%);
+  background: linear-gradient(90deg, rgba(14, 6, 28, 0.25) 0%, rgba(14, 6, 28, 0.5) 55%, rgba(14, 6, 28, 0.62) 100%);
 }
 
 .np-paused .np-bg.on {
-  opacity: 0.32;
+  opacity: 0.5;
 }
 
 .np-card > :not(.np-backdrop) {
@@ -2781,7 +2781,9 @@ body {
 /* "sync waves to sound" toggle on the now-playing card */
 .np-sync {
   flex-shrink: 0;
-  margin-left: 4px;
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
   padding: 3px 9px;
   border-radius: 999px;
   border: 1px solid #ffffff1f;
@@ -2814,15 +2816,7 @@ body {
   color: color-mix(in srgb, var(--np-color, var(--mood)) 80%, #fff);
 }
 
-@media (max-width: 520px) {
-  .np-progress {
-    flex-wrap: wrap;
-  }
 
-  .np-sync {
-    margin-left: 0;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .mt-particles {
@@ -2833,4 +2827,166 @@ body {
   .mt-waves path {
     animation: none !important;
   }
+}
+
+
+
+/* === DEFAULT THEME: VIOLET GLASS === */
+/* the default theme swaps the black boxes for see-through violet cards that let
+   the purple background glow through, plus a few soft accents that sit well with
+   purple: lavender, rose, peach, mint and sky. (other themes are untouched) */
+:root:is(:not([data-theme]), [data-theme="default"]) {
+  --glass: linear-gradient(160deg, rgba(64, 40, 112, 0.58) 0%, rgba(34, 20, 62, 0.62) 100%);
+  --glass-solid: #2a1a48;
+  --glass-edge: rgba(200, 176, 255, 0.16);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 14px 34px -22px rgba(6, 0, 20, 0.9);
+  --c-lavender: #c3b1ff;
+  --c-rose: #ff9fcf;
+  --c-peach: #ffb98f;
+  --c-mint: #82e3c6;
+  --c-sky: #93c8ff;
+}
+
+/* every card-like box */
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-view-header,
+:root:is(:not([data-theme]), [data-theme="default"]) .session-history-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .song-history-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .discover-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .discover-empty,
+:root:is(:not([data-theme]), [data-theme="default"]) .session-summary-box,
+:root:is(:not([data-theme]), [data-theme="default"]) .note-input-container,
+:root:is(:not([data-theme]), [data-theme="default"]) .log-card {
+  background: var(--glass) !important;
+  border: 1px solid var(--glass-edge) !important;
+  box-shadow: var(--glass-shine), var(--glass-shadow);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .note-textarea,
+:root:is(:not([data-theme]), [data-theme="default"]) #song-history-search {
+  background: rgba(24, 12, 44, 0.55) !important;
+  border-color: var(--glass-edge) !important;
+  color: var(--text-primary) !important;
+}
+
+/* song logs: the same dark violet as the stats cards — the mood colour only
+   shows in the thin edge on the left and the mood badge */
+:root:is(:not([data-theme]), [data-theme="default"]) .log-card.mood-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .song-history-card.mood-card {
+  background: var(--glass) !important;
+  border-color: var(--glass-edge) !important;
+  border-left: 3px solid var(--mc) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .log-card.mood-card:hover,
+:root:is(:not([data-theme]), [data-theme="default"]) .song-history-card.mood-card:hover {
+  border-color: var(--border-mid) !important;
+  border-left-color: var(--mc) !important;
+}
+
+/* stats: each card gets its own accent along the top and in its title */
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card {
+  --card-c: var(--c-lavender);
+  border-top: 2px solid color-mix(in srgb, var(--card-c) 70%, transparent) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card-title,
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card .stats-card-title {
+  background: none !important;
+  color: var(--card-c, var(--c-lavender)) !important;
+  opacity: 0.9;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-cal { --card-c: var(--c-lavender); }
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-grid > .stats-card:nth-child(1) { --card-c: var(--c-rose); }
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-grid > .stats-card:nth-child(2) { --card-c: var(--c-peach); }
+:root:is(:not([data-theme]), [data-theme="default"]) #mood-graph-container { --card-c: var(--c-mint); }
+:root:is(:not([data-theme]), [data-theme="default"]) #stats-content > .stats-card:last-child { --card-c: var(--c-sky); }
+
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-card {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 159, 207, 0.22), transparent 55%),
+    var(--glass) !important;
+  border-top: 2px solid color-mix(in srgb, var(--c-rose) 70%, transparent) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-label {
+  color: var(--c-rose) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-bar-track,
+:root:is(:not([data-theme]), [data-theme="default"]) .time-bar-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .time-bar-fill {
+  background: linear-gradient(90deg, var(--c-peach), var(--c-rose)) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .top-song-plays,
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-bar-count {
+  color: var(--text-secondary) !important;
+}
+
+/* mood calendar on violet */
+:root:is(:not([data-theme]), [data-theme="default"]) .mc-empty {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(200, 176, 255, 0.1);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mc-filled {
+  background: color-mix(in srgb, var(--mc) var(--mc-mix, 60%), #22133d);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mc-detail {
+  border-top-color: var(--glass-edge);
+}
+
+/* playlists: every card glows in its mood's colour */
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card {
+  background:
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--mc, var(--c-lavender)) 32%, transparent) 100%),
+    var(--glass) !important;
+  border-color: color-mix(in srgb, var(--mc, var(--c-lavender)) 30%, var(--glass-edge)) !important;
+  overflow: hidden;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.25s, opacity 0.15s;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card:hover {
+  opacity: 1;
+  box-shadow: var(--glass-shine), 0 18px 40px -20px var(--mc, var(--c-lavender));
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card .playlist-cover {
+  border-radius: 8px 8px 0 0;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-title,
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-title * {
+  color: var(--text-primary) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-count {
+  color: color-mix(in srgb, var(--mc, var(--c-lavender)) 70%, #fff) !important;
+}
+
+/* now playing: the album art shows through properly */
+:root:is(:not([data-theme]), [data-theme="default"]) .np-card {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--np-color) 30%, transparent) 0%, transparent 70%),
+    var(--glass);
+  border-color: color-mix(in srgb, var(--np-color) 40%, var(--glass-edge));
+}
+
+/* section headings and quieter text, readable on purple */
+:root:is(:not([data-theme]), [data-theme="default"]) .section-label {
+  color: var(--c-lavender) !important;
+  opacity: 0.85;
+}
+
+.np-status {
+  white-space: nowrap;
 }
