@@ -15,9 +15,10 @@ router.get('/now-playing',      jwt.verifyToken, spotify.getNowPlaying);
 router.get('/search-tracks',    jwt.verifyToken, spotify.searchTracks);
 router.post('/player/:action',  jwt.verifyToken, spotify.controlPlayback);
 router.post('/sync-playlist',   jwt.verifyToken, spotify.syncPlaylist);
-// mood playlists saved to your spotify library
 router.get('/playlists',        jwt.verifyToken, require('../controllers/spotifyPlaylistController').listSaved);
 router.put('/playlists/:mood',  jwt.verifyToken, require('../controllers/spotifyPlaylistController').savePlaylist);
+router.post('/play',            jwt.verifyToken, require('../controllers/spotifyPlayerController').play);
+router.post('/play-next',       jwt.verifyToken, require('../controllers/spotifyPlayerController').playNext);
 router.post('/queue',           jwt.verifyToken, spotify.addToQueue);
 
 module.exports = router;

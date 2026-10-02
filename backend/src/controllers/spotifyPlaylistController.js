@@ -104,6 +104,9 @@ async function replaceAll(userId, playlistId, uris) {
     }
 }
 
+module.exports.call = call;
+module.exports.uriOf = uriOf;
+
 const playlistUrl = (id) => 'https://open.spotify.com/playlist/' + id;
 
 function fail(res, e, what) {

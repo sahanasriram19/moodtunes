@@ -1,26 +1,26 @@
 /* motion.css — mood theming, live animations, skeletons, now-playing, session ring
    loaded after style.css on every page. works with js/mood.js
    fonts (Outfit + DM Sans) are loaded by a <link> in each page's <head> */
-
+ 
 /* registered so the colour can transition smoothly between moods */
 @property --mood {
   syntax: '<color>';
   inherits: true;
   initial-value: #9b6fc2;
 }
-
+ 
 @property --np {
   syntax: '<color>';
   inherits: true;
   initial-value: #9b6fc2;
 }
-
+ 
 @property --mood-2 {
   syntax: '<color>';
   inherits: true;
   initial-value: #4a2a8a;
 }
-
+ 
 :root {
   --mood-tempo: 1.2s;
   --mood-ink: #fff;
@@ -28,11 +28,11 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   transition: --mood 0.9s ease, --mood-2 0.9s ease, --np 1.4s ease;
 }
-
+ 
 :root:not(.has-np) {
   --np: var(--mood);
 }
-
+ 
 /* === AMBIENT GLOW === */
 /* a soft full-screen wash in the mood colour, plus four drifting glows:
    top-left + bottom-right + centre follow the mood, top-right follows the album art */
@@ -49,7 +49,7 @@
     color-mix(in srgb, var(--mood-2) 30%, transparent) 100%
   );
 }
-
+ 
 #mood-ambient .blob {
   position: absolute;
   border-radius: 50%;
@@ -57,7 +57,7 @@
   opacity: 0.9;
   will-change: transform;
 }
-
+ 
 #mood-ambient .blob-a {
   width: 85vmax;
   height: 85vmax;
@@ -70,7 +70,7 @@
   );
   animation: drift-a 26s ease-in-out infinite alternate;
 }
-
+ 
 #mood-ambient .blob-b {
   width: 80vmax;
   height: 80vmax;
@@ -83,7 +83,7 @@
   );
   animation: drift-b 32s ease-in-out infinite alternate;
 }
-
+ 
 #mood-ambient .blob-c {
   width: 70vmax;
   height: 70vmax;
@@ -96,7 +96,7 @@
   );
   animation: drift-c 40s ease-in-out infinite alternate;
 }
-
+ 
 #mood-ambient .blob-d {
   width: 60vmax;
   height: 60vmax;
@@ -109,35 +109,35 @@
   );
   animation: drift-d 36s ease-in-out infinite alternate;
 }
-
+ 
 @keyframes drift-a {
   to {
     transform: translate(14vmax, 12vmax) scale(1.1);
   }
 }
-
+ 
 @keyframes drift-b {
   to {
     transform: translate(-16vmax, -10vmax) scale(0.92);
   }
 }
-
+ 
 @keyframes drift-c {
   0% {
     transform: translate(-18vmax, -6vmax);
   }
-
+ 
   100% {
     transform: translate(18vmax, 14vmax) scale(1.2);
   }
 }
-
+ 
 @keyframes drift-d {
   to {
     transform: translate(-10vmax, 16vmax) scale(1.15);
   }
 }
-
+ 
 /* === MOOD CHIPS === */
 .chip {
   position: relative;
@@ -146,36 +146,36 @@
   align-items: center;
   gap: 6px;
 }
-
+ 
 .chip .chip-emoji {
   font-size: 14px;
   line-height: 1;
 }
-
+ 
 .chip.selected {
   box-shadow:
     0 0 0 1px var(--mc, var(--mood)),
     0 6px 22px -6px color-mix(in srgb, var(--mc, var(--mood)) 70%, transparent);
 }
-
+ 
 .chip.mt-pop {
   animation: chip-pop 0.38s var(--ease-spring);
 }
-
+ 
 @keyframes chip-pop {
   0% {
     transform: scale(0.92);
   }
-
+ 
   60% {
     transform: scale(1.06);
   }
-
+ 
   100% {
     transform: scale(1);
   }
 }
-
+ 
 .mt-ripple {
   position: absolute;
   border-radius: 50%;
@@ -184,65 +184,65 @@
   transform: scale(0);
   animation: ripple 0.6s ease-out forwards;
 }
-
+ 
 @keyframes ripple {
   to {
     transform: scale(1);
     opacity: 0;
   }
 }
-
+ 
 /* === MOOD BADGES === */
 .mood-badge.mood-tinted {
   color: var(--mc);
   background: color-mix(in srgb, var(--mc) 15%, transparent);
   border-color: color-mix(in srgb, var(--mc) 40%, transparent);
 }
-
+ 
 /* === SEARCH === */
 #song-search {
   transition: border-color 0.3s, box-shadow 0.3s, background 0.9s;
 }
-
+ 
 .result-item.selected {
   background: color-mix(in srgb, var(--mood) 12%, transparent);
 }
-
+ 
 /* === STAGGERED ENTRANCE === */
 .mt-in {
   animation: enter 0.5s var(--ease-out) backwards;
 }
-
+ 
 @keyframes enter {
   from {
     opacity: 0;
     transform: translateY(10px) scale(0.985);
   }
 }
-
+ 
 /* === JUST-LOGGED HIGHLIGHT === */
 .log-card.just-logged {
   animation: logged 1.8s ease-out;
 }
-
+ 
 @keyframes logged {
   0% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--mood) 70%, transparent);
     border-color: var(--mood);
     transform: scale(1.015);
   }
-
+ 
   40% {
     box-shadow: 0 0 0 8px color-mix(in srgb, var(--mood) 0%, transparent);
     border-color: var(--mood);
     transform: scale(1);
   }
-
+ 
   100% {
     box-shadow: none;
   }
 }
-
+ 
 /* === SKELETONS === */
 .sk {
   background: linear-gradient(
@@ -255,17 +255,17 @@
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 6px;
 }
-
+ 
 @keyframes shimmer {
   from {
     background-position: 100% 0;
   }
-
+ 
   to {
     background-position: -100% 0;
   }
 }
-
+ 
 .sk-row {
   display: flex;
   align-items: center;
@@ -276,61 +276,61 @@
   border-radius: 12px;
   background: var(--bg-card, #141414);
 }
-
+ 
 .sk-art {
   width: 52px;
   height: 52px;
   border-radius: 8px;
   flex-shrink: 0;
 }
-
+ 
 .sk-lines {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 9px;
 }
-
+ 
 .sk-line {
   height: 11px;
   width: 60%;
 }
-
+ 
 .sk-short {
   height: 9px;
   width: 30%;
 }
-
+ 
 .sk-dot {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-
+ 
 .sk-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
-
+ 
 .sk-tile {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
-
+ 
 .sk-square {
   width: 100%;
   aspect-ratio: 1;
   border-radius: 8px;
 }
-
+ 
 .sk-recs {
   display: flex;
   gap: 14px;
 }
-
+ 
 .sk-rec {
   width: 90px;
   flex-shrink: 0;
@@ -338,49 +338,49 @@
   flex-direction: column;
   gap: 8px;
 }
-
+ 
 .sk-rec .sk-square {
   width: 90px;
   height: 90px;
   border-radius: 10px;
 }
-
+ 
 .sk-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 28px;
 }
-
+ 
 .sk-stats.sk-3 {
   grid-template-columns: repeat(3, 1fr);
 }
-
+ 
 .sk-stat {
   height: 92px;
   border-radius: 12px;
 }
-
+ 
 .sk-block {
   height: 200px;
   border-radius: 12px;
   margin-bottom: 16px;
 }
-
+ 
 @media (max-width: 768px) {
   .sk-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
+ 
   .sk-stats {
     grid-template-columns: repeat(2, 1fr);
   }
-
+ 
   .sk-row {
     padding: 12px;
   }
 }
-
+ 
 /* === TOAST === */
 .mt-toast {
   position: fixed;
@@ -403,12 +403,12 @@
   backdrop-filter: blur(10px);
   transition: transform 0.4s var(--ease-spring), opacity 0.3s;
 }
-
+ 
 .mt-toast.show {
   transform: translate(-50%, 0);
   opacity: 1;
 }
-
+ 
 .mt-toast-dot {
   width: 8px;
   height: 8px;
@@ -417,13 +417,13 @@
   flex-shrink: 0;
   box-shadow: 0 0 10px var(--mc);
 }
-
+ 
 /* === NOW PLAYING CARD === */
 .np-mount {
   transition: opacity 0.4s, max-height 0.5s var(--ease-out), margin 0.4s;
   max-height: 200px;
 }
-
+ 
 .np-mount.np-hidden {
   opacity: 0;
   max-height: 0;
@@ -431,7 +431,7 @@
   overflow: hidden;
   pointer-events: none;
 }
-
+ 
 .np-card {
   --np-color: var(--mood);
   position: relative;
@@ -450,7 +450,7 @@
   transition: background 0.9s, border-color 0.9s;
   text-align: left;
 }
-
+ 
 /* blurred album art filling the card behind everything */
 .np-backdrop {
   position: absolute;
@@ -460,7 +460,7 @@
   overflow: hidden;
   border-radius: inherit;
 }
-
+ 
 .np-bg {
   position: absolute;
   left: -15%;
@@ -473,11 +473,11 @@
   opacity: 0;
   transition: opacity 0.9s ease;
 }
-
+ 
 .np-bg.on {
   opacity: 0.9;
 }
-
+ 
 /* keep the words readable on bright covers */
 .np-backdrop::after {
   content: "";
@@ -485,16 +485,16 @@
   inset: 0;
   background: linear-gradient(90deg, rgba(14, 6, 28, 0.25) 0%, rgba(14, 6, 28, 0.5) 55%, rgba(14, 6, 28, 0.62) 100%);
 }
-
+ 
 .np-paused .np-bg.on {
   opacity: 0.5;
 }
-
+ 
 .np-card > :not(.np-backdrop) {
   position: relative;
   z-index: 1;
 }
-
+ 
 .np-art-wrap {
   position: relative;
   width: 64px;
@@ -506,18 +506,18 @@
   background: #222;
   box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--np-color) 80%, transparent);
 }
-
+ 
 .np-art {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-
+ 
 .np-art:not([src]) {
   display: none;
 }
-
+ 
 .np-art-fallback {
   position: absolute;
   inset: 0;
@@ -528,12 +528,12 @@
   font-size: 22px;
   z-index: -1;
 }
-
+ 
 .np-body {
   flex: 1;
   min-width: 0;
 }
-
+ 
 .np-label {
   display: flex;
   align-items: center;
@@ -544,7 +544,7 @@
   color: var(--np-color);
   margin-bottom: 4px;
 }
-
+ 
 .np-title {
   font-size: 15px;
   font-weight: 600;
@@ -553,7 +553,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
+ 
 .np-artist {
   font-size: 12px;
   color: var(--text-secondary, #aaa);
@@ -562,14 +562,14 @@
   text-overflow: ellipsis;
   margin-top: 2px;
 }
-
+ 
 .np-progress {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
 }
-
+ 
 .np-bar {
   flex: 1;
   height: 4px;
@@ -577,7 +577,7 @@
   background: #ffffff1a;
   overflow: hidden;
 }
-
+ 
 .np-fill {
   height: 100%;
   width: 100%;
@@ -587,14 +587,14 @@
   border-radius: 4px;
   box-shadow: 0 0 10px var(--np-color);
 }
-
+ 
 .np-time {
   font-size: 11px;
   color: var(--text-muted, #777);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-
+ 
 /* equaliser bars */
 .np-eq {
   display: inline-flex;
@@ -602,7 +602,7 @@
   gap: 2px;
   height: 12px;
 }
-
+ 
 .np-eq i {
   width: 3px;
   height: 100%;
@@ -611,92 +611,92 @@
   transform-origin: bottom;
   animation: eq 1s ease-in-out infinite;
 }
-
+ 
 .np-eq i:nth-child(1) {
   animation-duration: calc(var(--mood-tempo) * 1.6);
 }
-
+ 
 .np-eq i:nth-child(2) {
   animation-duration: calc(var(--mood-tempo) * 1.1);
   animation-delay: -0.2s;
 }
-
+ 
 .np-eq i:nth-child(3) {
   animation-duration: calc(var(--mood-tempo) * 1.9);
   animation-delay: -0.5s;
 }
-
+ 
 .np-eq i:nth-child(4) {
   animation-duration: calc(var(--mood-tempo) * 1.3);
   animation-delay: -0.35s;
 }
-
+ 
 @keyframes eq {
   0%, 100% {
     transform: scaleY(0.25);
   }
-
+ 
   50% {
     transform: scaleY(1);
   }
 }
-
+ 
 .np-paused .np-eq i,
 .np-idle .np-eq i {
   animation-play-state: paused;
   transform: scaleY(0.25);
 }
-
+ 
 .np-idle {
   --np-color: var(--text-muted, #666);
 }
-
+ 
 .np-idle .np-art-wrap {
   width: 44px;
   height: 44px;
   box-shadow: none;
 }
-
+ 
 .np-idle .np-label {
   margin-bottom: 0;
   text-transform: none;
   letter-spacing: 0;
   font-size: 13px;
 }
-
+ 
 .np-idle .np-progress,
 .np-idle .np-title,
 .np-idle .np-artist {
   display: none;
 }
-
+ 
 .np-swap .np-art-wrap {
   animation: np-art-in 0.7s var(--ease-spring);
 }
-
+ 
 .np-swap .np-title,
 .np-swap .np-artist {
   animation: np-text-in 0.6s var(--ease-out) backwards;
 }
-
+ 
 .np-swap .np-artist {
   animation-delay: 0.08s;
 }
-
+ 
 @keyframes np-art-in {
   from {
     transform: scale(0.7) rotate(-6deg);
     opacity: 0;
   }
 }
-
+ 
 @keyframes np-text-in {
   from {
     transform: translateX(12px);
     opacity: 0;
   }
 }
-
+ 
 .np-added {
   position: absolute;
   right: 14px;
@@ -711,50 +711,50 @@
   transform: translateY(-6px) scale(0.9);
   pointer-events: none;
 }
-
+ 
 .np-added.show {
   animation: added-pill 2.4s var(--ease-out) forwards;
 }
-
+ 
 @keyframes added-pill {
   0% {
     opacity: 0;
     transform: translateY(-6px) scale(0.9);
   }
-
+ 
   12%, 80% {
     opacity: 1;
     transform: none;
   }
-
+ 
   100% {
     opacity: 0;
     transform: translateY(-4px);
   }
 }
-
+ 
 .np-compact {
   padding: 10px 14px 10px 10px;
 }
-
+ 
 .np-compact .np-art-wrap {
   width: 48px;
   height: 48px;
 }
-
+ 
 .np-compact .np-progress {
   margin-top: 6px;
 }
-
+ 
 /* journal page placement */
 #now-playing {
   margin-bottom: 32px;
 }
-
+ 
 .session-panel #panel-now-playing {
   margin-bottom: 14px;
 }
-
+ 
 /* === SESSION HERO RING === */
 .session-timer-circle {
   position: relative;
@@ -763,7 +763,7 @@
   border-color: color-mix(in srgb, var(--mood) 35%, transparent) !important;
   transition: background 0.9s, border-color 0.9s, box-shadow 0.9s;
 }
-
+ 
 .ring-art {
   position: absolute;
   inset: 0;
@@ -776,11 +776,11 @@
   transform: scale(1.05);
   transition: opacity 1s, background-image 1s;
 }
-
+ 
 .ring-art.show {
   opacity: 0.32;
 }
-
+ 
 .session-ring {
   position: absolute;
   inset: -10px;
@@ -790,13 +790,13 @@
   overflow: visible;
   pointer-events: none;
 }
-
+ 
 .ring-track {
   fill: none;
   stroke: color-mix(in srgb, var(--mood) 16%, transparent);
   stroke-width: 4;
 }
-
+ 
 .ring-progress {
   fill: none;
   stroke: var(--mood);
@@ -806,7 +806,7 @@
   opacity: 0;
   transition: opacity 0.6s, stroke 0.9s;
 }
-
+ 
 .ring-dot-wrap {
   position: absolute;
   inset: -10px;
@@ -814,7 +814,7 @@
   opacity: 0;
   transition: opacity 0.6s;
 }
-
+ 
 .ring-dot {
   position: absolute;
   left: 50%;
@@ -826,17 +826,17 @@
   background: #fff;
   box-shadow: 0 0 0 3px var(--mood), 0 0 16px 4px var(--mood);
 }
-
+ 
 .session-hero-timer,
 .ring-sub {
   position: relative;
   z-index: 1;
 }
-
+ 
 .session-timer-circle {
   flex-direction: column;
 }
-
+ 
 .ring-sub {
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -846,21 +846,21 @@
   opacity: 0;
   transition: opacity 0.6s;
 }
-
+ 
 .session-hero.live .ring-progress,
 .session-hero.live .ring-dot-wrap,
 .session-hero.live .ring-sub {
   opacity: 1;
 }
-
+ 
 .session-hero.live .session-timer-circle {
   animation: breathe calc(var(--mood-tempo) * 3) ease-in-out infinite;
 }
-
+ 
 .session-hero.lap .session-timer-circle {
   animation: lap 0.7s var(--ease-spring);
 }
-
+ 
 @keyframes breathe {
   0%, 100% {
     box-shadow:
@@ -868,7 +868,7 @@
       inset 0 0 30px -10px color-mix(in srgb, var(--mood) 40%, transparent);
     transform: scale(1);
   }
-
+ 
   50% {
     box-shadow:
       0 0 90px 4px color-mix(in srgb, var(--mood) 45%, transparent),
@@ -876,64 +876,64 @@
     transform: scale(1.025);
   }
 }
-
+ 
 @keyframes lap {
   0% {
     transform: scale(1);
   }
-
+ 
   35% {
     transform: scale(1.07);
     box-shadow: 0 0 120px 20px color-mix(in srgb, var(--mood) 60%, transparent);
   }
-
+ 
   100% {
     transform: scale(1);
   }
 }
-
+ 
 .session-hero-label {
   transition: color 0.6s;
 }
-
+ 
 .session-hero.live .session-hero-label {
   color: var(--mood) !important;
 }
-
+ 
 #session-now-playing {
   max-width: 460px;
   margin: 28px auto 0;
 }
-
+ 
 /* recommendation tiles on the session page */
 .rec-tile {
   transition: transform 0.25s var(--ease-out);
 }
-
+ 
 .rec-tile:hover {
   transform: translateY(-3px);
 }
-
+ 
 .rec-tile .session-add-btn:hover {
   border-color: var(--mood) !important;
   color: var(--mood) !important;
 }
-
+ 
 /* === SESSION SUMMARY === */
 .mt-summary {
   opacity: 0;
   transition: opacity 0.3s;
   backdrop-filter: blur(6px);
 }
-
+ 
 .mt-summary.open {
   opacity: 1;
 }
-
+ 
 .mt-summary.closing {
   opacity: 0;
 }
-
+ 
 .mt-summary .session-summary-box {
   position: relative;
   overflow: hidden;
@@ -943,16 +943,16 @@
   transition: transform 0.5s var(--ease-spring);
   max-width: calc(100vw - 32px);
 }
-
+ 
 .mt-summary.open .session-summary-box {
   transform: none;
 }
-
+ 
 .mt-summary.closing .session-summary-box {
   transform: scale(0.96);
   transition-duration: 0.25s;
 }
-
+ 
 .sum-glow {
   position: absolute;
   left: 50%;
@@ -967,30 +967,30 @@
   );
   pointer-events: none;
 }
-
+ 
 .sum-emoji {
   position: relative;
   font-size: 40px;
   margin-bottom: 8px;
   animation: emoji-in 0.7s var(--ease-spring) 0.15s backwards;
 }
-
+ 
 @keyframes emoji-in {
   from {
     transform: scale(0) rotate(-30deg);
   }
 }
-
+ 
 .mt-summary .session-summary-title {
   position: relative;
   font-size: 20px;
 }
-
+ 
 .mt-summary .session-summary-meta {
   position: relative;
   margin-bottom: 18px;
 }
-
+ 
 .sum-stats {
   position: relative;
   display: flex;
@@ -998,7 +998,7 @@
   gap: 12px;
   margin-bottom: 20px;
 }
-
+ 
 .sum-stat {
   flex: 1;
   max-width: 140px;
@@ -1007,7 +1007,7 @@
   background: color-mix(in srgb, var(--mc) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--mc) 25%, transparent);
 }
-
+ 
 .sum-stat b {
   display: block;
   font-size: 30px;
@@ -1016,14 +1016,14 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
-
+ 
 .sum-stat span {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-secondary, #aaa);
 }
-
+ 
 .sum-covers {
   position: relative;
   display: grid;
@@ -1031,7 +1031,7 @@
   gap: 10px;
   text-align: left;
 }
-
+ 
 .sum-cover {
   display: block;
   text-decoration: none;
@@ -1039,7 +1039,7 @@
   animation: cover-pop 0.5s var(--ease-spring) backwards;
   animation-delay: calc(0.35s + var(--i) * 60ms);
 }
-
+ 
 .sum-cover img,
 .sum-cover-empty {
   width: 100%;
@@ -1053,11 +1053,11 @@
   color: #555;
   transition: transform 0.2s;
 }
-
+ 
 .sum-cover:hover img {
   transform: scale(1.06) rotate(-2deg);
 }
-
+ 
 .sum-cover-title {
   display: block;
   font-size: 10px;
@@ -1067,27 +1067,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
+ 
 @keyframes cover-pop {
   from {
     opacity: 0;
     transform: scale(0.5) translateY(10px);
   }
 }
-
+ 
 .sum-empty {
   position: relative;
   color: var(--text-muted, #666);
   font-size: 13px;
 }
-
+ 
 .mt-summary .session-summary-close {
   position: relative;
   background: var(--mc) !important;
   color: var(--mc-ink, #fff) !important;
   font-weight: 600;
 }
-
+ 
 .mt-confetti {
   position: fixed;
   inset: 0;
@@ -1096,20 +1096,20 @@
   pointer-events: none;
   z-index: 100001;
 }
-
+ 
 /* === STATS BARS GROW IN === */
 .mood-bar-fill,
 .time-bar-fill {
   animation: bar-grow 1s var(--ease-out) backwards;
   animation-delay: 0.2s;
 }
-
+ 
 @keyframes bar-grow {
   from {
     width: 0;
   }
 }
-
+ 
 /* === ACCESSIBILITY: RESPECT REDUCED MOTION === */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1119,49 +1119,49 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-
+ 
   #mood-ambient .blob {
     animation: none;
   }
-
+ 
   .session-hero.live .session-timer-circle {
     animation: none;
     box-shadow: 0 0 60px -6px color-mix(in srgb, var(--mood) 45%, transparent);
   }
 }
-
+ 
 @media (max-width: 768px) {
   .session-timer-circle {
     width: 210px !important;
     height: 210px !important;
   }
-
+ 
   .np-card {
     gap: 12px;
     padding: 12px;
   }
-
+ 
   .np-art-wrap {
     width: 52px;
     height: 52px;
   }
-
+ 
   #mood-ambient .blob {
     filter: blur(50px);
   }
 }
-
+ 
 /* labels sit on top of the stronger mood glow — keep them readable in every mood */
 body .section-label,
 body .section-subtitle {
   color: color-mix(in srgb, var(--text-primary, #f0f0f0) 62%, transparent) !important;
 }
-
+ 
 /* === TOAST ACTION (UNDO) === */
 .mt-toast {
   overflow: hidden;
 }
-
+ 
 .mt-toast-action {
   margin-left: 6px;
   padding: 4px 12px;
@@ -1175,11 +1175,11 @@ body .section-subtitle {
   border: none;
   transition: transform 0.15s;
 }
-
+ 
 .mt-toast-action:hover {
   transform: scale(1.06);
 }
-
+ 
 .mt-toast-timer {
   position: absolute;
   left: 0;
@@ -1191,47 +1191,47 @@ body .section-subtitle {
   opacity: 0.7;
   animation: toast-timer linear forwards;
 }
-
+ 
 @keyframes toast-timer {
   from {
     transform: scaleX(1);
   }
-
+ 
   to {
     transform: scaleX(0);
   }
 }
-
+ 
 /* === "PICK A MOOD FIRST" SHAKE === */
 .mt-shake {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
-
+ 
 @keyframes shake {
   10%, 90% {
     transform: translateX(-2px);
   }
-
+ 
   20%, 80% {
     transform: translateX(4px);
   }
-
+ 
   30%, 50%, 70% {
     transform: translateX(-7px);
   }
-
+ 
   40%, 60% {
     transform: translateX(7px);
   }
 }
-
+ 
 /* === RESTORE HIDDEN MOODS (MANAGE MODE) === */
 #hidden-moods-restore {
   margin-bottom: 18px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border, #2a2a2a);
 }
-
+ 
 #hidden-moods-restore .restore-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -1239,13 +1239,13 @@ body .section-subtitle {
   color: var(--text-secondary, #999);
   margin-bottom: 10px;
 }
-
+ 
 #hidden-moods-restore .restore-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-
+ 
 .restore-chip {
   padding: 6px 14px;
   border-radius: 20px;
@@ -1256,13 +1256,13 @@ body .section-subtitle {
   border: 1px dashed color-mix(in srgb, var(--mc) 60%, transparent);
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
-
+ 
 .restore-chip:hover {
   background: color-mix(in srgb, var(--mc) 18%, transparent);
   color: var(--text-primary, #fff);
   border-style: solid;
 }
-
+ 
 /* === SESSION RECOMMENDATION GRID === */
 .rec-grid {
   display: grid;
@@ -1271,25 +1271,25 @@ body .section-subtitle {
   align-items: start;
   width: 100%;
 }
-
+ 
 @media (max-width: 768px) {
   .rec-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
 }
-
+ 
 .mt-toast-action,
 .restore-chip {
   font-family: inherit;
 }
-
+ 
 /* === TYPOGRAPHY === */
 :root {
   --font-body: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Outfit', 'DM Sans', 'Segoe UI', system-ui, sans-serif;
 }
-
+ 
 body,
 button,
 input,
@@ -1298,7 +1298,7 @@ select,
 .note-textarea {
   font-family: var(--font-body);
 }
-
+ 
 .session-hero-timer,
 .stat-box-num,
 .stat-num,
@@ -1320,78 +1320,78 @@ select,
 .top-song-title {
   font-family: var(--font-display);
 }
-
+ 
 .session-hero-timer {
   font-weight: 300;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   letter-spacing: -1px;
 }
-
+ 
 .stat-box-num,
 .stat-num,
 .sum-stat b {
   font-weight: 600;
   letter-spacing: -0.5px;
 }
-
+ 
 .timeline-date,
 .playlist-view-title {
   font-weight: 600;
   letter-spacing: -0.2px;
 }
-
+ 
 .section-label {
   letter-spacing: 0.14em;
   font-weight: 500;
 }
-
+ 
 .song-title,
 .result-title {
   letter-spacing: -0.1px;
 }
-
+ 
 /* === PAGE TRANSITIONS === */
 /* Chrome, Edge, Safari 18.2+; others navigate normally.
    the opt-in (@view-transition) is in each page's <head> so it's seen in time */
 .navbar {
   view-transition-name: navbar;
 }
-
+ 
 #mood-ambient {
   view-transition-name: ambient;
 }
-
+ 
 ::view-transition-old(root) {
   animation: vt-out 0.14s ease-in both;
 }
-
+ 
 ::view-transition-new(root) {
   animation: vt-in 0.3s var(--ease-out) both;
 }
-
+ 
 ::view-transition-group(ambient) {
   animation-duration: 0.6s;
 }
-
+ 
 ::view-transition-group(navbar) {
   animation-duration: 0.3s;
 }
-
+ 
 @keyframes vt-out {
   to {
     opacity: 0;
     transform: translateY(-8px) scale(0.995);
   }
 }
-
+ 
 @keyframes vt-in {
   from {
     opacity: 0;
     transform: translateY(14px);
   }
 }
-
+ 
 /* === EMPTY STATES === */
 .mt-empty {
   display: flex;
@@ -1404,26 +1404,26 @@ select,
   background: color-mix(in srgb, var(--mood) 6%, transparent);
   animation: enter 0.5s var(--ease-out) backwards;
 }
-
+ 
 .mt-empty-art {
   width: 120px;
   height: 120px;
   margin-bottom: 10px;
 }
-
+ 
 .mt-empty-art svg {
   width: 100%;
   height: 100%;
   overflow: visible;
 }
-
+ 
 .mt-empty-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary, #f0f0f0);
   margin-bottom: 6px;
 }
-
+ 
 .mt-empty-text {
   font-size: 14px;
   line-height: 1.55;
@@ -1431,7 +1431,7 @@ select,
   max-width: 340px;
   margin: 0 auto;
 }
-
+ 
 .mt-empty-btn {
   display: inline-block;
   margin-top: 18px;
@@ -1445,12 +1445,12 @@ select,
   box-shadow: 0 8px 24px -10px var(--mood);
   transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
 }
-
+ 
 .mt-empty-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px -10px var(--mood);
 }
-
+ 
 .mt-empty-compact {
   flex-direction: row;
   text-align: left;
@@ -1458,67 +1458,67 @@ select,
   padding: 14px 18px;
   border-radius: 12px;
 }
-
+ 
 .mt-empty-compact .mt-empty-art {
   width: 52px;
   height: 52px;
   margin: 0;
   flex-shrink: 0;
 }
-
+ 
 .mt-empty-compact .mt-empty-title {
   font-size: 14px;
   margin-bottom: 2px;
 }
-
+ 
 .mt-empty-compact .mt-empty-text {
   font-size: 13px;
   max-width: none;
   margin: 0;
 }
-
+ 
 .mt-empty-compact .mt-empty-btn {
   margin-top: 8px;
   padding: 6px 14px;
   font-size: 12px;
 }
-
+ 
 .session-recommendations .mt-empty {
   flex: 1;
 }
-
+ 
 /* illustration parts, all tinted by the mood colour */
 .mt-empty .ea-glow {
   fill: color-mix(in srgb, var(--mood) 16%, transparent);
 }
-
+ 
 .mt-empty .ea-disc {
   fill: #151515;
   stroke: color-mix(in srgb, var(--mood) 55%, transparent);
   stroke-width: 1.5;
 }
-
+ 
 .mt-empty .ea-groove {
   fill: none;
   stroke: #ffffff14;
   stroke-width: 1;
 }
-
+ 
 .mt-empty .ea-label {
   fill: var(--mood);
 }
-
+ 
 .mt-empty .ea-hole {
   fill: #151515;
 }
-
+ 
 .mt-empty .ea-shine {
   fill: none;
   stroke: #ffffff40;
   stroke-width: 2;
   stroke-linecap: round;
 }
-
+ 
 .mt-empty .ea-note path {
   fill: none;
   stroke: var(--mood);
@@ -1526,83 +1526,83 @@ select,
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
+ 
 .mt-empty .ea-note circle {
   fill: var(--mood);
 }
-
+ 
 .mt-empty .ea-lens {
   fill: #ffffff08;
   stroke: var(--mood);
   stroke-width: 4;
 }
-
+ 
 .mt-empty .ea-handle {
   stroke: var(--mood);
   stroke-width: 7;
   stroke-linecap: round;
 }
-
+ 
 .mt-empty .ea-cloud {
   fill: #ffffff0d;
   stroke: var(--mood);
   stroke-width: 3;
   stroke-linejoin: round;
 }
-
+ 
 .mt-empty .ea-slash {
   stroke: #e05c5c;
   stroke-width: 4;
   stroke-linecap: round;
 }
-
+ 
 .mt-empty .ea-spin {
   transform-origin: 60px 62px;
   animation: ea-spin calc(var(--mood-tempo) * 6) linear infinite;
 }
-
+ 
 .mt-empty .ea-note {
   animation: ea-float 3.2s ease-in-out infinite;
 }
-
+ 
 .mt-empty .ea-note.n2 {
   animation-delay: -1.4s;
   animation-duration: 2.7s;
 }
-
+ 
 .mt-empty .ea-bob {
   animation: ea-bob 3s ease-in-out infinite;
   transform-origin: 60px 60px;
 }
-
+ 
 @keyframes ea-spin {
   to {
     transform: rotate(360deg);
   }
 }
-
+ 
 @keyframes ea-float {
   0%, 100% {
     transform: translateY(0);
     opacity: 0.9;
   }
-
+ 
   50% {
     transform: translateY(-7px);
     opacity: 0.55;
   }
 }
-
+ 
 @keyframes ea-bob {
   0%, 100% {
     transform: translateY(0) rotate(0);
   }
-
+ 
   50% {
     transform: translateY(-4px) rotate(-4deg);
   }
 }
-
+ 
 /* === VISIBLE FOCUS FOR KEYBOARD USERS === */
 .chip:focus-visible,
 button:focus-visible,
@@ -1611,12 +1611,12 @@ a:focus-visible,
   outline: 2px solid var(--mood);
   outline-offset: 3px;
 }
-
+ 
 #song-search:focus-visible,
 #song-history-search:focus-visible {
   outline: none;
 }
-
+ 
 /* shortcut key badges in the help modal */
 kbd.mt-kbd {
   display: inline-block;
@@ -1631,7 +1631,7 @@ kbd.mt-kbd {
   border: 1px solid #ffffff22;
   border-bottom-width: 2px;
 }
-
+ 
 /* === SAFE AREAS (NOTCH, STATUS BAR, HOME BAR) === */
 /* when installed as an app the page runs edge to edge, so keep content clear of
    the iPhone notch/status bar and the home bar. these are 0 in a normal browser */
@@ -1640,15 +1640,15 @@ kbd.mt-kbd {
   padding-left: calc(32px + env(safe-area-inset-left));
   padding-right: calc(32px + env(safe-area-inset-right));
 }
-
+ 
 body {
   padding-bottom: env(safe-area-inset-bottom);
 }
-
+ 
 .mt-toast {
   bottom: calc(28px + env(safe-area-inset-bottom));
 }
-
+ 
 @media (max-width: 768px) {
   .navbar {
     padding-top: calc(14px + env(safe-area-inset-top));
@@ -1656,7 +1656,7 @@ body {
     padding-right: calc(16px + env(safe-area-inset-right));
   }
 }
-
+ 
 /* === INSTALL APP BUTTON === */
 .install-btn {
   display: inline-flex;
@@ -1674,17 +1674,17 @@ body {
   animation: enter 0.5s var(--ease-out) backwards;
   transition: background 0.2s, transform 0.2s var(--ease-spring);
 }
-
+ 
 .install-btn:hover {
   background: color-mix(in srgb, var(--mood) 28%, transparent);
   transform: translateY(-1px);
 }
-
+ 
 .install-btn svg {
   width: 14px;
   height: 14px;
 }
-
+ 
 /* === IPHONE "ADD TO HOME SCREEN" HINT === */
 .ios-hint {
   position: fixed;
@@ -1705,11 +1705,11 @@ body {
   transform: translateY(140%);
   transition: transform 0.5s var(--ease-spring);
 }
-
+ 
 .ios-hint.show {
   transform: none;
 }
-
+ 
 .ios-hint-icon {
   width: 44px;
   height: 44px;
@@ -1717,7 +1717,7 @@ body {
   border-radius: 11px;
   background: #0f0f0f url('../assets/apple-touch-icon.png') center / cover;
 }
-
+ 
 .ios-hint-title {
   font-family: var(--font-display);
   font-size: 15px;
@@ -1725,20 +1725,20 @@ body {
   color: var(--text-primary, #f0f0f0);
   margin-bottom: 3px;
 }
-
+ 
 .ios-hint-text {
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-secondary, #bbb);
 }
-
+ 
 .ios-hint-text svg {
   width: 15px;
   height: 15px;
   vertical-align: -3px;
   color: #3d8bfd;
 }
-
+ 
 .ios-hint-close {
   margin-left: auto;
   width: 32px;
@@ -1751,7 +1751,7 @@ body {
   font-size: 15px;
   cursor: pointer;
 }
-
+ 
 /* installed app: no install prompts */
 @media (display-mode: standalone) {
   .install-btn,
@@ -1759,19 +1759,19 @@ body {
     display: none !important;
   }
 }
-
+ 
 /* toast: size to the message instead of being squeezed into half the screen */
 .mt-toast {
   width: max-content;
   max-width: calc(100vw - 32px);
 }
-
+ 
 /* === BOTTOM TAB BAR (PHONES) === */
 /* built by js/mood.js from the same pages as the top nav; hidden on desktop */
 .tabbar {
   display: none;
 }
-
+ 
 @media (max-width: 768px) {
   .tabbar {
     view-transition-name: tabbar;
@@ -1788,7 +1788,7 @@ body {
     backdrop-filter: blur(18px) saturate(1.4);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
   }
-
+ 
   .tab {
     position: relative;
     display: flex;
@@ -1803,15 +1803,15 @@ body {
     -webkit-tap-highlight-color: transparent;
     transition: color 0.2s;
   }
-
+ 
   .tab:active {
     transform: scale(0.94);
   }
-
+ 
   .tab.active {
     color: var(--mood);
   }
-
+ 
   .tab-pill {
     view-transition-name: tab-pill;
     position: absolute;
@@ -1823,7 +1823,7 @@ body {
     border-radius: 999px;
     background: color-mix(in srgb, var(--mood) 18%, transparent);
   }
-
+ 
   .tab-icon {
     position: relative;
     display: flex;
@@ -1831,19 +1831,19 @@ body {
     height: 24px;
     margin-top: 7px;
   }
-
+ 
   .tab-icon svg {
     width: 24px;
     height: 24px;
   }
-
+ 
   .tab-label {
     font-family: var(--font-display);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.02em;
   }
-
+ 
   /* pulsing dot on the session tab while a session is running */
   .tab-live {
     position: absolute;
@@ -1856,20 +1856,20 @@ body {
     box-shadow: 0 0 0 2px var(--bg-page, #0f0f0f);
     animation: pulse 1.5s infinite;
   }
-
+ 
   /* room for the tab bar; toasts and the iphone hint sit above it */
   body {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
-
+ 
   .mt-toast {
     bottom: calc(84px + env(safe-area-inset-bottom));
   }
-
+ 
   .ios-hint {
     bottom: calc(80px + env(safe-area-inset-bottom));
   }
-
+ 
   /* === SLIM HEADER (PHONES) === */
   /* the page links live in the tab bar now, so the header is one short row
      that scrolls away with the page instead of staying stuck on screen */
@@ -1882,16 +1882,16 @@ body {
     padding-top: calc(10px + env(safe-area-inset-top));
     padding-bottom: 10px;
   }
-
+ 
   .navbar .nav-links {
     display: none;
   }
-
+ 
   .logo {
     width: 118px;
     margin-bottom: 0;
   }
-
+ 
   .nav-right {
     order: 0;
     width: auto;
@@ -1899,12 +1899,12 @@ body {
     justify-content: flex-end;
     gap: 8px;
   }
-
+ 
   .session-btn {
     padding: 9px 14px;
     min-height: 40px;
   }
-
+ 
   /* install button: icon only, to fit the short header */
   .install-btn {
     width: 40px;
@@ -1912,26 +1912,26 @@ body {
     padding: 0;
     justify-content: center;
   }
-
+ 
   .install-btn span {
     display: none;
   }
-
+ 
   .install-btn svg {
     width: 17px;
     height: 17px;
   }
-
+ 
   #help-btn,
   #profile-btn {
     width: 40px !important;
     height: 40px !important;
   }
-
+ 
   .container {
     margin-top: 16px;
   }
-
+ 
   /* === TAP TARGETS (PHONES) === */
   /* small controls get an invisible 40px+ touch area without looking any bigger */
   .delete-btn,
@@ -1947,7 +1947,7 @@ body {
   .mt-toast-action {
     position: relative;
   }
-
+ 
   .delete-btn::after,
   .add-note-btn::after,
   .edit-note-btn::after,
@@ -1963,22 +1963,22 @@ body {
     position: absolute;
     inset: -10px;
   }
-
+ 
   .delete-btn {
     min-width: 36px;
     min-height: 36px;
     font-size: 14px;
   }
-
+ 
   .chip {
     min-height: 40px;
     padding: 9px 16px;
   }
-
+ 
   .history-tab {
     min-height: 44px;
   }
-
+ 
   /* === NO ZOOM ON FOCUS (PHONES) === */
   /* iPhones zoom into any text box under 16px when you tap it */
   input,
@@ -1989,7 +1989,7 @@ body {
   .note-textarea {
     font-size: 16px !important;
   }
-
+ 
   /* === READABLE TEXT (PHONES) === */
   .plays-text,
   .date-text,
@@ -2001,7 +2001,7 @@ body {
   .session-rec-card .rec-artist {
     font-size: 12px !important;
   }
-
+ 
   .stat-label,
   .stat-box-label,
   .top-song-artist,
@@ -2013,13 +2013,13 @@ body {
   .np-status {
     font-size: 12px !important;
   }
-
+ 
   /* the mood graph is drawn 600px wide and scaled down, so its labels need a
      bigger font to end up readable on a phone */
   #mood-graph-container svg text {
     font-size: 17px;
   }
-
+ 
   /* === SIDEWAYS ROWS (PHONES) === */
   /* snap card by card and fade the edge, so it's obvious the row scrolls */
   .session-recommendations,
@@ -2031,24 +2031,24 @@ body {
     -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
     padding-right: 32px;
   }
-
+ 
   .session-recommendations > *,
   .session-history-songs > * {
     scroll-snap-align: start;
   }
-
+ 
   /* === SESSION PAGE (PHONES) === */
   /* while a session runs the mood can't change, so hide the chips and put
      the timer at the top of the screen */
   .session-live .mood-section {
     display: none;
   }
-
+ 
   .session-live .session-hero {
     margin-top: 0;
     padding-top: 8px;
   }
-
+ 
   /* === HISTORY SESSION CARDS (PHONES) === */
   .session-history-header {
     display: grid;
@@ -2060,21 +2060,21 @@ body {
     column-gap: 12px;
     row-gap: 2px;
   }
-
+ 
   .session-history-mood {
     grid-area: mood;
   }
-
+ 
   .session-history-meta {
     grid-area: meta;
     color: var(--text-secondary, #999) !important;
   }
-
+ 
   .session-delete-btn {
     grid-area: delete;
   }
 }
-
+ 
 @media (max-width: 768px) {
   #session-end-btn,
   #session-refresh-btn,
@@ -2082,34 +2082,34 @@ body {
   .session-end-btn {
     min-height: 44px;
   }
-
+ 
   .add-note-btn::after,
   .edit-note-btn::after,
   .session-song-delete::after {
     inset: -14px -10px;
   }
-
+ 
   .session-delete-btn {
     font-size: 12px !important;
   }
 }
-
+ 
 /* very small phones: help moves into the profile menu so the header fits */
 @media (max-width: 360px) {
   .logo {
     width: 100px;
   }
-
+ 
   #help-btn {
     display: none !important;
   }
-
+ 
   .session-btn {
     padding: 8px 12px;
     font-size: 12px;
   }
 }
-
+ 
 /* === MOOD-TINTED SONG CARDS === */
 /* every logged song picks up its mood's colour: an accent edge, a soft wash and
    a glow under the album art (set up by js/mood.js from the card's mood badge) */
@@ -2123,19 +2123,19 @@ body {
   ) !important;
   transition: border-color 0.2s, box-shadow 0.25s, transform 0.25s var(--ease-out);
 }
-
+ 
 .log-card.mood-card:hover,
 .song-history-card.mood-card:hover {
   border-color: color-mix(in srgb, var(--mc) 45%, transparent) !important;
   border-left-color: var(--mc) !important;
   box-shadow: 0 10px 30px -18px var(--mc);
 }
-
+ 
 .log-card.mood-card .song-art,
 .song-history-card.mood-card .song-history-header img {
   box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--mc) 85%, transparent);
 }
-
+ 
 .log-card.mood-card .log-note,
 .song-history-card.mood-card .log-note,
 .log-card.mood-card .edit-note-btn,
@@ -2144,151 +2144,151 @@ body {
 .song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 75%, #fff) !important;
 }
-
+ 
 /* === POP-UP ANIMATIONS === */
 /* profile menu pops out of its button */
 #profile-dropdown {
   transform-origin: top right;
   animation: menu-in 0.26s var(--ease-spring) both;
 }
-
+ 
 #profile-dropdown.closing {
   animation: menu-out 0.16s ease-in both;
   pointer-events: none;
 }
-
+ 
 #profile-dropdown > * {
   animation: enter 0.3s var(--ease-out) backwards;
 }
-
+ 
 #profile-dropdown > *:nth-child(2) {
   animation-delay: 0.03s;
 }
-
+ 
 #profile-dropdown > *:nth-child(3) {
   animation-delay: 0.06s;
 }
-
+ 
 #profile-dropdown > *:nth-child(4) {
   animation-delay: 0.09s;
 }
-
+ 
 #profile-dropdown > *:nth-child(5) {
   animation-delay: 0.12s;
 }
-
+ 
 #profile-dropdown > *:nth-child(6) {
   animation-delay: 0.15s;
 }
-
+ 
 #profile-dropdown > *:nth-child(7) {
   animation-delay: 0.18s;
 }
-
+ 
 #profile-dropdown > *:nth-child(8) {
   animation-delay: 0.21s;
 }
-
-
+ 
+ 
 @keyframes menu-in {
   from {
     opacity: 0;
     transform: translateY(-8px) scale(0.92);
   }
 }
-
+ 
 @keyframes menu-out {
   to {
     opacity: 0;
     transform: translateY(-6px) scale(0.95);
   }
 }
-
+ 
 /* help: backdrop fades, the card springs in (slides up as a sheet on phones) */
 #help-modal {
   animation: backdrop-in 0.25s ease both;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
-
+ 
 #help-modal > div {
   animation: card-in 0.42s var(--ease-spring) both;
 }
-
+ 
 #help-modal.closing {
   animation: backdrop-out 0.22s ease both;
   pointer-events: none;
 }
-
+ 
 #help-modal.closing > div {
   animation: card-out 0.22s ease-in both;
 }
-
+ 
 /* "open in spotify" popup */
 #spotify-open-popup {
   animation: backdrop-in 0.2s ease both;
 }
-
+ 
 #spotify-open-popup > div {
   animation: card-in 0.36s var(--ease-spring) both;
 }
-
+ 
 @keyframes backdrop-in {
   from {
     opacity: 0;
   }
 }
-
+ 
 @keyframes backdrop-out {
   to {
     opacity: 0;
   }
 }
-
+ 
 @keyframes card-in {
   from {
     opacity: 0;
     transform: translateY(18px) scale(0.95);
   }
 }
-
+ 
 @keyframes card-out {
   to {
     opacity: 0;
     transform: translateY(12px) scale(0.97);
   }
 }
-
+ 
 @media (max-width: 768px) {
   #help-modal {
     align-items: flex-end !important;
     padding: 0 !important;
   }
-
+ 
   #help-modal > div {
     max-width: none !important;
     border-radius: 22px 22px 0 0 !important;
     padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
     animation-name: sheet-in;
   }
-
+ 
   #help-modal.closing > div {
     animation-name: sheet-out;
   }
 }
-
+ 
 @keyframes sheet-in {
   from {
     transform: translateY(100%);
   }
 }
-
+ 
 @keyframes sheet-out {
   to {
     transform: translateY(100%);
   }
 }
-
+ 
 /* buttons that open things give a little press feedback */
 /* (the profile menu lives inside its button, so only the icon shrinks — otherwise
    tapping a menu row would shrink the whole menu) */
@@ -2296,13 +2296,13 @@ body {
 #help-btn {
   transition: transform 0.15s var(--ease-spring), border-color 0.15s, color 0.15s !important;
 }
-
+ 
 #profile-btn:active:not(:has(#profile-dropdown:active)) > svg,
 #help-btn:active {
   transform: scale(0.85);
 }
-
-
+ 
+ 
 /* === SONG BOX IN SEARCH RESULTS === */
 /* the "pick a mood / add a note" box under a search result follows the mood too,
    so picking a mood inside it visibly re-colours it along with the page */
@@ -2320,12 +2320,12 @@ body {
   animation: enter 0.35s var(--ease-out) backwards;
   transition: background 0.9s, border-color 0.9s, box-shadow 0.9s;
 }
-
+ 
 .result-item.selected {
   border-radius: 10px;
   box-shadow: inset 3px 0 0 var(--mood);
 }
-
+ 
 /* === ICONS === */
 /* line icons (js/mood.js) used in place of emojis; they take the text colour */
 .mt-icon {
@@ -2334,22 +2334,22 @@ body {
   flex-shrink: 0;
   vertical-align: -0.2em;
 }
-
+ 
 /* mood chips: the icon wears the mood colour; on a selected chip it matches the text */
 .chip .chip-emoji {
   display: inline-flex;
   color: var(--mc, currentColor);
 }
-
+ 
 .chip .chip-emoji .mt-icon {
   width: 16px;
   height: 16px;
 }
-
+ 
 .chip.selected .chip-emoji {
   color: inherit;
 }
-
+ 
 /* custom-mood icon picker */
 .emoji-opt {
   display: inline-flex;
@@ -2358,40 +2358,40 @@ body {
   color: var(--text-secondary, #aaa);
   transition: color 0.15s, background 0.15s, transform 0.15s var(--ease-spring);
 }
-
+ 
 .emoji-opt:hover {
   color: var(--text-primary, #f0f0f0);
   background: #ffffff0f !important;
   transform: scale(1.1);
 }
-
+ 
 .emoji-opt .mt-icon {
   width: 22px;
   height: 22px;
 }
-
+ 
 #chosen-emoji {
   display: inline-flex;
   vertical-align: middle;
   color: var(--mood);
 }
-
+ 
 #chosen-emoji .mt-icon {
   width: 18px;
   height: 18px;
 }
-
+ 
 .chip-delete-btn .mt-icon {
   width: 18px;
   height: 18px;
 }
-
+ 
 .restore-chip .mt-icon {
   width: 14px;
   height: 14px;
   vertical-align: -2px;
 }
-
+ 
 /* help headings */
 .help-heading {
   display: flex;
@@ -2402,34 +2402,34 @@ body {
   font-weight: 600;
   color: #9b8cf0;
 }
-
+ 
 .help-heading .mt-icon {
   width: 16px;
   height: 16px;
 }
-
+ 
 /* "a month ago" cards */
 .flashback-icon {
   display: flex;
   color: var(--mood);
 }
-
+ 
 .flashback-icon .mt-icon {
   width: 28px;
   height: 28px;
 }
-
+ 
 .flashback-label {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
+ 
 .flashback-label .mt-icon {
   width: 14px;
   height: 14px;
 }
-
+ 
 /* placeholders where there's no album art */
 .playlist-cover-empty,
 .rec-no-art,
@@ -2440,36 +2440,36 @@ body {
   justify-content: center;
   color: var(--text-muted, #666);
 }
-
+ 
 .playlist-cover-empty .mt-icon {
   width: 40%;
   height: 40%;
 }
-
+ 
 .rec-no-art .mt-icon,
 .np-art-fallback .mt-icon {
   width: 24px;
   height: 24px;
 }
-
+ 
 .sum-cover-empty .mt-icon {
   width: 38%;
   height: 38%;
 }
-
+ 
 /* session summary */
 .sum-emoji {
   display: flex;
   justify-content: center;
   color: var(--mc);
 }
-
+ 
 .sum-emoji .mt-icon {
   width: 46px;
   height: 46px;
   filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--mc) 60%, transparent));
 }
-
+ 
 /* === NOW PLAYING: PLAYBACK CONTROLS === */
 .np-controls {
   display: flex;
@@ -2477,7 +2477,7 @@ body {
   gap: 6px;
   flex-shrink: 0;
 }
-
+ 
 .np-btn {
   display: flex;
   align-items: center;
@@ -2492,20 +2492,20 @@ body {
   cursor: pointer;
   transition: background 0.15s, transform 0.15s var(--ease-spring), opacity 0.15s;
 }
-
+ 
 .np-btn:hover {
   background: #ffffff14;
 }
-
+ 
 .np-btn:active {
   transform: scale(0.88);
 }
-
+ 
 .np-btn .mt-icon {
   width: 18px;
   height: 18px;
 }
-
+ 
 /* the big play/pause button wears the song's colour */
 .np-toggle {
   width: 44px;
@@ -2514,20 +2514,20 @@ body {
   color: var(--np-ink, #fff);
   box-shadow: 0 8px 22px -10px var(--np-color);
 }
-
+ 
 .np-toggle:hover {
   background: color-mix(in srgb, var(--np-color) 85%, #fff);
 }
-
+ 
 .np-toggle .mt-icon {
   width: 20px;
   height: 20px;
 }
-
+ 
 .np-btn.np-busy {
   opacity: 0.6;
 }
-
+ 
 .np-idle .np-controls {
   display: none;
 }
@@ -2541,23 +2541,23 @@ body {
   letter-spacing: 0.02em;
   text-transform: none;
 }
-
+ 
 .np-compact .np-btn {
   width: 32px;
   height: 32px;
 }
-
+ 
 .np-compact .np-toggle {
   width: 40px;
   height: 40px;
 }
-
+ 
 @media (max-width: 420px) {
   .np-compact .np-prev {
     display: none;
   }
 }
-
+ 
 /* === SONG TITLE + NOTE ON ONE LINE === */
 /* the note sits to the right of the title (api.js titleRowHTML). the note gives
    way first when space is tight; tap it to read it in full */
@@ -2567,13 +2567,13 @@ body {
   gap: 10px;
   min-width: 0;
 }
-
+ 
 /* let the text column shrink so a long note is cut off instead of stretching the card */
 .log-card .song-info,
 .song-history-card .song-history-info {
   min-width: 0;
 }
-
+ 
 .title-row .song-title {
   flex: 0 0 auto;
   min-width: 0;
@@ -2582,7 +2582,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
+ 
 .title-row .log-note {
   flex: 0 100 auto;
   min-width: 4em;
@@ -2594,19 +2594,19 @@ body {
   text-overflow: ellipsis;
   cursor: pointer;
 }
-
+ 
 .title-row .log-note[hidden] {
   display: none;
 }
-
+ 
 .title-row .log-note.note-open {
   white-space: normal;
 }
-
+ 
 .title-row:has(.note-open) {
   align-items: flex-start;
 }
-
+ 
 /* === BACKGROUND: VIGNETTE + GRAIN === */
 /* darker edges pull the eye to the middle; a fine grain gives the colour texture */
 .mt-vignette,
@@ -2614,7 +2614,7 @@ body {
   position: absolute;
   inset: 0;
 }
-
+ 
 .mt-vignette {
   background: radial-gradient(
     ellipse 120% 90% at 50% 40%,
@@ -2622,12 +2622,12 @@ body {
     color-mix(in srgb, var(--bg-page, #0f0f0f) 45%, rgb(0 0 0 / 0.55)) 100%
   );
 }
-
+ 
 .mt-grain {
   opacity: 0.07;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
-
+ 
 /* === BACKGROUND: DRIFTING LIGHTS === */
 .mt-particles i {
   position: absolute;
@@ -2641,27 +2641,27 @@ body {
   animation: drift-up var(--dur) linear var(--delay) infinite;
   transition: background 0.9s, box-shadow 0.9s;
 }
-
+ 
 @keyframes drift-up {
   0% {
     transform: translate(0, 0);
     opacity: 0;
   }
-
+ 
   12% {
     opacity: var(--glow);
   }
-
+ 
   85% {
     opacity: var(--glow);
   }
-
+ 
   100% {
     transform: translate(var(--drift), -110vh);
     opacity: 0;
   }
 }
-
+ 
 /* === BACKGROUND: SOUND WAVES === */
 /* soft flowing lines across the middle of the screen, behind the cards, while
    spotify is playing — in the song's colour. they pulse on the song's beat when
@@ -2678,20 +2678,20 @@ body {
   /* disappear quickly when the music stops… */
   transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
 }
-
+ 
 /* …and fade in gently when it starts. paused or nothing playing = no waves */
 :root.np-live .mt-waves {
   opacity: 0.9;
   visibility: visible;
   transition: opacity 1s ease, visibility 0s;
 }
-
+ 
 /* freeze the motion the moment playback stops */
 :root:not(.np-live) .mt-waves .wave,
 :root:not(.np-live) .mt-waves path {
   animation-play-state: paused;
 }
-
+ 
 .mt-waves .wave {
   position: absolute;
   left: 0;
@@ -2701,39 +2701,39 @@ body {
   overflow: visible;
   animation: wave-slide calc(var(--mood-tempo) * var(--k)) linear infinite;
 }
-
+ 
 .mt-waves .wave-2 {
   animation-direction: reverse;
 }
-
+ 
 .mt-waves .wave-amp {
   transform-box: fill-box;
   transform-origin: center;
   transform: scaleY(0.06);
   transition: transform 0.3s var(--ease-out);
 }
-
+ 
 :root.np-live .mt-waves .wave-amp {
   transform: scaleY(1);
 }
-
+ 
 .mt-waves path {
   fill: none;
   stroke: var(--np);
   vector-effect: non-scaling-stroke;
   transition: stroke 1.4s;
 }
-
+ 
 .mt-waves .wave-line {
   stroke-width: 2;
   opacity: var(--o);
 }
-
+ 
 .mt-waves .wave-glow {
   stroke-width: 10;
   opacity: calc(var(--o) * 0.3);
 }
-
+ 
 /* no tempo known and not listening: a slow, calm swell (not pretending to be the beat) */
 :root.np-live .mt-waves .wave-line,
 :root.np-live .mt-waves .wave-glow {
@@ -2741,43 +2741,43 @@ body {
   transform-origin: center;
   animation: wave-swell 7s ease-in-out infinite;
 }
-
+ 
 :root.np-live .mt-waves .wave-2 path {
   animation-delay: -2.5s;
 }
-
+ 
 /* on the beat: each hit stretches the waves taller and brighter for a moment */
 :root.np-beat .mt-waves .wave-amp {
   transform: scaleY(calc(var(--base, 0.78) + var(--pulse, 0) * 0.45 * var(--pk, 1)));
   transition: transform 0.05s linear;
 }
-
+ 
 :root.np-beat .mt-waves path {
   animation: none;
 }
-
+ 
 :root.np-beat .mt-waves .wave-line {
   opacity: calc(var(--o) * (0.8 + var(--pulse, 0) * 0.7));
 }
-
+ 
 @keyframes wave-slide {
   to {
     transform: translateX(-50%);
   }
 }
-
+ 
 @keyframes wave-swell {
   50% {
     transform: scaleY(0.7);
   }
 }
-
+ 
 @media (max-width: 768px) {
   .mt-waves {
     height: 78vh;
   }
 }
-
+ 
 /* "sync waves to sound" toggle on the now-playing card */
 .np-sync {
   flex-shrink: 0;
@@ -2796,41 +2796,41 @@ body {
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
-
+ 
 .np-sync:hover {
   color: var(--text-primary, #fff);
   border-color: color-mix(in srgb, var(--np-color, var(--mood)) 60%, transparent);
 }
-
+ 
 .np-sync.on {
   color: var(--np-color, var(--mood));
   border-color: color-mix(in srgb, var(--np-color, var(--mood)) 55%, transparent);
   background: color-mix(in srgb, var(--np-color, var(--mood)) 12%, transparent);
 }
-
+ 
 .np-idle .np-sync {
   display: none;
 }
-
+ 
 .np-sync.map {
   color: color-mix(in srgb, var(--np-color, var(--mood)) 80%, #fff);
 }
-
-
-
+ 
+ 
+ 
 @media (prefers-reduced-motion: reduce) {
   .mt-particles {
     display: none;
   }
-
+ 
   .mt-waves .wave,
   .mt-waves path {
     animation: none !important;
   }
 }
-
-
-
+ 
+ 
+ 
 /* === DEFAULT THEME: VIOLET GLASS === */
 /* the default theme swaps the black boxes for see-through violet cards that let
    the purple background glow through, plus a few soft accents that sit well with
@@ -2847,7 +2847,7 @@ body {
   --c-mint: #82e3c6;
   --c-sky: #93c8ff;
 }
-
+ 
 /* every card-like box */
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-card,
 :root:is(:not([data-theme]), [data-theme="default"]) .flashback-card,
@@ -2864,14 +2864,14 @@ body {
   border: 1px solid var(--glass-edge) !important;
   box-shadow: var(--glass-shine), var(--glass-shadow);
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .note-textarea,
 :root:is(:not([data-theme]), [data-theme="default"]) #song-history-search {
   background: rgba(24, 12, 44, 0.55) !important;
   border-color: var(--glass-edge) !important;
   color: var(--text-primary) !important;
 }
-
+ 
 /* song logs: the same dark violet as the stats cards — the mood colour only
    shows in the thin edge on the left and the mood badge */
 :root:is(:not([data-theme]), [data-theme="default"]) .log-card.mood-card,
@@ -2880,71 +2880,71 @@ body {
   border-color: var(--glass-edge) !important;
   border-left: 3px solid var(--mc) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .log-card.mood-card:hover,
 :root:is(:not([data-theme]), [data-theme="default"]) .song-history-card.mood-card:hover {
   border-color: var(--border-mid) !important;
   border-left-color: var(--mc) !important;
 }
-
+ 
 /* stats: each card gets its own accent along the top and in its title */
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-card {
   --card-c: var(--c-lavender);
   border-top: 2px solid color-mix(in srgb, var(--card-c) 70%, transparent) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-card-title,
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-card .stats-card-title {
   background: none !important;
   color: var(--card-c, var(--c-lavender)) !important;
   opacity: 0.9;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .mood-cal { --card-c: var(--c-lavender); }
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-grid > .stats-card:nth-child(1) { --card-c: var(--c-rose); }
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-grid > .stats-card:nth-child(2) { --card-c: var(--c-peach); }
 :root:is(:not([data-theme]), [data-theme="default"]) #mood-graph-container { --card-c: var(--c-mint); }
 :root:is(:not([data-theme]), [data-theme="default"]) #stats-content > .stats-card:last-child { --card-c: var(--c-sky); }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .flashback-card {
   background:
     radial-gradient(120% 140% at 0% 0%, rgba(255, 159, 207, 0.22), transparent 55%),
     var(--glass) !important;
   border-top: 2px solid color-mix(in srgb, var(--c-rose) 70%, transparent) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .flashback-label {
   color: var(--c-rose) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .mood-bar-track,
 :root:is(:not([data-theme]), [data-theme="default"]) .time-bar-track {
   background: rgba(255, 255, 255, 0.08) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .time-bar-fill {
   background: linear-gradient(90deg, var(--c-peach), var(--c-rose)) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .top-song-plays,
 :root:is(:not([data-theme]), [data-theme="default"]) .mood-bar-count {
   color: var(--text-secondary) !important;
 }
-
+ 
 /* mood calendar on violet */
 :root:is(:not([data-theme]), [data-theme="default"]) .mc-empty {
   background: rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 0 0 1px rgba(200, 176, 255, 0.1);
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .mc-filled {
   background: color-mix(in srgb, var(--mc) var(--mc-mix, 60%), #22133d);
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .mc-detail {
   border-top-color: var(--glass-edge);
 }
-
+ 
 /* playlists: every card glows in its mood's colour */
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card {
   background:
@@ -2954,25 +2954,25 @@ body {
   overflow: hidden;
   transition: transform 0.2s var(--ease-out), box-shadow 0.25s, opacity 0.15s;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card:hover {
   opacity: 1;
   box-shadow: var(--glass-shine), 0 18px 40px -20px var(--mc, var(--c-lavender));
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card .playlist-cover {
   border-radius: 8px 8px 0 0;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-title,
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-title * {
   color: var(--text-primary) !important;
 }
-
+ 
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-count {
   color: color-mix(in srgb, var(--mc, var(--c-lavender)) 70%, #fff) !important;
 }
-
+ 
 /* now playing: the album art shows through properly */
 :root:is(:not([data-theme]), [data-theme="default"]) .np-card {
   background:
@@ -2980,13 +2980,74 @@ body {
     var(--glass);
   border-color: color-mix(in srgb, var(--np-color) 40%, var(--glass-edge));
 }
-
+ 
 /* section headings and quieter text, readable on purple */
 :root:is(:not([data-theme]), [data-theme="default"]) .section-label {
   color: var(--c-lavender) !important;
   opacity: 0.85;
 }
-
+ 
 .np-status {
   white-space: nowrap;
+}
+ 
+/* === PLAY NEXT (spotify queue) === */
+.queue-btn {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-right: 8px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary, #ccc);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+ 
+.queue-btn .mt-icon {
+  width: 17px;
+  height: 17px;
+}
+ 
+.queue-btn:hover {
+  color: #fff;
+  background: rgba(29, 185, 84, 0.18);
+  border-color: rgba(29, 185, 84, 0.55);
+  transform: translateY(-1px);
+}
+ 
+.queue-btn.done {
+  color: #4be08a;
+  border-color: rgba(29, 185, 84, 0.7);
+}
+ 
+.queue-btn-sm {
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+}
+ 
+.queue-btn-sm .mt-icon {
+  width: 14px;
+  height: 14px;
+}
+ 
+/* spotify free: there's no queue to add to */
+.spotify-free .queue-btn {
+  display: none;
+}
+ 
+/* waiting for spotify to start the song */
+.is-starting {
+  animation: starting-pulse 0.9s ease-in-out infinite;
+  pointer-events: none;
+}
+ 
+@keyframes starting-pulse {
+  50% { opacity: 0.45; transform: scale(0.94); }
 }
