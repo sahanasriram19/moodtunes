@@ -20,6 +20,61 @@ apiCall('/moods', 'GET', null, function(err, result) {
     });
 });
 
+// ── saved to spotify ───────────────────────────────────
+// "save to spotify" makes a private "moodtunes — <mood>" playlist in your spotify
+// library. the server keeps it up to date when you log or delete songs; reordering
+// here re-saves it. ▶ then opens the whole playlist in spotify.
+var savedSpotify = {};                      // { mood: 'https://open.spotify.com/playlist/…' }
+apiCall('/spotify/playlists', 'GET', null, function(err, res) {
+    if (err || !res || res.status !== 200 || !Array.isArray(res.data)) return;
+    res.data.forEach(function(p) { savedSpotify[p.mood] = p.url; });
+    markSavedCards();
+    if (window.__mtRefreshSaveBtn) window.__mtRefreshSaveBtn();
+});
+
+function markSavedCards() {
+    document.querySelectorAll('.playlist-card[data-mood]').forEach(function(card) {
+        var saved = !!savedSpotify[card.dataset.mood];
+        var badge = card.querySelector('.pl-in-spotify');
+        if (saved && !badge) {
+            badge = document.createElement('span');
+            badge.className = 'pl-in-spotify';
+            badge.title = 'saved in your spotify library';
+            badge.textContent = '♫ in spotify';
+            card.appendChild(badge);
+        } else if (!saved && badge) badge.remove();
+    });
+}
+
+// spotify links for a mood's songs, in the given order of song ids
+function spotifyUrlsFor(mood, songIds) {
+    var byId = {};
+    (latestLogs || []).forEach(function(l) { if (l.mood === mood && l.spotify_url) byId[l.song_id] = l.spotify_url; });
+    return songIds.map(function(id) { return byId[id] || id; });
+}
+
+function saveToSpotify(mood, songIds, quiet, done) {
+    apiCall('/spotify/playlists/' + encodeURIComponent(mood), 'PUT', { songs: spotifyUrlsFor(mood, songIds) }, function(err, res) {
+        if (err || !res || res.status >= 400) {
+            if (!quiet) MoodFX.toast((res && res.data && res.data.message) || 'couldn’t save to spotify — try again');
+            return done && done(null);
+        }
+        var first = !savedSpotify[mood];
+        savedSpotify[mood] = res.data.url;
+        markSavedCards();
+        if (!quiet) MoodFX.toast(first ? '“moodtunes — ' + mood + '” is now in your spotify library' : 'updated in spotify', mood);
+        done && done(res.data.url);
+    });
+}
+
+// reordering a saved playlist re-saves it (waits a moment so several drags count as one)
+var resaveTimers = {};
+function resaveIfSaved(mood, songIds) {
+    if (!savedSpotify[mood]) return;
+    clearTimeout(resaveTimers[mood]);
+    resaveTimers[mood] = setTimeout(function() { saveToSpotify(mood, songIds, true); }, 1500);
+}
+
 // ── playlist order persistence ─────────────────────────
 // the order you arrange songs in is saved to your account (/api/playlists/order),
 // so every device shows the same playlist. orders that were only saved on this
@@ -29,6 +84,7 @@ var LEGACY_ORDER_PREFIX = 'moodtunes_order_';
 
 function saveOrder(mood, songIds) {
     playlistOrders[mood] = songIds;
+    resaveIfSaved(mood, songIds);
     apiCacheSet('/playlists/order', playlistOrders);
     apiCall('/playlists/order/' + encodeURIComponent(mood), 'PUT', { song_ids: songIds }, function(err, res) {
         if (err || !res || res.status >= 400) MoodFX.toast('couldn’t sync this order — it will still show on this device');
@@ -138,6 +194,7 @@ function renderGrid(grouped) {
         })(mood, sorted));
         grid.appendChild(card);
     });
+    markSavedCards();
 }
 
 // ── open a playlist ────────────────────────────────────
@@ -157,8 +214,9 @@ function openPlaylist(mood, songs) {
                 '<div class="playlist-view-title">' + MoodFX.esc(mood) + ' playlist</div>' +
                 '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' · built from your journal</div>' +
                 '<div style="font-size:12px;color:#555;margin-top:4px;">new songs go to the top · drag to reorder · cover shows the top 4</div>' +
+                '<button type="button" class="pl-save-btn" id="pl-save-btn"></button>' +
             '</div>' +
-            '<button class="playlist-play-btn" id="sync-btn" style="border:none;cursor:pointer;">▶</button>' +
+            '<button class="playlist-play-btn" id="sync-btn" title="play in spotify" style="border:none;cursor:pointer;">▶</button>' +
         '</div>' +
         '<div class="playlist-block" id="playlist-block"></div>';
 
@@ -307,9 +365,36 @@ function openPlaylist(mood, songs) {
         document.getElementById('grid-view').classList.remove('hidden');
     });
 
+    // save / update in spotify
+    var saveBtn = document.getElementById('pl-save-btn');
+    function currentIds() {
+        return Array.prototype.map.call(block.querySelectorAll('.draggable-card'), function(c) { return c.dataset.songId; });
+    }
+    function refreshSaveBtn() {
+        var saved = !!savedSpotify[mood];
+        saveBtn.classList.toggle('saved', saved);
+        saveBtn.innerHTML = saved ? '✓ in your spotify library · <u>update</u>' : '＋ save to spotify';
+        saveBtn.title = saved ? 'it updates by itself when you log songs — tap to re-save it now' : 'add this playlist to your spotify library';
+    }
+    window.__mtRefreshSaveBtn = refreshSaveBtn;
+    refreshSaveBtn();
+    saveBtn.addEventListener('click', function() {
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'saving…';
+        saveToSpotify(mood, currentIds(), false, function() { saveBtn.disabled = false; refreshSaveBtn(); });
+    });
+
+    // ▶ plays the whole playlist in spotify (saving it there first if needed)
     document.getElementById('sync-btn').addEventListener('click', function() {
-        var first = block.querySelector('.draggable-card');
-        if (first) playFromPlaylist(songMap[first.dataset.songId].spotify_url, first.dataset.songId, mood);
+        if (savedSpotify[mood]) return openSpotify(savedSpotify[mood]);
+        var btn = this;
+        btn.disabled = true;
+        saveToSpotify(mood, currentIds(), false, function(url) {
+            btn.disabled = false;
+            refreshSaveBtn();
+            if (url) openSpotify(url);
+        });
     });
 }
 

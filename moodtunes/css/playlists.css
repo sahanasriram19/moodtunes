@@ -168,3 +168,67 @@
   width: 40px;
   height: 40px;
 }
+/* === SAVED IN SPOTIFY === */
+.pl-save-btn {
+  display: inline-flex;
+  align-self: flex-start;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid #1db95466;
+  background: #1db9541f;
+  color: #4be08a;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.pl-save-btn:hover {
+  background: #1db95433;
+  border-color: #1db954aa;
+  transform: translateY(-1px);
+}
+
+.pl-save-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.pl-save-btn.saved {
+  font-weight: 500;
+  color: #8fe8b4;
+  border-color: #1db95440;
+  background: #1db95414;
+}
+
+.pl-save-btn.saved u {
+  text-underline-offset: 2px;
+  color: #c8f5da;
+}
+
+.playlist-card {
+  position: relative;
+}
+
+.pl-in-spotify {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #0c1a12d9;
+  border: 1px solid #1db95466;
+  color: #4be08a;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+}

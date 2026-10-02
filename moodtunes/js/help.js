@@ -31,7 +31,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('playlists') + 'playlists</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">every mood gets its own playlist built from your logged songs. open a playlist to see all tracks, drag to reorder (hold the ⠿ handle on mobile too), and add or edit notes per song. the cover art shows the top 4 songs in the list — newly added songs go to the top, so your latest additions appear on the cover. you can also sync any playlist directly to your spotify account.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">every mood gets its own playlist built from your logged songs. open a playlist to see all tracks, drag to reorder (hold the ⠿ handle on mobile too), and add or edit notes per song. the cover art shows the top 4 songs in the list — newly added songs go to the top, so your latest additions appear on the cover. tap <b style="color:#ddd;">＋ save to spotify</b> to add it to your spotify library (e.g. “moodtunes — chill”) — it then keeps itself up to date as you log songs, and ▶ plays the whole playlist in spotify.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +

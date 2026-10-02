@@ -208,9 +208,8 @@ if (!/login\.html$/.test(location.pathname)) {
 // opts.onOpen runs once, when a way to listen is picked (not on cancel)
 function openSpotify(spotifyUrl, opts) {
     // derive the spotify:// app URI from the web URL
-    var parts   = spotifyUrl.split('/track/');
-    var trackId = parts[1] ? parts[1].split('?')[0] : null;
-    var appUri  = trackId ? 'spotify:track:' + trackId : null;
+    var m       = String(spotifyUrl).match(/\/(track|playlist|album)\/([A-Za-z0-9]+)/);
+    var appUri  = m ? 'spotify:' + m[1] + ':' + m[2] : null;
 
     // remove any existing popup
     var existing = document.getElementById('spotify-open-popup');

@@ -1,6 +1,7 @@
 const model   = require('../models/logModel');
 const spotify = require('./spotifyController');
 const axios   = require('axios');
+const savedPlaylists = require('./spotifyPlaylistController');
 
 // the browser sends its timezone with every request (X-Timezone-Offset header);
 // older app versions sent tz_offset in the body or query instead
@@ -73,7 +74,11 @@ module.exports.logSong = (req, res, next) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         if (req.body.played !== false) startLaunch(res.locals.userId, req, req.body.song_id, req.body.mood);
         // affectedRows: 1 = new row for today, 2 = today's row updated
-        if (result.affectedRows === 1) return res.status(201).json({ message: 'Song logged successfully' });
+        if (result.affectedRows === 1) {
+            // first time with this mood? add it to the saved spotify playlist too
+            savedPlaylists.songAdded(res.locals.userId, req.body.song_id, req.body.mood, req.body.spotify_url);
+            return res.status(201).json({ message: 'Song logged successfully' });
+        }
         res.status(200).json({ message: 'Play count updated' });
     });
 };
@@ -247,13 +252,17 @@ module.exports.updateNoteLatest = (req, res, next) => {
 };
 
 module.exports.deleteLog = (req, res, next) => {
-    model.deleteLog({
-        user_id: res.locals.userId,
-        id:      req.params.id
-    }, (err, results) => {
-        if (err) return res.status(500).json({ message: 'Internal server error' });
-        if (results.affectedRows === 0) return res.status(404).json({ message: 'Log not found' });
-        res.status(200).json({ message: 'Log deleted successfully' });
+    const userId = res.locals.userId;
+    savedPlaylists.beforeLogDeleted(userId, req.params.id).then((log) => {
+        model.deleteLog({
+            user_id: userId,
+            id:      req.params.id
+        }, (err, results) => {
+            if (err) return res.status(500).json({ message: 'Internal server error' });
+            if (results.affectedRows === 0) return res.status(404).json({ message: 'Log not found' });
+            savedPlaylists.afterLogDeleted(userId, log);     // drops it from the saved spotify playlist if it was the last one
+            res.status(200).json({ message: 'Log deleted successfully' });
+        });
     });
 };
 // ── stats endpoint ────────────────────────────────────────────────────────────
