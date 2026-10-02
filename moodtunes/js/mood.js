@@ -797,6 +797,7 @@ function applyHidden() {
 }
  
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
+ 
 function hideMood(m) {
     if (!m || isHidden(m)) return;
     hiddenMoods.push(m);
@@ -881,7 +882,6 @@ function ripple(el, evt) {
     el.appendChild(s);
     setTimeout(function() { s.remove(); }, 600);
 }
- 
 // ── confetti ───────────────────────────────────────────
 function confetti(baseColor) {
     if (reduceMotion) return;
@@ -1063,6 +1063,7 @@ function nowPlaying(container, opts) {
     container.classList.add('np-mount');
     container.innerHTML =
         '<div class="np-card' + (opts.compact ? ' np-compact' : '') + ' np-idle">' +
+            '<div class="np-backdrop" aria-hidden="true"><img class="np-bg" alt="" /></div>' +
             '<div class="np-art-wrap"><img class="np-art" alt="" /><div class="np-art-fallback">' + icon('note') + '</div></div>' +
             '<div class="np-body">' +
                 '<div class="np-label"><span class="np-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="np-status">listening for spotify…</span><span class="np-added" aria-live="polite"></span></div>' +
@@ -1080,6 +1081,9 @@ function nowPlaying(container, opts) {
  
     var card   = container.querySelector('.np-card');
     var art    = container.querySelector('.np-art');
+    var bg     = container.querySelector('.np-bg');
+    // blurred copy of the album art behind the card; fades in once loaded
+    bg.addEventListener('load', function() { bg.classList.add('on'); });
     var status = container.querySelector('.np-status');
     var title  = container.querySelector('.np-title');
     var artist = container.querySelector('.np-artist');
@@ -1165,6 +1169,8 @@ function nowPlaying(container, opts) {
         time.textContent = '';
         fill.style.transform = 'scaleX(0)';
         art.removeAttribute('src');
+        bg.classList.remove('on');
+        bg.removeAttribute('src');
         if (opts.hideWhenIdle) container.classList.add('np-hidden');
         setTrackColor(null);
         setLiveState('idle', null);
@@ -1211,6 +1217,8 @@ function nowPlaying(container, opts) {
             title.textContent = t.title;
             artist.textContent = t.artist;
             if (t.albumArt) art.src = t.albumArt; else art.removeAttribute('src');
+            bg.classList.remove('on');
+            if (t.albumArt) bg.src = t.albumArt; else bg.removeAttribute('src');
             artColor(t.albumArt, function(c) {
                 card.style.setProperty('--np-color', c || 'var(--mood)');
                 card.style.setProperty('--np-ink', c ? ink(c) : 'var(--mood-ink)');

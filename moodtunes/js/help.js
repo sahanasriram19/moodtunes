@@ -41,7 +41,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('stats') + 'stats</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">a full breakdown of your listening — total plays, unique songs, days active, top mood, mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">a full breakdown of your listening — total plays, unique songs, days active, top mood, a mood calendar (each day coloured by the mood you played most — tap a day to see its songs and notes), mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +

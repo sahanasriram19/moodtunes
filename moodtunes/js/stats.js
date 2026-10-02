@@ -35,6 +35,9 @@ function render(data) {
             '<div class="stat-box"><div class="stat-box-num">' + (moods.length > 0 ? moods[0].mood : '—') + '</div><div class="stat-box-label">top mood</div></div>' +
         '</div>';
 
+    // mood calendar (filled in once the per-day logs arrive)
+    html += '<div class="stats-card mood-cal" id="mood-calendar"><div class="stats-card-title">MOOD CALENDAR</div>' + MoodFX.skeleton('block') + '</div>';
+
     // flashback
     if (flashback.length > 0) {
         var fbMood = flashback[0].mood;
@@ -185,6 +188,174 @@ function buildLineGraph(logs) {
     if (container) container.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div>' + svg + legend;
 }
 
+// ── mood calendar ──────────────────────────────────────
+// one month at a time, every day filled with the colour of the mood you
+// played most that day (stronger colour = more plays). tap a day to see
+// what you listened to.
+var MoodCalendar = (function() {
+    var MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+    var days = {};            // 'YYYY-MM-DD' → { moods: {mood: plays}, total, songs: [log] }
+    var view = null;          // { y, m } (m = 0..11)
+    var selected = null;      // 'YYYY-MM-DD'
+    var first = null;         // earliest month with logs
+
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function keyOf(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
+    function todayKey() { var t = new Date(); return keyOf(t.getFullYear(), t.getMonth(), t.getDate()); }
+
+    // the day a log belongs to: its own day (in your timezone) when the server sends it,
+    // otherwise the local date of when it was last played
+    function dayOf(log) {
+        if (log.log_date) return String(log.log_date).slice(0, 10);
+        if (!log.last_logged) return null;
+        var t = new Date(String(log.last_logged).replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(log.last_logged) ? '' : 'Z'));
+        return isNaN(t) ? null : keyOf(t.getFullYear(), t.getMonth(), t.getDate());
+    }
+
+    function mainMood(day) {
+        var best = null;
+        Object.keys(day.moods).forEach(function(m) { if (!best || day.moods[m] > day.moods[best]) best = m; });
+        return best;
+    }
+
+    function show(logs) {
+        days = {};
+        first = null;
+        (logs || []).forEach(function(log) {
+            var k = dayOf(log);
+            if (!k) return;
+            var d = days[k] || (days[k] = { moods: {}, total: 0, songs: [] });
+            var plays = Math.max(1, Number(log.play_count) || 0);
+            d.moods[log.mood] = (d.moods[log.mood] || 0) + plays;
+            d.total += plays;
+            d.songs.push(log);
+            if (!first || k < first) first = k;
+        });
+        var t = new Date();
+        if (!view) view = { y: t.getFullYear(), m: t.getMonth() };
+        draw();
+    }
+
+    function move(step) {
+        var m = view.m + step, y = view.y;
+        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+        view = { y: y, m: m };
+        selected = null;
+        draw(step);
+    }
+
+    function draw(step) {
+        var box = document.getElementById('mood-calendar');
+        if (!box) return;
+        var t = new Date();
+        var isNow = view.y === t.getFullYear() && view.m === t.getMonth();
+        var firstKey = keyOf(view.y, view.m, 1);
+        var canBack = first && first.slice(0, 7) < firstKey.slice(0, 7);
+        var daysIn = new Date(view.y, view.m + 1, 0).getDate();
+        var lead = (new Date(view.y, view.m, 1).getDay() + 6) % 7;      // weeks start on monday
+        var today = todayKey();
+
+        // busiest day this month sets the scale for colour strength
+        var maxPlays = 1, moodDays = {};
+        for (var d = 1; d <= daysIn; d++) {
+            var day = days[keyOf(view.y, view.m, d)];
+            if (!day) continue;
+            maxPlays = Math.max(maxPlays, day.total);
+            var mm = mainMood(day);
+            moodDays[mm] = (moodDays[mm] || 0) + 1;
+        }
+
+        var cells = '';
+        for (var i = 0; i < lead; i++) cells += '<span class="mc-cell mc-pad" aria-hidden="true"></span>';
+        for (d = 1; d <= daysIn; d++) {
+            var k = keyOf(view.y, view.m, d);
+            var info = days[k];
+            var cls = 'mc-cell' + (k === today ? ' mc-today' : '') + (k === selected ? ' mc-selected' : '') + (k > today ? ' mc-future' : '');
+            if (!info) {
+                cells += '<span class="' + cls + ' mc-empty"><span class="mc-num">' + d + '</span></span>';
+                continue;
+            }
+            var mood = mainMood(info);
+            var others = Object.keys(info.moods).filter(function(m) { return m !== mood; }).slice(0, 3);
+            var strength = Math.round(38 + 52 * Math.min(1, info.total / maxPlays));
+            cells += '<button type="button" class="' + cls + ' mc-filled" data-day="' + k + '" ' +
+                'style="--mc:' + MoodFX.color(mood) + ';--mc-mix:' + strength + '%;" ' +
+                'aria-label="' + d + ' ' + MONTHS[view.m] + ': mostly ' + MoodFX.esc(mood) + ', ' + info.total + ' play' + (info.total === 1 ? '' : 's') + '">' +
+                '<span class="mc-num">' + d + '</span>' +
+                (others.length ? '<span class="mc-dots">' + others.map(function(m) { return '<i style="background:' + MoodFX.color(m) + '"></i>'; }).join('') + '</span>' : '') +
+                '</button>';
+        }
+
+        var legendMoods = Object.keys(moodDays).sort(function(a, b) { return moodDays[b] - moodDays[a]; });
+        var legend = legendMoods.length
+            ? legendMoods.map(function(m) {
+                return '<span class="mc-key"><i style="background:' + MoodFX.color(m) + '"></i>' + MoodFX.esc(m) + ' <b>' + moodDays[m] + 'd</b></span>';
+            }).join('')
+            : '<span class="mc-none">no songs logged this month</span>';
+
+        var chevron = function(dir) {
+            return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + (dir < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '"/></svg>';
+        };
+
+        box.innerHTML =
+            '<div class="mc-head">' +
+                '<div class="stats-card-title" style="margin:0;">MOOD CALENDAR</div>' +
+                '<div class="mc-nav">' +
+                    '<button type="button" class="mc-arrow" data-step="-1" aria-label="previous month"' + (canBack ? '' : ' disabled') + '>' + chevron(-1) + '</button>' +
+                    '<span class="mc-month">' + MONTHS[view.m] + ' ' + view.y + '</span>' +
+                    '<button type="button" class="mc-arrow" data-step="1" aria-label="next month"' + (isNow ? ' disabled' : '') + '>' + chevron(1) + '</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="mc-grid' + (step ? (step < 0 ? ' mc-in-left' : ' mc-in-right') : '') + '">' +
+                ['m', 't', 'w', 't', 'f', 's', 's'].map(function(w) { return '<span class="mc-wd">' + w + '</span>'; }).join('') +
+                cells +
+            '</div>' +
+            '<div class="mc-legend">' + legend + '</div>' +
+            '<div class="mc-detail" id="mc-detail">' + detailHTML(selected) + '</div>';
+    }
+
+    function detailHTML(k) {
+        if (!k || !days[k]) return '<div class="mc-hint">tap a day to see what you were listening to</div>';
+        var info = days[k];
+        var parts = k.split('-');
+        var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        var label = date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }).toLowerCase();
+        var songs = info.songs.slice().sort(function(a, b) { return (Number(b.play_count) || 0) - (Number(a.play_count) || 0); });
+        return '<div class="mc-detail-head">' + MoodFX.esc(label) +
+                '<span>' + info.total + ' play' + (info.total === 1 ? '' : 's') + ' · mostly ' + MoodFX.esc(mainMood(info)) + '</span></div>' +
+            songs.map(function(s) {
+                var c = MoodFX.color(s.mood);
+                return '<div class="mc-song" style="--mc:' + c + '">' +
+                    (s.album_art ? '<img src="' + MoodFX.esc(s.album_art) + '" alt="" loading="lazy" />' : '<span class="mc-song-art"></span>') +
+                    '<div class="mc-song-info">' +
+                        '<div class="mc-song-title">' + MoodFX.esc(s.title) + '</div>' +
+                        '<div class="mc-song-sub">' + MoodFX.esc(s.artist) + '</div>' +
+                        (s.note ? '<div class="mc-song-note">“' + MoodFX.esc(s.note) + '”</div>' : '') +
+                    '</div>' +
+                    '<div class="mc-song-meta"><span class="mc-song-mood">' + MoodFX.esc(s.mood) + '</span>' +
+                        '<span>' + (Number(s.play_count) || 0) + ' play' + (Number(s.play_count) === 1 ? '' : 's') + '</span></div>' +
+                '</div>';
+            }).join('');
+    }
+
+    document.addEventListener('click', function(e) {
+        var box = document.getElementById('mood-calendar');
+        if (!box || !box.contains(e.target)) return;
+        var arrow = e.target.closest('.mc-arrow');
+        if (arrow && !arrow.disabled) return move(Number(arrow.dataset.step));
+        var cell = e.target.closest('.mc-filled');
+        if (!cell) return;
+        selected = selected === cell.dataset.day ? null : cell.dataset.day;
+        box.querySelectorAll('.mc-selected').forEach(function(c) { c.classList.remove('mc-selected'); });
+        if (selected) cell.classList.add('mc-selected');
+        var det = document.getElementById('mc-detail');
+        det.innerHTML = detailHTML(selected);
+        det.classList.remove('mc-pop'); void det.offsetWidth; det.classList.add('mc-pop');
+    });
+
+    return { show: show };
+})();
+
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 document.getElementById('stats-content').innerHTML =
@@ -200,7 +371,7 @@ apiCallCached('/logs/stats', function(err, result) {
     render(result.data);
     // fetch per-day logs for the graph
     apiCallCached('/logs/perday', function(err2, r2) {
-        if (!err2 && r2 && r2.data) buildLineGraph(r2.data);
-        else { var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY</div><p style="color:#555;font-size:13px;">not enough data yet</p>'; }
+        if (!err2 && r2 && r2.data) { buildLineGraph(r2.data); MoodCalendar.show(r2.data); }
+        else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY</div><p style="color:#555;font-size:13px;">not enough data yet</p>'; }
     });
 });

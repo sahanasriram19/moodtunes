@@ -451,6 +451,50 @@
   text-align: left;
 }
 
+/* blurred album art filling the card behind everything */
+.np-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.np-bg {
+  position: absolute;
+  left: -15%;
+  top: -60%;
+  width: 130%;
+  height: 220%;
+  object-fit: cover;
+  filter: blur(34px) saturate(1.5);
+  transform: scale(1.1);
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.np-bg.on {
+  opacity: 0.55;
+}
+
+/* keep the words readable on bright covers */
+.np-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #0f0f0f73 0%, #0f0f0fa6 55%, #0f0f0fbf 100%);
+}
+
+.np-paused .np-bg.on {
+  opacity: 0.32;
+}
+
+.np-card > :not(.np-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+
 .np-art-wrap {
   position: relative;
   width: 64px;
