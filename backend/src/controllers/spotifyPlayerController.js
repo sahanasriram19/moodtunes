@@ -56,6 +56,31 @@ async function started(userId, uri, isTrack, before) {
     };
 }
 
+// the version of a song that can actually play in your country. a song saved
+// from search can be a release that isn't available where you are — spotify's
+// app quietly swaps in another copy, but asking spotify to play it directly just
+// stops the music. so look up the playable copy first.
+async function playableUri(userId, trackId) {
+    try {
+        const t = await call(userId, 'get', '/tracks/' + trackId + '?market=from_token');
+        if (t && t.is_playable !== false) return { uri: t.uri || 'spotify:track:' + trackId, swapped: t.id && t.id !== trackId };
+        // not playable here: look for another release of the same song that is
+        const artist = t && t.artists && t.artists[0] && t.artists[0].name;
+        if (t && t.name && artist) {
+            const q = 'track:"' + t.name.replace(/"/g, '') + '" artist:"' + artist.replace(/"/g, '') + '"';
+            const found = await call(userId, 'get', '/search?type=track&limit=10&market=from_token&q=' + encodeURIComponent(q));
+            const items = (found && found.tracks && found.tracks.items) || [];
+            const ok = items.find((x) => x.is_playable !== false && x.name.toLowerCase() === t.name.toLowerCase())
+                || items.find((x) => x.is_playable !== false);
+            if (ok) return { uri: ok.uri, swapped: true };
+        }
+        return { uri: 'spotify:track:' + trackId, unplayable: true };
+    } catch (e) {
+        if (reasonOf(e) === 'not_connected') throw e;
+        return { uri: 'spotify:track:' + trackId };    // couldn't check: try the original
+    }
+}
+
 async function stateNow(userId) {
     try {
         const st = await call(userId, 'get', '/me/player');
@@ -69,11 +94,17 @@ module.exports.play = async (req, res) => {
     const raw = String(req.body.uri || '');
     const m = raw.match(/(track|playlist|album)[/:]([A-Za-z0-9]{10,40})/);
     if (!m) return res.status(400).json({ message: 'a spotify track, playlist or album is required' });
-    const uri = 'spotify:' + m[1] + ':' + m[2];
+    let uri = 'spotify:' + m[1] + ':' + m[2];
     const isTrack = m[1] === 'track';
-    const body = isTrack ? { uris: [uri] } : { context_uri: uri };
 
     try {
+        let resolved = null;
+        if (isTrack) {
+            resolved = await playableUri(userId, m[2]);
+            if (resolved.unplayable) return res.status(409).json({ reason: 'unavailable' });
+            uri = resolved.uri;
+        }
+        const body = isTrack ? { uris: [uri] } : { context_uri: uri };
         const before = await stateNow(userId);
 
         // 1. on whatever is playing now
@@ -102,8 +133,8 @@ module.exports.play = async (req, res) => {
         await call(userId, 'put', '/me/player/play?device_id=' + encodeURIComponent(dev.id), body);
         const check2 = await started(userId, uri, isTrack, before);
         if (check2.ok) return res.json({ ok: true, device: check2.device || dev.name });
-        console.log('play did not start:', JSON.stringify(check2.debug));
-        res.status(409).json({ reason: 'didnt_start', device: dev.name, debug: check2.debug });
+        console.log('play did not start:', JSON.stringify(Object.assign({ resolved }, check2.debug)));
+        res.status(409).json({ reason: 'didnt_start', device: dev.name, debug: Object.assign({ resolved }, check2.debug) });
     } catch (e) {
         failed(res, e);
     }

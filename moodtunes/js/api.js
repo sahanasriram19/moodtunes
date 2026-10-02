@@ -254,6 +254,7 @@ function openSpotify(spotifyUrl, opts) {
         if (reason === 'premium_required') markSpotifyFree();
         openSpotifyPopup(spotifyUrl, Object.assign({}, opts, {
             hint: reason === 'no_active_device' ? 'open spotify on any device and moodtunes can play songs there directly'
+                : reason === 'unavailable' ? 'spotify says this version of the song isn’t available in your country — the spotify app may find another copy'
                 : reason === 'didnt_start' ? 'spotify' + (res.data.device ? ' on ' + res.data.device : '') + ' didn’t start the song — open it here instead'
                 : null
         }));
