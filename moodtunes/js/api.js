@@ -32,7 +32,12 @@ function apiCall(endpoint, method, body, callback) {
                 return { status: res.status, data: data };
             });
         })
-        .then(function(result) { callback(null, result); })
+        .then(function(result) {
+            // your moodtunes login has run out (e.g. a laptop you haven't used in a while):
+            // go to the login page instead of quietly failing everywhere
+            if (result.status === 401 && result.data && /token/i.test(result.data.error || '')) return loginExpired();
+            callback(null, result);
+        })
         .catch(function(err) { callback(err, null); });
 }
 
@@ -101,6 +106,15 @@ function apiCallCached(endpoint, callback) {
     }
 
     load();
+}
+
+var _loginExpired = false;
+function loginExpired() {
+    if (_loginExpired || /login\.html/.test(location.pathname)) return;
+    _loginExpired = true;
+    localStorage.removeItem('moodtunes_token');
+    if (window.MoodFX) MoodFX.toast('you’ve been logged out — please log in again');
+    setTimeout(function() { window.location.href = 'login.html'; }, 1200);
 }
 
 function logout() {
@@ -238,7 +252,9 @@ function openSpotify(spotifyUrl, opts) {
         var reason = res && res.data && res.data.reason;
         if (reason === 'premium_required') markSpotifyFree();
         openSpotifyPopup(spotifyUrl, Object.assign({}, opts, {
-            hint: reason === 'no_active_device' ? 'open spotify on any device and moodtunes can play songs there directly' : null
+            hint: reason === 'no_active_device' ? 'open spotify on any device and moodtunes can play songs there directly'
+                : reason === 'didnt_start' ? 'spotify' + (res.data.device ? ' on ' + res.data.device : '') + ' didn’t start the song — open it here instead'
+                : null
         }));
     });
 }

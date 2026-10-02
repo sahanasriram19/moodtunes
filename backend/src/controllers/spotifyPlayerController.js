@@ -23,11 +23,28 @@ function failed(res, e) {
 }
 
 // a device to play on when none is active: the one spotify marks active,
-// otherwise the first one that accepts commands (your laptop app, phone, speaker…)
+// otherwise a computer (the spotify app on your laptop), otherwise anything
+// that accepts commands (phone, speaker…)
 async function pickDevice(userId) {
     const d = await call(userId, 'get', '/me/player/devices');
-    const list = (d && d.devices) || [];
-    return list.find((x) => x.is_active && !x.is_restricted) || list.find((x) => !x.is_restricted) || null;
+    const list = ((d && d.devices) || []).filter((x) => !x.is_restricted);
+    return list.find((x) => x.is_active) || list.find((x) => x.type === 'Computer') || list[0] || null;
+}
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// did spotify really start it? (it sometimes says yes to a sleeping app and then does nothing)
+async function started(userId, uri, isTrack) {
+    for (let i = 0; i < 3; i++) {
+        await wait(700);
+        let st = null;
+        try { st = await call(userId, 'get', '/me/player'); } catch (e) { return { ok: true }; }   // can't check: trust it
+        if (!st) continue;
+        const now = isTrack ? (st.item && st.item.uri) : (st.context && st.context.uri);
+        if (st.is_playing && (!now || now === uri)) return { ok: true, device: st.device && st.device.name, deviceId: st.device && st.device.id };
+        if (i === 2) return { ok: false, device: st.device, };
+    }
+    return { ok: false };
 }
 
 // POST /api/spotify/play   body: { uri } — spotify:track:…, spotify:playlist:… or spotify:album:… (or an open.spotify.com link)
@@ -37,22 +54,34 @@ module.exports.play = async (req, res) => {
     const m = raw.match(/(track|playlist|album)[/:]([A-Za-z0-9]{10,40})/);
     if (!m) return res.status(400).json({ message: 'a spotify track, playlist or album is required' });
     const uri = 'spotify:' + m[1] + ':' + m[2];
-    const body = m[1] === 'track' ? { uris: [uri] } : { context_uri: uri };
+    const isTrack = m[1] === 'track';
+    const body = isTrack ? { uris: [uri] } : { context_uri: uri };
 
     try {
-        await call(userId, 'put', '/me/player/play', body);
-        let device = null;
-        try { const st = await call(userId, 'get', '/me/player'); device = st && st.device && st.device.name; } catch (e) {}
-        return res.json({ ok: true, device });
-    } catch (e) {
-        if (reasonOf(e) !== 'no_active_device') return failed(res, e);
-    }
-    // nothing playing right now: wake the spotify app you have open
-    try {
+        // 1. on whatever is playing now
+        let ok = false;
+        try {
+            await call(userId, 'put', '/me/player/play', body);
+            ok = true;
+        } catch (e) {
+            if (reasonOf(e) !== 'no_active_device') return failed(res, e);
+        }
+        if (ok) {
+            const check = await started(userId, uri, isTrack);
+            if (check.ok) return res.json({ ok: true, device: check.device || null });
+        }
+
+        // 2. nothing active (or it didn't start): wake up a device and play there
         const dev = await pickDevice(userId);
         if (!dev) return res.status(404).json({ reason: 'no_active_device' });
+        try { await call(userId, 'put', '/me/player', { device_ids: [dev.id], play: false }); } catch (e) {
+            if (reasonOf(e) === 'premium_required') throw e;
+        }
+        await wait(600);
         await call(userId, 'put', '/me/player/play?device_id=' + encodeURIComponent(dev.id), body);
-        res.json({ ok: true, device: dev.name });
+        const check2 = await started(userId, uri, isTrack);
+        if (check2.ok) return res.json({ ok: true, device: check2.device || dev.name });
+        res.status(409).json({ reason: 'didnt_start', device: dev.name });
     } catch (e) {
         failed(res, e);
     }
