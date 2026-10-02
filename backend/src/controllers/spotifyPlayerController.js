@@ -33,18 +33,30 @@ async function pickDevice(userId) {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// did spotify really start it? (it sometimes says yes to a sleeping app and then does nothing)
-async function started(userId, uri, isTrack) {
-    for (let i = 0; i < 3; i++) {
-        await wait(700);
-        let st = null;
+// did spotify really start it? (it sometimes says yes to a sleeping app and then
+// does nothing). spotify may swap in another copy of the same song (a different
+// release with its own id), so a new song from the start counts too.
+async function started(userId, uri, isTrack, before) {
+    let st = null;
+    for (let i = 0; i < 5; i++) {
+        await wait(600);
         try { st = await call(userId, 'get', '/me/player'); } catch (e) { return { ok: true }; }   // can't check: trust it
-        if (!st) continue;
+        if (!st || !st.is_playing) continue;
         const now = isTrack ? (st.item && st.item.uri) : (st.context && st.context.uri);
-        if (st.is_playing && (!now || now === uri)) return { ok: true, device: st.device && st.device.name, deviceId: st.device && st.device.id };
-        if (i === 2) return { ok: false, device: st.device, };
+        const changed = !before || !before.uri || (st.item && st.item.uri) !== before.uri;
+        const fromStart = (st.progress_ms || 0) < 8000;
+        if (!now || now === uri || changed || fromStart) {
+            return { ok: true, device: st.device && st.device.name };
+        }
     }
-    return { ok: false };
+    return { ok: false, device: st && st.device && st.device.name };
+}
+
+async function stateNow(userId) {
+    try {
+        const st = await call(userId, 'get', '/me/player');
+        return st ? { uri: st.item && st.item.uri, deviceId: st.device && st.device.id } : null;
+    } catch (e) { return null; }
 }
 
 // POST /api/spotify/play   body: { uri } — spotify:track:…, spotify:playlist:… or spotify:album:… (or an open.spotify.com link)
@@ -58,6 +70,8 @@ module.exports.play = async (req, res) => {
     const body = isTrack ? { uris: [uri] } : { context_uri: uri };
 
     try {
+        const before = await stateNow(userId);
+
         // 1. on whatever is playing now
         let ok = false;
         try {
@@ -67,19 +81,22 @@ module.exports.play = async (req, res) => {
             if (reasonOf(e) !== 'no_active_device') return failed(res, e);
         }
         if (ok) {
-            const check = await started(userId, uri, isTrack);
+            const check = await started(userId, uri, isTrack, before);
             if (check.ok) return res.json({ ok: true, device: check.device || null });
         }
 
-        // 2. nothing active (or it didn't start): wake up a device and play there
+        // 2. nothing active (or it didn't start): play on a specific device,
+        //    waking it up first if it isn't the active one
         const dev = await pickDevice(userId);
         if (!dev) return res.status(404).json({ reason: 'no_active_device' });
-        try { await call(userId, 'put', '/me/player', { device_ids: [dev.id], play: false }); } catch (e) {
-            if (reasonOf(e) === 'premium_required') throw e;
+        if (!dev.is_active) {
+            try { await call(userId, 'put', '/me/player', { device_ids: [dev.id], play: true }); } catch (e) {
+                if (reasonOf(e) === 'premium_required') throw e;
+            }
+            await wait(800);
         }
-        await wait(600);
         await call(userId, 'put', '/me/player/play?device_id=' + encodeURIComponent(dev.id), body);
-        const check2 = await started(userId, uri, isTrack);
+        const check2 = await started(userId, uri, isTrack, before);
         if (check2.ok) return res.json({ ok: true, device: check2.device || dev.name });
         res.status(409).json({ reason: 'didnt_start', device: dev.name });
     } catch (e) {
