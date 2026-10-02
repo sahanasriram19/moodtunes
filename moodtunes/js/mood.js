@@ -21,6 +21,7 @@ var TEMPO = {
 // one set of line icons used everywhere instead of emojis, which look different
 // on every phone and computer. all 24x24, drawn with the current text colour.
 var ICON_PATHS = {
+    queue:      '<path d="M4 6h12M4 11h12M4 16h7"/><path d="M17.5 13.5v6M14.5 16.5h6"/>',
     // moods
     smile:      '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
     rain:       '<path d="M7 15.5a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8a3.5 3.5 0 0 1 .5 7"/><path d="M8 18.5l-1 2.5M12 17.5l-1 3.5M16 18.5l-1 2.5"/>',
@@ -153,6 +154,14 @@ function accent() {
     var a = getComputedStyle(root).getPropertyValue('--accent').trim();
     return a || '#9b6fc2';
 }
+ 
+document.addEventListener('click', function(e) {
+    var q = e.target.closest && e.target.closest('.queue-btn');
+    if (!q) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof playNextInSpotify === 'function') playNextInSpotify(q.dataset.url, q);
+}, true);
  
 // ── set the page mood ──────────────────────────────────
 var currentMood = null;
@@ -571,6 +580,7 @@ function watchPlayback() {
     }
     document.addEventListener('visibilitychange', function() { if (!document.hidden) check(); });
     window.addEventListener('focus', function() { if (!document.hidden) check(); });
+    window.addEventListener('moodtunes:playback-changed', function() { setTimeout(check, 700); });
     check();
 }
  
@@ -589,6 +599,23 @@ function decorate(node) {
             span.innerHTML = icon(moodIcon(chip.dataset.mood, chip.dataset.emoji));
             chip.insertBefore(span, chip.firstChild);
         }
+    });
+ 
+    // "play next" beside every song's ▶ (adds it to your spotify queue)
+    var plays = node.matches && node.matches('.play-btn[data-url], .session-play-btn[data-url]') ? [node] : [];
+    plays = plays.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.play-btn[data-url], .session-play-btn[data-url]') : []));
+    plays.forEach(function(b) {
+        if (b.classList.contains('session-thumb-play') || !/\/track\//.test(b.dataset.url || '')) return;
+        var prev = b.previousElementSibling;
+        if (prev && prev.classList.contains('queue-btn')) return;
+        var q = document.createElement('button');
+        q.type = 'button';
+        q.className = 'queue-btn' + (b.classList.contains('session-play-btn') ? ' queue-btn-sm' : '');
+        q.dataset.url = b.dataset.url;
+        q.title = 'play next in spotify';
+        q.setAttribute('aria-label', 'play next');
+        q.innerHTML = icon('queue');
+        b.parentNode.insertBefore(q, b);
     });
  
     // playlist cards glow in their mood's colour
@@ -773,7 +800,6 @@ function isInView(el) {
     var r = el.getBoundingClientRect();
     return r.top >= 0 && r.bottom <= innerHeight;
 }
- 
 // ── hidden built-in moods ──────────────────────────────
 // users can remove any built-in mood from their page; the choice is saved to
 // the backend (with a local copy so the page doesn't flash hidden chips)
@@ -800,6 +826,7 @@ function applyHidden() {
     }).join(',\n') + (hiddenMoods.length ? ' { display: none !important; }' : '');
     renderRestore();
 }
+ 
 function isHidden(m) { return hiddenMoods.indexOf(m) !== -1; }
  
 function hideMood(m) {
@@ -1319,6 +1346,10 @@ function nowPlaying(container, opts) {
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) { clearTimeout(pollTimer); }
         else if (!stopped && !document.prerendering) { poll(true); }
+    });
+    // a song was just started from moodtunes — show it on the card
+    window.addEventListener('moodtunes:playback-changed', function() {
+        if (!stopped) setTimeout(function() { poll(true); }, 700);
     });
     // coming back from the spotify app (e.g. after pausing there) — check straight away
     window.addEventListener('focus', function() { if (!stopped && !document.hidden && !document.prerendering) poll(true); });
