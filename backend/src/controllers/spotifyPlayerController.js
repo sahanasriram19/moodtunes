@@ -38,18 +38,22 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // release with its own id), so a new song from the start counts too.
 async function started(userId, uri, isTrack, before) {
     let st = null;
-    for (let i = 0; i < 5; i++) {
-        await wait(600);
+    for (let i = 0; i < 8; i++) {
+        await wait(i < 4 ? 600 : 900);
         try { st = await call(userId, 'get', '/me/player'); } catch (e) { return { ok: true }; }   // can't check: trust it
-        if (!st || !st.is_playing) continue;
-        const now = isTrack ? (st.item && st.item.uri) : (st.context && st.context.uri);
-        const changed = !before || !before.uri || (st.item && st.item.uri) !== before.uri;
-        const fromStart = (st.progress_ms || 0) < 8000;
-        if (!now || now === uri || changed || fromStart) {
-            return { ok: true, device: st.device && st.device.name };
-        }
+        if (!st) continue;
+        const item = st.item && st.item.uri;
+        const now = isTrack ? item : (st.context && st.context.uri);
+        const changed = !!item && (!before || !before.uri || item !== before.uri);
+        // the requested song is loaded (it may still be buffering) — that's a start
+        if (now === uri || changed) return { ok: true, device: st.device && st.device.name };
+        if (st.is_playing && (st.progress_ms || 0) < 8000) return { ok: true, device: st.device && st.device.name };
     }
-    return { ok: false, device: st && st.device && st.device.name };
+    return {
+        ok: false,
+        device: st && st.device && st.device.name,
+        debug: st ? { is_playing: !!st.is_playing, item: st.item && st.item.uri, wanted: uri, before: before && before.uri, progress_ms: st.progress_ms } : { state: 'none' }
+    };
 }
 
 async function stateNow(userId) {
@@ -98,7 +102,8 @@ module.exports.play = async (req, res) => {
         await call(userId, 'put', '/me/player/play?device_id=' + encodeURIComponent(dev.id), body);
         const check2 = await started(userId, uri, isTrack, before);
         if (check2.ok) return res.json({ ok: true, device: check2.device || dev.name });
-        res.status(409).json({ reason: 'didnt_start', device: dev.name });
+        console.log('play did not start:', JSON.stringify(check2.debug));
+        res.status(409).json({ reason: 'didnt_start', device: dev.name, debug: check2.debug });
     } catch (e) {
         failed(res, e);
     }

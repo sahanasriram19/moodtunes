@@ -250,6 +250,7 @@ function openSpotify(spotifyUrl, opts) {
             return;
         }
         var reason = res && res.data && res.data.reason;
+        if (window.console) console.info('[moodtunes] play straight in spotify didn’t work:', res ? res.status : err, res && res.data);
         if (reason === 'premium_required') markSpotifyFree();
         openSpotifyPopup(spotifyUrl, Object.assign({}, opts, {
             hint: reason === 'no_active_device' ? 'open spotify on any device and moodtunes can play songs there directly'
