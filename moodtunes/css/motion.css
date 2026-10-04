@@ -53,7 +53,6 @@
 #mood-ambient .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
   opacity: 0.9;
   will-change: transform;
 }
@@ -1146,9 +1145,6 @@
     height: 52px;
   }
  
-  #mood-ambient .blob {
-    filter: blur(50px);
-  }
 }
  
 /* labels sit on top of the stronger mood glow — keep them readable in every mood */
@@ -1476,7 +1472,7 @@ select,
   max-width: none;
   margin: 0;
 }
-
+ 
 .mt-empty-compact .mt-empty-btn {
   margin-top: 8px;
   padding: 6px 14px;
@@ -1503,7 +1499,6 @@ select,
   stroke: #ffffff14;
   stroke-width: 1;
 }
- 
 .mt-empty .ea-label {
   fill: var(--mood);
 }
@@ -3068,17 +3063,21 @@ body {
  
 .mt-cover img {
   position: absolute;
-  inset: -10%;
-  width: 120%;
-  height: 120%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  filter: blur(46px) saturate(1.4) brightness(0.62);
   opacity: 0;
   transition: opacity 1.4s ease;
 }
  
 .mt-cover img.on {
   opacity: 1;
+}
+ 
+/* only if the cover couldn't be pre-blurred in the browser */
+.mt-cover img.raw {
+  filter: blur(40px) saturate(1.4) brightness(0.6);
 }
  
 /* the mood wash: the mood colour over the cover, darker towards the bottom */
@@ -3116,7 +3115,6 @@ body {
    background) only show in the gaps between them, never through them */
 .chip:not(.selected),
 .np-sync,
-.history-tab,
 .restore-chip {
   background-color: rgba(30, 18, 54, 0.88);
 }
@@ -3142,4 +3140,34 @@ body {
  
 .result-item .queue-btn + .result-hint {
   margin-left: 0;
+}
+ 
+/* === HISTORY TABS FOLLOW THE BACKGROUND === */
+/* no boxes: the text sits straight on the page and the active tab gets a
+   soft glow + underline in the current song / mood colour */
+.history-tabs {
+  border-bottom: 1px solid color-mix(in srgb, var(--text-primary, #f0f0f0) 12%, transparent);
+}
+ 
+.history-tab,
+:root:is(:not([data-theme]), [data-theme="default"]) .history-tab {
+  background: transparent !important;
+  border-radius: 10px 10px 0 0;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 55%, transparent);
+  transition: color 0.2s, background-color 0.25s, border-color 0.25s;
+}
+ 
+.history-tab:hover {
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 85%, transparent);
+  background: color-mix(in srgb, var(--np, var(--mood)) 8%, transparent) !important;
+}
+ 
+.history-tab.active {
+  color: var(--text-primary, #f0f0f0);
+  border-bottom-color: var(--np, var(--mood));
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--np, var(--mood)) 22%, transparent),
+    transparent 85%
+  ) !important;
 }

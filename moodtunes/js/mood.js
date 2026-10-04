@@ -182,6 +182,46 @@ function setMood(mood) {
 // image layers crossfade when the song changes; with nothing playing or paused,
 // it fades back to the normal purple background (see .mt-cover in motion.css)
 var coverUrl = null, coverFlip = 0;
+var BLUR_KEY = 'moodtunes_cover_blur';
+ 
+// blurring a full-size cover with a CSS filter every frame is what made page
+// switches stutter, so the blur is baked once into a tiny image instead: shrink
+// the cover to a few pixels, stretch it back up softly, darken it. the result is
+// a ~3KB picture that costs nothing to draw, and it's kept for the next page
+function bakeCover(url, done) {
+    try {
+        var c = JSON.parse(sessionStorage.getItem(BLUR_KEY) || 'null');
+        if (c && c.url === url && c.data) return done(c.data, true);
+    } catch (e) {}
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+        var data = null;
+        try {
+            var small = document.createElement('canvas');
+            small.width = small.height = 18;
+            var sx = small.getContext('2d');
+            sx.imageSmoothingQuality = 'high';
+            sx.drawImage(img, 0, 0, 18, 18);
+            var big = document.createElement('canvas');
+            big.width = big.height = 144;
+            var bx = big.getContext('2d');
+            bx.imageSmoothingEnabled = true;
+            bx.imageSmoothingQuality = 'high';
+            if ('filter' in bx) bx.filter = 'blur(7px) saturate(1.4)';
+            bx.drawImage(small, -12, -12, 168, 168);
+            bx.filter = 'none';
+            bx.fillStyle = 'rgba(0, 0, 0, 0.4)';   // darken so text stays readable
+            bx.fillRect(0, 0, 144, 144);
+            data = big.toDataURL('image/jpeg', 0.85);
+            try { sessionStorage.setItem(BLUR_KEY, JSON.stringify({ url: url, data: data })); } catch (e) {}
+        } catch (e) { data = null; }               // image wouldn't let itself be read
+        done(data, false);
+    };
+    img.onerror = function() { done(null, false); };
+    img.src = url;
+}
+ 
 function setCover(url, instant) {
     url = url || null;
     var box = document.querySelector('#mood-ambient .mt-cover');
@@ -195,24 +235,23 @@ function setCover(url, instant) {
         return;
     }
     var next = imgs[coverFlip % 2], prev = imgs[(coverFlip + 1) % 2];
-    var loader = new Image();
-    loader.onload = function() {
+    bakeCover(url, function(data, cached) {
         if (coverUrl !== url) return;              // another song started meanwhile
         // coming from another page: show it straight away instead of fading in again
-        if (instant) {
+        if (instant || cached) {
             [box, next, prev].forEach(function(el) { el.style.transition = 'none'; });
             requestAnimationFrame(function() { requestAnimationFrame(function() {
                 [box, next, prev].forEach(function(el) { el.style.transition = ''; });
             }); });
         }
         coverFlip++;
-        next.src = url;
+        next.classList.toggle('raw', !data);       // fallback: blur the original in CSS
+        next.src = data || url;
         next.classList.add('on');
         prev.classList.remove('on');
         box.classList.add('has-art');
         root.classList.add('has-cover');
-    };
-    loader.src = url;
+    });
     try {
         var v = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null') || {};
         v.cover = url;
@@ -752,7 +791,7 @@ function skeleton(kind, n) {
     }
     return '';
 }
- 
+
 // ── toast ──────────────────────────────────────────────
 // opts: { action: 'undo', onAction: fn, duration: ms }
 var toastTimer = null;
@@ -903,6 +942,7 @@ function syncHidden() {
         applyHidden();
     });
 }
+ 
 // the moods currently on the page: visible built-ins + the user's custom ones
 function visibleMoods() {
     var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
