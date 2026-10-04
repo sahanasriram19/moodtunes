@@ -176,6 +176,50 @@ function setMood(mood) {
 }
  
 // album-art colour — blended into the ambient glow by the now-playing card
+// ── album art as the page background ───────────────────
+// while a song plays, its cover fills the background (blurred, darkened and
+// washed with the mood colour so picking a mood still re-tints the page). two
+// image layers crossfade when the song changes; with nothing playing or paused,
+// it fades back to the normal purple background (see .mt-cover in motion.css)
+var coverUrl = null, coverFlip = 0;
+function setCover(url, instant) {
+    url = url || null;
+    var box = document.querySelector('#mood-ambient .mt-cover');
+    if (!box) { coverUrl = url; return; }
+    if (url === coverUrl && (!url || box.classList.contains('has-art'))) return;
+    coverUrl = url;
+    var imgs = box.querySelectorAll('img');
+    if (!url) {
+        box.classList.remove('has-art');
+        root.classList.remove('has-cover');
+        return;
+    }
+    var next = imgs[coverFlip % 2], prev = imgs[(coverFlip + 1) % 2];
+    var loader = new Image();
+    loader.onload = function() {
+        if (coverUrl !== url) return;              // another song started meanwhile
+        // coming from another page: show it straight away instead of fading in again
+        if (instant) {
+            [box, next, prev].forEach(function(el) { el.style.transition = 'none'; });
+            requestAnimationFrame(function() { requestAnimationFrame(function() {
+                [box, next, prev].forEach(function(el) { el.style.transition = ''; });
+            }); });
+        }
+        coverFlip++;
+        next.src = url;
+        next.classList.add('on');
+        prev.classList.remove('on');
+        box.classList.add('has-art');
+        root.classList.add('has-cover');
+    };
+    loader.src = url;
+    try {
+        var v = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null') || {};
+        v.cover = url;
+        sessionStorage.setItem(LIVE_KEY, JSON.stringify(v));
+    } catch (e) {}
+}
+ 
 function setTrackColor(c) {
     root.style.setProperty('--np', c || 'var(--mood)');
     root.classList.toggle('has-np', !!c);
@@ -187,7 +231,8 @@ function mountAmbient() {
     var amb = document.createElement('div');
     amb.id = 'mood-ambient';
     amb.setAttribute('aria-hidden', 'true');
-    amb.innerHTML = '<span class="blob blob-a"></span><span class="blob blob-b"></span><span class="blob blob-c"></span><span class="blob blob-d"></span>' +
+    amb.innerHTML = '<div class="mt-cover"><img alt="" /><img alt="" /></div>' +
+        '<span class="blob blob-a"></span><span class="blob blob-b"></span><span class="blob blob-c"></span><span class="blob blob-d"></span>' +
         particlesHTML() + wavesHTML() +
         '<span class="mt-vignette"></span><span class="mt-grain"></span>';
     document.body.insertBefore(amb, document.body.firstChild);
@@ -241,7 +286,8 @@ function setLiveState(st, trackColor) {
     try {
         var prev = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null') || {};
         sessionStorage.setItem(LIVE_KEY, JSON.stringify({
-            state: st, color: trackColor !== undefined ? trackColor : (st === 'idle' ? null : prev.color), at: Date.now()
+            state: st, color: trackColor !== undefined ? trackColor : (st === 'idle' ? null : prev.color),
+            cover: st === 'idle' ? null : (coverUrl || prev.cover || null), at: Date.now()
         }));
     } catch (e) {}
 }
@@ -252,6 +298,7 @@ function restoreLiveState() {
         root.classList.toggle('np-live', v.state === 'playing');
         root.classList.toggle('np-paused', v.state === 'paused');
         if (v.color) setTrackColor(v.color);
+        if (v.cover && v.state !== 'idle') setCover(v.cover, true);
     } catch (e) {}
 }
  
@@ -566,12 +613,13 @@ function watchPlayback() {
             playing = !!(res.data && res.data.playing && res.data.is_playing);
             if (res.status === 401 || res.status === 404) { stopped = true; setLiveState('idle'); return; }
             var d = res.data || {};
-            if (!d.playing || !d.track) { lastTrack = null; setTrackColor(null); setLiveState('idle', null); Beat.stop(); }
+            if (!d.playing || !d.track) { lastTrack = null; setTrackColor(null); setCover(null); setLiveState('idle', null); Beat.stop(); }
             else {
                 setLiveState(d.is_playing ? 'playing' : 'paused');
                 Beat.update(d.track, (d.progress_ms || 0) + (d.is_playing ? halfTrip : 0), d.is_playing);
                 if (d.track.id !== lastTrack) {
                     lastTrack = d.track.id;
+                    setCover(d.track.albumArt);
                     artColor(d.track.albumArt, function(c) { setTrackColor(c); setLiveState(d.is_playing ? 'playing' : 'paused', c); });
                 }
             }
@@ -855,7 +903,6 @@ function syncHidden() {
         applyHidden();
     });
 }
- 
 // the moods currently on the page: visible built-ins + the user's custom ones
 function visibleMoods() {
     var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
@@ -1205,6 +1252,7 @@ function nowPlaying(container, opts) {
         bg.removeAttribute('src');
         if (opts.hideWhenIdle) container.classList.add('np-hidden');
         setTrackColor(null);
+        setCover(null);
         setLiveState('idle', null);
         Beat.stop();
         if (opts.onIdle) opts.onIdle();
@@ -1251,6 +1299,7 @@ function nowPlaying(container, opts) {
             if (t.albumArt) art.src = t.albumArt; else art.removeAttribute('src');
             bg.classList.remove('on');
             if (t.albumArt) bg.src = t.albumArt; else bg.removeAttribute('src');
+            setCover(t.albumArt);
             artColor(t.albumArt, function(c) {
                 card.style.setProperty('--np-color', c || 'var(--mood)');
                 card.style.setProperty('--np-ink', c ? ink(c) : 'var(--mood-ink)');
