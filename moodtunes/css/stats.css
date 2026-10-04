@@ -586,3 +586,26 @@
     animation: none;
   }
 }
+/* calendar days show the album cover of that day's top song; a thin bar in the
+   mood colour along the bottom keeps the mood visible (days without a cover keep the colour fill) */
+.mc-filled.mc-art {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 45%),
+    var(--mc-art) center / cover no-repeat,
+    color-mix(in srgb, var(--mc) 60%, #22133d) !important;
+}
+
+.mc-filled.mc-art::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--mc);
+}
+
+.mc-filled.mc-art .mc-dots {
+  bottom: 9px;
+}

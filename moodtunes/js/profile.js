@@ -8,9 +8,9 @@ var THEMES = {
         label: 'default',
         // night-sky purple: cards are see-through violet glass instead of black
         '--bg-page':        '#120a20',
-        '--bg-card':        'rgba(46, 28, 80, 0.62)',
-        '--bg-input':       'rgba(56, 36, 96, 0.6)',
-        '--bg-hover':       'rgba(70, 46, 118, 0.62)',
+        '--bg-card':        'rgba(42, 26, 74, 0.94)',
+        '--bg-input':       'rgba(48, 30, 84, 0.94)',
+        '--bg-hover':       'rgba(62, 40, 106, 0.95)',
         '--border':         'rgba(196, 170, 255, 0.16)',
         '--border-mid':     'rgba(196, 170, 255, 0.3)',
         '--text-primary':   '#f6f1ff',

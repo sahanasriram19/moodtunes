@@ -247,6 +247,9 @@ function showResults(tracks) {
         item.innerHTML =
             (art ? '<img src="' + MoodFX.esc(art) + '" alt="album art" />' : '<div style="width:44px;height:44px;background:#2a2a2a;border-radius:6px;flex-shrink:0;"></div>') +
             '<div class="result-text"><div class="result-title">' + MoodFX.esc(track.name) + '</div><div class="result-artist">' + MoodFX.esc(artists) + '</div></div>' +
+            (track.external_urls && track.external_urls.spotify
+                ? '<button type="button" class="queue-btn queue-btn-sm" data-url="' + MoodFX.esc(track.external_urls.spotify) + '" title="play next in spotify" aria-label="play next">' + MoodFX.icon('queue') + '</button>'
+                : '') +
             '<span class="result-hint">▶ play</span>';
 
         item.addEventListener('click', function() {

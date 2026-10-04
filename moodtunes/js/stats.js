@@ -212,6 +212,18 @@ var MoodCalendar = (function() {
         return isNaN(t) ? null : keyOf(t.getFullYear(), t.getMonth(), t.getDate());
     }
 
+    // the day's cover: the album of its most-played song in that day's main mood
+    // (any song with a cover if none of those has one)
+    function dayCover(day, mood) {
+        var best = null;
+        day.songs.forEach(function(s) {
+            if (!s.album_art) return;
+            var score = (Number(s.play_count) || 0) + (s.mood === mood ? 1000 : 0);
+            if (!best || score > best.score) best = { score: score, art: s.album_art };
+        });
+        return best ? best.art : null;
+    }
+
     function mainMood(day) {
         var best = null;
         Object.keys(day.moods).forEach(function(m) { if (!best || day.moods[m] > day.moods[best]) best = m; });
@@ -284,8 +296,10 @@ var MoodCalendar = (function() {
             var mood = mainMood(info);
             var others = Object.keys(info.moods).filter(function(m) { return m !== mood; }).slice(0, 3);
             var strength = Math.round(38 + 52 * Math.min(1, info.total / maxPlays));
-            cells += '<button type="button" class="' + cls + ' mc-filled" data-day="' + k + '" ' +
-                'style="--mc:' + MoodFX.color(mood) + ';--mc-mix:' + strength + '%;" ' +
+            var art = dayCover(info, mood);
+            cells += '<button type="button" class="' + cls + ' mc-filled' + (art ? ' mc-art' : '') + '" data-day="' + k + '" ' +
+                'style="--mc:' + MoodFX.color(mood) + ';--mc-mix:' + strength + '%;' +
+                    (art ? '--mc-art:url(&quot;' + MoodFX.esc(art).replace(/[()]/g, function(c) { return c === '(' ? '%28' : '%29'; }) + '&quot;);' : '') + '" ' +
                 'aria-label="' + d + ' ' + MONTHS[view.m] + ': mostly ' + MoodFX.esc(mood) + ', ' + info.total + ' play' + (info.total === 1 ? '' : 's') + '">' +
                 '<span class="mc-num">' + d + '</span>' +
                 (others.length ? '<span class="mc-dots">' + others.map(function(m) { return '<i style="background:' + MoodFX.color(m) + '"></i>'; }).join('') + '</span>' : '') +
