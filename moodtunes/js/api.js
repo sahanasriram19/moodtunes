@@ -33,6 +33,9 @@ function apiCall(endpoint, method, body, callback) {
             });
         })
         .then(function(result) {
+            // the server answered, so it's awake (hides the "waking up" notice, see config.js)
+            try { sessionStorage.setItem('moodtunes_server_awake', String(Date.now())); } catch (e) {}
+            if (window.mtServerAwake) window.mtServerAwake();
             // your moodtunes login has run out (e.g. a laptop you haven't used in a while):
             // go to the login page instead of quietly failing everywhere
             if (result.status === 401 && result.data && /token/i.test(result.data.error || '')) return loginExpired();

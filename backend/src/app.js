@@ -3,6 +3,22 @@ const cors    = require('cors');
 
 const app = express();
 
+// render sits in front of the app as a proxy, so trust its "real visitor IP"
+// header — the login limit (see middlewares/rateLimit.js) counts by that IP
+app.set('trust proxy', 1);
+
+// basic security headers on every response (and don't advertise "Express")
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+    res.set({
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'no-referrer',
+        'Strict-Transport-Security': 'max-age=15552000; includeSubDomains'
+    });
+    next();
+});
+
 app.use(cors({
     origin: [
         'https://moodtunes-rust.vercel.app',

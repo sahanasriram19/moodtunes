@@ -41,7 +41,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('stats') + 'stats</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">a full breakdown of your listening — total plays, unique songs, days active, top mood, a mood calendar (each day coloured by the mood you played most — tap a day to see its songs and notes), mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">a full breakdown of your listening — total plays, unique songs, days active, top mood, a mood calendar (each day shows the cover of the song you played most that day, with a strip in that day\'s mood colour — tap a day to see its songs and notes), mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -51,7 +51,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('note') + 'now playing &amp; sound waves</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. while a song plays, sound waves drift across the background in the colour of its album art — they disappear when you pause.' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. while a song plays, its album cover fills the page background (tinted with your mood colour) and sound waves drift across it in the colour of the art — both fade away when you pause.' +
                     (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches
                         ? ' to make the waves follow the drums and volume, tap <b style="color:#ddd;">sync waves to sound</b> on the card. in the pop-up, pick <b style="color:#ddd;">entire screen</b> (or any window), switch on <b style="color:#ddd;">share with system audio</b> and press share — it works with headphones too. the browser asks again on each page, so tap <b style="color:#ddd;">▶ resume sync</b> after switching pages, and tap the button again to stop. moodtunes only reads the beat and loudness — nothing is recorded or seen.'
                         : ' when spotify\'s beat map is available for a song, the waves hit on its beats and follow its volume automatically.') +
@@ -60,7 +60,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('queue') + 'playing songs &amp; play next</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#ddd;">queue icon</b> beside ▶ to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#ddd;">queue icon</b> beside ▶ (on your logs and on search results) to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +

@@ -1611,7 +1611,6 @@ a:focus-visible,
 #song-history-search:focus-visible {
   outline: none;
 }
- 
 /* shortcut key badges in the help modal */
 kbd.mt-kbd {
   display: inline-block;
@@ -3170,4 +3169,34 @@ body {
     color-mix(in srgb, var(--np, var(--mood)) 22%, transparent),
     transparent 85%
   ) !important;
+}
+/* === CLEAN LIGHT THEME === */
+/* the logo's white "mood" disappears on a light page: flip its lightness
+   (white → near-black) while keeping the purple */
+:root[data-theme="light"] .logo {
+  filter: invert(1) hue-rotate(180deg) saturate(1.3);
+}
+ 
+:root[data-theme="light"] #song-search,
+:root[data-theme="light"] #song-history-search,
+:root[data-theme="light"] .note-textarea {
+  background: #fff !important;
+  color: #111;
+  border-color: #dcd6e6;
+}
+ 
+:root[data-theme="light"] #song-search::placeholder,
+:root[data-theme="light"] #song-history-search::placeholder,
+:root[data-theme="light"] .note-textarea::placeholder {
+  color: #8a8a8a;
+}
+ 
+/* a song's cover still shows behind the page, but washed out pale instead of
+   darkened, so the page stays light and the text stays readable */
+:root[data-theme="light"] .mt-cover::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mood) 12%, rgba(248, 248, 246, 0.8)) 0%,
+    color-mix(in srgb, var(--mood-2) 16%, rgba(248, 248, 246, 0.86)) 100%
+  );
 }
