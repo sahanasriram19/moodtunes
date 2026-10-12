@@ -3764,3 +3764,32 @@ body {
     padding-right: 0 !important;
   }
 }
+ 
+/* === NOTES BESIDE SONG TITLES: EASIER TO READ === */
+/* a light tint of the mood instead of the full colour, so grey and dark moods
+   (chill, hype) are as readable as the bright ones */
+.log-card.mood-card .log-note,
+.song-history-card.mood-card .log-note {
+  color: color-mix(in srgb, var(--mc) 45%, #fff) !important;
+  opacity: 0.95;
+}
+ 
+.log-card.mood-card .edit-note-btn,
+.log-card.mood-card .add-note-btn,
+.song-history-card.mood-card .edit-note-btn,
+.song-history-card.mood-card .add-note-btn {
+  color: color-mix(in srgb, var(--mc) 40%, #e9e4f5) !important;
+}
+ 
+.title-row .log-note {
+  font-size: 12.5px;
+}
+ 
+:root[data-theme="light"] .log-card.mood-card .log-note,
+:root[data-theme="light"] .song-history-card.mood-card .log-note,
+:root[data-theme="light"] .log-card.mood-card .edit-note-btn,
+:root[data-theme="light"] .log-card.mood-card .add-note-btn,
+:root[data-theme="light"] .song-history-card.mood-card .edit-note-btn,
+:root[data-theme="light"] .song-history-card.mood-card .add-note-btn {
+  color: color-mix(in srgb, var(--mc) 65%, #222) !important;
+}

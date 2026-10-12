@@ -228,8 +228,7 @@ function renderGrid(grouped) {
         card.dataset.mood = mood;
         card.innerHTML =
             buildCoverHTML(sorted, mood, 'small') +
-            '<div class="playlist-card-title">' + MoodFX.esc(mood) + ' playlist</div>' +
-            '<div class="playlist-card-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>';
+            '<div class="playlist-card-title">' + MoodFX.esc(mood) + ' playlist</div>';
         card.addEventListener('click', (function(m, s) {
             return function() { openPlaylist(m, s); };
         })(mood, sorted));

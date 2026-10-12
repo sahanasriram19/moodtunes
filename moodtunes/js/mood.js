@@ -965,6 +965,7 @@ function visibleMoods() {
     });
     return list;
 }
+ 
 // "hidden moods — tap to bring back", shown inside the add-mood panel in manage mode
 function renderRestore() {
     var host = document.getElementById('add-mood-section');
@@ -1109,7 +1110,6 @@ function saveSessionToSpotify(sessionId, mood, songs, btn, done) {
         });
     });
 }
- 
 // the button that shows a session's spotify state (used in the summary and on history)
 function sessionSpotifyButton(btn, saved) {
     btn.classList.toggle('saved', !!saved);
@@ -2080,4 +2080,5 @@ window.MoodFX = {
     composeCover: composeCover, spotifyProblem: spotifyProblem, likeButton: likeButton,
     saveSessionToSpotify: saveSessionToSpotify, sessionSpotifyButton: sessionSpotifyButton, reconnectSpotify: reconnectSpotify, trackIdOf: trackIdOf
 };
+ 
 })();
