@@ -35,9 +35,6 @@ function render(data) {
             '<div class="stat-box"><div class="stat-box-num">' + (moods.length > 0 ? moods[0].mood : '—') + '</div><div class="stat-box-label">top mood</div></div>' +
         '</div>';
 
-    // mood calendar (filled in once the per-day logs arrive)
-    html += '<div class="stats-card mood-cal" id="mood-calendar"><div class="stats-card-title">your month in moods</div>' + MoodFX.skeleton('block') + '</div>';
-
     // flashback
     if (flashback.length > 0) {
         var fbMood = flashback[0].mood;
@@ -96,6 +93,9 @@ function render(data) {
         });
         html += '</div>';
     }
+
+    // mood calendar, at the bottom (filled in once the per-day logs arrive)
+    html += '<div class="stats-card mood-cal" id="mood-calendar"><div class="stats-card-title">your month in moods</div>' + MoodFX.skeleton('block') + '</div>';
 
     document.getElementById('stats-content').innerHTML = html;
 }

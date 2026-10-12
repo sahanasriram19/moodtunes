@@ -2102,6 +2102,7 @@ body {
     font-size: 12px;
   }
 }
+ 
 /* === MOOD-TINTED SONG CARDS === */
 /* every logged song picks up its mood's colour: an accent edge, a soft wash and
    a glow under the album art (set up by js/mood.js from the card's mood badge) */
@@ -2280,7 +2281,7 @@ body {
     transform: translateY(100%);
   }
 }
- 
+
 /* buttons that open things give a little press feedback */
 /* (the profile menu lives inside its button, so only the icon shrinks — otherwise
    tapping a menu row would shrink the whole menu) */
@@ -4265,4 +4266,9 @@ body {
   .journal-side .np-upnext-list li {
     max-width: 100%;
   }
+}
+ 
+/* the mood calendar sits at the bottom of the stats page */
+#mood-calendar {
+  margin-top: 16px;
 }
