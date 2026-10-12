@@ -3,8 +3,8 @@ const pool = require('../services/db');
 const spotify = require('./spotifyController');
 
 // ── mood playlists saved to your spotify library ────────
-// "save to spotify" on a playlist creates a private playlist called
-// "moodtunes — <mood>" in your spotify account (or updates the one it made
+// "save to spotify" on a playlist creates a private playlist named after the
+// mood (e.g. "chill") in your spotify account (or updates the one it made
 // before). after that it stays up to date by itself:
 //  - a song logged with that mood for the first time is added to the top
 //  - a song whose last log for that mood is deleted is removed
@@ -77,17 +77,11 @@ async function savedId(userId, mood) {
 async function createPlaylist(userId, mood) {
     let made;
     try {
-        made = await call(userId, 'post', '/me/playlists', {
-            name: 'moodtunes — ' + mood,
-            description: 'your ' + mood + ' playlist, kept up to date by moodtunes',
-            public: false
-        });
+        made = await call(userId, 'post', '/me/playlists', { name: mood, public: false });
     } catch (e) {
         if (e.status !== 404 && e.status !== 405) throw e;
         const me = await call(userId, 'get', '/me');
-        made = await call(userId, 'post', '/users/' + encodeURIComponent(me.id) + '/playlists', {
-            name: 'moodtunes — ' + mood, description: 'your ' + mood + ' playlist, kept up to date by moodtunes', public: false
-        });
+        made = await call(userId, 'post', '/users/' + encodeURIComponent(me.id) + '/playlists', { name: mood, public: false });
     }
     await query(
         'INSERT INTO SpotifyPlaylist (user_id, mood, playlist_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE playlist_id = VALUES(playlist_id)',
@@ -104,13 +98,58 @@ async function replaceAll(userId, playlistId, uris) {
     }
 }
 
+// playlists saved before were called "moodtunes — chill": rename them to just the mood
+async function renameTo(userId, playlistId, name) {
+    try { await call(userId, 'put', '/playlists/' + playlistId, { name: name, description: '' }); }
+    catch (e) {
+        try { await call(userId, 'put', '/playlists/' + playlistId, { name: name }); } catch (e2) { /* keep the old name */ }
+    }
+}
+
+// a cover image for a playlist: a base64 jpeg (spotify allows up to 256 KB)
+async function uploadCover(userId, playlistId, base64) {
+    const data = String(base64 || '').replace(/^data:image\/jpeg;base64,/, '');
+    if (!data || data.length > 350000) throw Object.assign(new Error('cover too big'), { status: 413 });
+    return new Promise((resolve, reject) => {
+        spotify.getUserToken(userId, (err, token) => {
+            if (err) return reject(Object.assign(new Error('Spotify not connected'), { status: 401 }));
+            const go = (t, retried) => axios.put(API + '/playlists/' + playlistId + '/images', data, {
+                headers: { 'Authorization': 'Bearer ' + t, 'Content-Type': 'image/jpeg' }, timeout: 20000
+            })
+                .then(() => resolve())
+                .catch((e) => {
+                    const status = e.response && e.response.status;
+                    if (!retried && status === 401) return spotify.refreshToken(userId, (e2, fresh) => e2 ? reject(e2) : go(fresh, true));
+                    reject(Object.assign(e, { status }));
+                });
+            go(token, false);
+        });
+    });
+}
+
+// spotify answers 403 "Insufficient client scope" when a feature needs a
+// permission the user hasn't given yet (they connected before it existed)
+function needsReconnect(e) {
+    const msg = e && e.response && e.response.data && e.response.data.error && e.response.data.error.message;
+    return (e.status === 403 || (e.response && e.response.status === 403)) && /scope/i.test(String(msg || ''));
+}
+module.exports.needsReconnect = needsReconnect;
+module.exports.fail = fail;
+
 module.exports.call = call;
 module.exports.uriOf = uriOf;
+module.exports.query = query;
+module.exports.items = items;
+module.exports.replaceAll = replaceAll;
+module.exports.renameTo = renameTo;
+module.exports.uploadCover = uploadCover;
 
 const playlistUrl = (id) => 'https://open.spotify.com/playlist/' + id;
+module.exports.playlistUrl = playlistUrl;
 
 function fail(res, e, what) {
     if (e.status === 401) return res.status(401).json({ message: 'connect spotify first' });
+    if (needsReconnect(e)) return res.status(403).json({ reason: 'reconnect', message: 'reconnect spotify to turn this on' });
     if (e.status === 403) return res.status(403).json({ message: 'spotify didn’t allow this — try disconnecting and reconnecting spotify' });
     console.error(what + ' failed:', e.status || '', e.response ? JSON.stringify(e.response.data) : e.message);
     res.status(502).json({ message: 'spotify didn’t respond — try again in a moment' });
@@ -146,6 +185,7 @@ module.exports.savePlaylist = async (req, res) => {
             created = true;
             await replaceAll(userId, id, uris);
         }
+        if (!created) await renameTo(userId, id, mood);
         res.json({ playlist_id: id, url: playlistUrl(id), created, songs: uris.length });
     } catch (e) {
         fail(res, e, 'saving the ' + mood + ' playlist to spotify');
@@ -183,4 +223,19 @@ module.exports.afterLogDeleted = (userId, log) => {
         const uri = uriOf(log.spotify_url) || uriOf(log.song_id);
         if (uri) await items(userId, 'delete', id, { items: [{ uri }] }, { tracks: [{ uri }] });
     })().catch((e) => console.error('could not remove from saved spotify playlist:', e.status || e.message));
+};
+// PUT /api/spotify/playlists/:mood/cover   body: { image: base64 jpeg }
+// the same 4-cover picture the app shows, so the playlist looks the same in spotify
+module.exports.saveCover = async (req, res) => {
+    const userId = res.locals.userId;
+    const mood = String(req.params.mood || '').slice(0, 50);
+    try {
+        const id = await savedId(userId, mood);
+        if (!id) return res.status(404).json({ message: 'save this playlist to spotify first' });
+        await renameTo(userId, id, mood);
+        await uploadCover(userId, id, req.body.image);
+        res.json({ ok: true });
+    } catch (e) {
+        fail(res, e, 'uploading the ' + mood + ' cover');
+    }
 };

@@ -8,6 +8,7 @@ router.get('/active',                     jwt.verifyToken, session.getActiveSess
 router.get('/',                           jwt.verifyToken, session.getAllSessions);
 router.get('/:session_id/songs',          jwt.verifyToken, session.getSessionSongs);
 router.put('/:session_id/end',            jwt.verifyToken, session.endSession);
+router.put('/:session_id/spotify',        jwt.verifyToken, require('../controllers/spotifyExtrasController').saveSession);
 router.post('/songs',                     jwt.verifyToken, session.addSongToSession);
 router.delete('/:session_id',             jwt.verifyToken, session.deleteSession);
 router.delete('/:session_id/songs/:song_id', jwt.verifyToken, session.deleteSongFromSession);

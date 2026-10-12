@@ -420,7 +420,7 @@
 /* === NOW PLAYING CARD === */
 .np-mount {
   transition: opacity 0.4s, max-height 0.5s var(--ease-out), margin 0.4s;
-  max-height: 200px;
+  max-height: 420px;          /* room for the "log as" and "up next" rows */
 }
  
 .np-mount.np-hidden {
@@ -1782,7 +1782,6 @@ body {
     backdrop-filter: blur(18px) saturate(1.4);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
   }
- 
   .tab {
     position: relative;
     display: flex;
@@ -3199,4 +3198,500 @@ body {
     color-mix(in srgb, var(--mood) 12%, rgba(248, 248, 246, 0.8)) 0%,
     color-mix(in srgb, var(--mood-2) 16%, rgba(248, 248, 246, 0.86)) 100%
   );
+}
+/* === SPOTIFY: THE HEART (LIKED SONGS) === */
+/* sits before "play next" on every song; filled green when the song is in your liked songs */
+.like-btn {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-right: 8px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary, #ccc);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+ 
+.like-btn .mt-icon {
+  width: 16px;
+  height: 16px;
+  transition: fill 0.2s;
+}
+ 
+.like-btn:hover {
+  color: #fff;
+  border-color: rgba(29, 185, 84, 0.55);
+  transform: translateY(-1px);
+}
+ 
+.like-btn.liked {
+  color: #1ed760;
+  border-color: rgba(30, 215, 96, 0.55);
+  background: rgba(30, 215, 96, 0.12);
+}
+ 
+.like-btn.liked .mt-icon {
+  fill: currentColor;
+}
+ 
+.like-btn.pop {
+  animation: like-pop 0.45s var(--ease-spring, ease);
+}
+ 
+@keyframes like-pop {
+  40% { transform: scale(1.28); }
+}
+ 
+.like-btn-sm {
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+}
+ 
+.like-btn-sm .mt-icon {
+  width: 13px;
+  height: 13px;
+}
+ 
+/* spotify not connected: no hearts */
+.likes-off .like-btn {
+  display: none;
+}
+ 
+.result-item .like-btn {
+  margin-left: auto;
+}
+ 
+.result-item .like-btn + .queue-btn {
+  margin-left: 0;
+}
+ 
+/* === NOW PLAYING: LOG IN ONE TAP + UP NEXT === */
+.np-card {
+  flex-wrap: wrap;
+}
+ 
+.np-extra {
+  flex: 1 0 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--np-color) 22%, rgba(255, 255, 255, 0.06));
+}
+ 
+.np-idle .np-extra {
+  display: none;
+}
+ 
+.np-logrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+ 
+.np-logas,
+.np-upnext-label {
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 55%, transparent);
+}
+ 
+.np-moods,
+.inbox-moods {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+  mask-image: linear-gradient(90deg, #000 88%, transparent);
+}
+ 
+.np-moods::-webkit-scrollbar,
+.inbox-moods::-webkit-scrollbar {
+  display: none;
+}
+ 
+.np-mood {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mc) 45%, transparent);
+  background: color-mix(in srgb, var(--mc) 12%, rgba(20, 12, 36, 0.6));
+  color: color-mix(in srgb, var(--mc) 55%, var(--text-primary, #fff));
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, border-color 0.2s;
+}
+ 
+.np-mood .mt-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--mc);
+}
+ 
+.np-mood:hover {
+  background: color-mix(in srgb, var(--mc) 26%, rgba(20, 12, 36, 0.6));
+  border-color: var(--mc);
+  transform: translateY(-1px);
+}
+ 
+.np-mood.done {
+  background: var(--mc);
+  border-color: var(--mc);
+  color: var(--mc-ink, #fff);
+}
+ 
+.np-mood.done .mt-icon {
+  color: inherit;
+}
+ 
+.np-mood.usual {
+  border-color: var(--mc);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mc) 45%, transparent);
+}
+ 
+.np-like-slot .like-btn {
+  margin-right: 0;
+}
+ 
+.np-upnext {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+ 
+.np-upnext[hidden] {
+  display: none;
+}
+ 
+.np-upnext-list {
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+ 
+.np-upnext-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 220px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 80%, transparent);
+}
+ 
+.np-upnext-list img {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+ 
+.np-upnext-title,
+.np-upnext-artist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+.np-upnext-artist {
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 50%, transparent);
+}
+ 
+.np-upnext-artist::before {
+  content: "· ";
+}
+ 
+@media (max-width: 768px) {
+  .np-upnext-list li:nth-child(n + 2) {
+    display: none;
+  }
+}
+ 
+/* === JOURNAL: PLAYED ON SPOTIFY, NOT LOGGED YET === */
+.inbox-section {
+  margin-bottom: 30px;
+}
+ 
+.inbox-section[hidden] {
+  display: none;
+}
+ 
+.inbox-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+ 
+.inbox-head .section-label {
+  margin-bottom: 12px;
+}
+ 
+.inbox-count {
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+}
+ 
+.inbox-toggle,
+.inbox-more {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 60%, transparent);
+  border-bottom: 1px solid currentColor;
+  cursor: pointer;
+}
+ 
+.inbox-more {
+  margin-top: 4px;
+}
+ 
+.inbox-more[hidden] {
+  display: none;
+}
+ 
+.inbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ 
+.inbox-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--bg-card, #141414);
+  border: 1px dashed color-mix(in srgb, var(--text-primary, #fff) 18%, transparent);
+  transition: opacity 0.28s, transform 0.28s;
+  animation: enter 0.4s var(--ease-out, ease) backwards;
+}
+ 
+.inbox-item.leaving {
+  opacity: 0;
+  transform: translateX(24px);
+}
+ 
+.inbox-art {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: #2a2a2a;
+}
+ 
+.inbox-info {
+  flex: 1;
+  min-width: 0;
+}
+ 
+.inbox-title {
+  font-size: 14px;
+  color: var(--text-primary, #f0f0f0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+.inbox-meta {
+  font-size: 12px;
+  color: var(--text-secondary, #999);
+  margin: 2px 0 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+.inbox-dismiss {
+  flex-shrink: 0;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--text-muted, #777);
+  font-size: 13px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+ 
+.inbox-dismiss:hover {
+  color: var(--text-primary, #fff);
+}
+ 
+/* === SESSIONS: THIS SESSION SO FAR · WHY THESE RECS · SAVE TO SPOTIFY === */
+.session-so-far {
+  width: 100%;
+  max-width: 640px;
+  margin: 16px auto 0;
+  text-align: left;
+}
+ 
+.session-so-far[hidden] {
+  display: none;
+}
+ 
+.ssf-head {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 60%, transparent);
+  margin-bottom: 8px;
+}
+ 
+.ssf-list {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+ 
+.ssf-list::-webkit-scrollbar {
+  display: none;
+}
+ 
+.ssf-song {
+  flex-shrink: 0;
+  width: 72px;
+  text-decoration: none;
+  animation: enter 0.4s var(--ease-out, ease) backwards;
+}
+ 
+.ssf-song img,
+.ssf-empty {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #2a2a2a;
+  color: var(--text-muted, #777);
+  box-shadow: 0 8px 18px -10px var(--mood);
+}
+ 
+.ssf-title {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 80%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+.rec-why {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 65%, transparent);
+  line-height: 2;
+}
+ 
+.rec-genre {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--mc) 55%, var(--text-primary, #fff));
+  background: color-mix(in srgb, var(--mc) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mc) 40%, transparent);
+}
+ 
+.session-spotify-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(30, 215, 96, 0.5);
+  background: rgba(30, 215, 96, 0.1);
+  color: #7fe8a6;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+ 
+.session-spotify-btn .mt-icon {
+  width: 15px;
+  height: 15px;
+}
+ 
+.session-spotify-btn:hover {
+  background: rgba(30, 215, 96, 0.2);
+  transform: translateY(-1px);
+}
+ 
+.session-spotify-btn.saved {
+  border-color: rgba(30, 215, 96, 0.3);
+  background: transparent;
+}
+ 
+.session-spotify-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+ 
+.sum-spotify {
+  margin: 4px auto 12px;
+}
+ 
+.session-history-header {
+  gap: 8px 14px;
+}
+ 
+.session-history-header .session-spotify-btn {
+  margin-left: auto;
+}
+ 
+@media (max-width: 768px) {
+  .session-history-header .session-spotify-btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin: 6px 0 0;
+  }
+}
+ 
+/* light theme: the new pills and chips on a pale background */
+:root[data-theme="light"] .np-mood {
+  background: color-mix(in srgb, var(--mc) 10%, #fff);
+  color: color-mix(in srgb, var(--mc) 70%, #222);
+}
+ 
+:root[data-theme="light"] .session-spotify-btn {
+  color: #128a3e;
+}
+ 
+:root[data-theme="light"] .like-btn {
+  border-color: rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.03);
 }

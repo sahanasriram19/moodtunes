@@ -22,6 +22,7 @@ var TEMPO = {
 // on every phone and computer. all 24x24, drawn with the current text colour.
 var ICON_PATHS = {
     queue:      '<path d="M4 6h12M4 11h12M4 16h7"/><path d="M17.5 13.5v6M14.5 16.5h6"/>',
+    check:      '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     // moods
     smile:      '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
     rain:       '<path d="M7 15.5a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8a3.5 3.5 0 0 1 .5 7"/><path d="M8 18.5l-1 2.5M12 17.5l-1 3.5M16 18.5l-1 2.5"/>',
@@ -705,6 +706,19 @@ function decorate(node) {
         b.parentNode.insertBefore(q, b);
     });
  
+    // the heart (save to your spotify liked songs) goes in front of play next
+    plays.forEach(function(b) {
+        if (b.classList.contains('session-thumb-play')) return;
+        var id = trackIdOf(b.dataset.url);
+        if (!id) return;
+        var q = b.previousElementSibling;
+        var before = q && q.classList.contains('queue-btn') ? q : b;
+        var prev = before.previousElementSibling;
+        if (prev && prev.classList.contains('like-btn')) return;
+        var h = likeButton(id, b.classList.contains('session-play-btn'));
+        before.parentNode.insertBefore(h, before);
+    });
+ 
     // playlist cards glow in their mood's colour
     var plCards = node.matches && node.matches('.playlist-card[data-mood]') ? [node] : [];
     plCards = plCards.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.playlist-card[data-mood]') : []));
@@ -791,7 +805,7 @@ function skeleton(kind, n) {
     }
     return '';
 }
-
+ 
 // ── toast ──────────────────────────────────────────────
 // opts: { action: 'undo', onAction: fn, duration: ms }
 var toastTimer = null;
@@ -1012,7 +1026,7 @@ function confetti(baseColor) {
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
- 
+
     var palette = [baseColor, baseColor, '#ffffff', 'color-mix(in srgb, ' + baseColor + ' 50%, white)'];
     // canvas can't parse color-mix — resolve colours through a probe element
     var probe = document.createElement('span');
@@ -1072,7 +1086,42 @@ function esc(s) {
 }
  
 // ── animated session summary ───────────────────────────
-function sessionSummary(mood, startTime, endTime, songs) {
+// ── save a session to spotify as "session 1", "session 2", … ──
+// with the same kind of 4-cover picture as the mood playlists.
+// btn shows progress; done(result) gets { number, url } or null
+function saveSessionToSpotify(sessionId, mood, songs, btn, done) {
+    if (!sessionId) return done && done(null);
+    var label = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'saving to spotify…'; }
+    var arts = [];
+    (songs || []).forEach(function(s) { if (s.album_art && arts.indexOf(s.album_art) === -1) arts.push(s.album_art); });
+    composeCover(arts, mood, null, function(image) {
+        apiCall('/sessions/' + sessionId + '/spotify', 'PUT', image ? { image: image } : {}, function(err, res) {
+            if (btn) btn.disabled = false;
+            if (err || !res || res.status >= 400) {
+                if (btn) btn.innerHTML = label;
+                var reason = res && res.data && res.data.reason;
+                if (!spotifyProblem(reason, 'saving to spotify')) toast((res && res.data && res.data.message) || 'couldn’t save to spotify — try again');
+                return done && done(null);
+            }
+            if (res.data.cover === 'reconnect') spotifyProblem('reconnect', 'playlist covers');
+            toast('saved as “session ' + res.data.number + '” in your spotify library', mood);
+            done && done(res.data);
+        });
+    });
+}
+ 
+// the button that shows a session's spotify state (used in the summary and on history)
+function sessionSpotifyButton(btn, saved) {
+    btn.classList.toggle('saved', !!saved);
+    btn.innerHTML = saved
+        ? icon('playlists') + '<span>session ' + saved.number + ' in spotify · <u>open</u></span>'
+        : icon('playlists') + '<span>save to spotify</span>';
+    btn.title = saved ? 'open “session ' + saved.number + '” in spotify' : 'save this session as a playlist in your spotify library';
+}
+ 
+function sessionSummary(mood, startTime, endTime, songs, opts) {
+    opts = opts || {};
     var mins = Math.max(0, Math.floor((endTime - startTime) / 60000));
     var fmt = function(d) { return d.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true }); };
     var c = color(mood);
@@ -1102,6 +1151,7 @@ function sessionSummary(mood, startTime, endTime, songs) {
                 '<div class="sum-stat"><b data-count="' + songs.length + '">0</b><span>song' + (songs.length !== 1 ? 's' : '') + '</span></div>' +
             '</div>' +
             covers +
+            (songs.length && opts.sessionId ? '<button type="button" class="sum-spotify session-spotify-btn" id="sum-spotify"></button>' : '') +
             '<button class="session-summary-close" id="close-summary">done</button>' +
         '</div>';
  
@@ -1118,6 +1168,17 @@ function sessionSummary(mood, startTime, endTime, songs) {
         setTimeout(function() { overlay.remove(); }, 280);
     }
     overlay.querySelector('#close-summary').addEventListener('click', close);
+    var spBtn = overlay.querySelector('#sum-spotify');
+    if (spBtn) {
+        var saved = null;
+        sessionSpotifyButton(spBtn, null);
+        spBtn.addEventListener('click', function() {
+            if (saved) return openSpotify(saved.url);
+            saveSessionToSpotify(opts.sessionId, mood, songs, spBtn, function(r) {
+                if (r) { saved = r; sessionSpotifyButton(spBtn, r); }
+            });
+        });
+    }
     overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
     return overlay;
 }
@@ -1196,6 +1257,11 @@ function nowPlaying(container, opts) {
                 '<button class="np-btn np-toggle" aria-label="pause">' + icon('pause') + '</button>' +
                 '<button class="np-btn np-next" aria-label="next song">' + icon('next') + '</button>' +
             '</div>' +
+            // log what's playing with one tap · the heart · the next songs in your spotify queue
+            '<div class="np-extra">' +
+                '<div class="np-logrow"><span class="np-logas">log as</span><div class="np-moods" role="group" aria-label="log this song as"></div><span class="np-like-slot"></span></div>' +
+                '<div class="np-upnext" hidden><span class="np-upnext-label">up next</span><ol class="np-upnext-list"></ol></div>' +
+            '</div>' +
         '</div>';
  
     var card   = container.querySelector('.np-card');
@@ -1250,6 +1316,69 @@ function nowPlaying(container, opts) {
     }
  
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
+ 
+    // ── one-tap logging ──
+    var moodsBox = container.querySelector('.np-moods');
+    var likeSlot = container.querySelector('.np-like-slot');
+    var loggedNow = {};                  // moods this song was logged with from the card
+ 
+    function drawMoods() {
+        var t = state.track;
+        moodsBox.innerHTML = visibleMoods().map(function(m) {
+            var chip = document.querySelector('.mood-chips .chip[data-mood="' + (window.CSS && CSS.escape ? CSS.escape(m) : m) + '"]');
+            var emoji = chip ? chip.dataset.emoji : '';
+            var done = t && loggedNow[t.id + '|' + m];
+            return '<button type="button" class="np-mood' + (done ? ' done' : '') + '" data-mood="' + esc(m) + '" style="--mc:' + color(m) + '" title="log this song as ' + esc(m) + '">' +
+                icon(done ? 'check' : moodIcon(m, emoji)) + '<span>' + esc(m) + '</span></button>';
+        }).join('');
+    }
+ 
+    moodsBox.addEventListener('click', function(e) {
+        var b = e.target.closest('.np-mood');
+        var t = state.track;
+        if (!b || !t || b.disabled) return;
+        var m = b.dataset.mood;
+        if (loggedNow[t.id + '|' + m]) return toast('already logged as ' + m, m);
+        b.disabled = true;
+        b.classList.add('is-starting');
+        apiCall('/logs', 'POST', {
+            song_id: t.id, title: t.title, artist: t.artist, album_art: t.albumArt,
+            spotify_url: t.spotifyUrl, mood: m, played: true
+        }, function(err, res) {
+            b.disabled = false;
+            b.classList.remove('is-starting');
+            if (err || !res || res.status >= 400) return toast('couldn’t log that — try again');
+            loggedNow[t.id + '|' + m] = true;
+            if (state.track && state.track.id === t.id) drawMoods();
+            flashAdded('✓ logged as ' + m);
+            toast('“' + t.title + '” logged as ' + m, m);
+            window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: { song_id: t.id, mood: m, logged: true } }));
+        });
+    });
+ 
+    // ── up next ──
+    var upnext = container.querySelector('.np-upnext');
+    var upnextList = container.querySelector('.np-upnext-list');
+    var upnextOff = false, upnextTimer = null;
+    function loadUpNext() {
+        if (upnextOff) return;
+        clearTimeout(upnextTimer);
+        upnextTimer = setTimeout(function() {
+            apiCall('/spotify/queue', 'GET', null, function(err, res) {
+                if (err || !res) return;
+                if (res.status === 401 || res.status === 403) { upnextOff = true; upnext.hidden = true; return; }
+                var next = res.status === 200 && res.data && Array.isArray(res.data.next) ? res.data.next : [];
+                upnext.hidden = !next.length;
+                upnextList.innerHTML = next.map(function(t) {
+                    return '<li title="' + esc(t.title + ' — ' + t.artist) + '">' +
+                        (t.albumArt ? '<img src="' + esc(t.albumArt) + '" alt="" />' : '') +
+                        '<span class="np-upnext-title">' + esc(t.title) + '</span><span class="np-upnext-artist">' + esc(t.artist) + '</span></li>';
+                }).join('');
+            });
+        }, 400);
+    }
+    // a song was just added with "play next"
+    window.addEventListener('moodtunes:queue-changed', function() { if (state.track) loadUpNext(); });
  
     function mmss(ms) {
         var s = Math.max(0, Math.floor(ms / 1000));
@@ -1308,6 +1437,7 @@ function nowPlaying(container, opts) {
             album_art: track.albumArt, spotify_url: track.spotifyUrl
         }, function(err, res) {
             if (err || !res || res.status >= 400) return;
+            window.dispatchEvent(new CustomEvent('moodtunes:session-song', { detail: { session_id: s.id, track: track } }));
             flashAdded('+ added to session');
             toast('“' + track.title + '” added to your ' + s.mood + ' session', s.mood);
         });
@@ -1347,6 +1477,10 @@ function nowPlaying(container, opts) {
                 setLiveState(state.playing ? 'playing' : 'paused', c);
             });
             if (opts.onTrack) opts.onTrack(t);
+            drawMoods();
+            likeSlot.innerHTML = '';
+            if (t.id) likeSlot.appendChild(likeButton(t.id));
+            loadUpNext();
         }
         if (state.playing) autoLog(t);
         Beat.update(t, state.base, state.playing);
@@ -1450,6 +1584,170 @@ function nowPlaying(container, opts) {
         markLogged: function(sessionId, songId) { markSessionSong(sessionId, songId); },
         get track() { return state.track; }
     };
+}
+ 
+// ── spotify: reconnecting for new permissions ──────────
+// features added later (hearts, playlist covers) need permissions people who
+// connected spotify earlier haven't given yet. spotify then answers "reconnect";
+// one tap on the toast goes through spotify's connect screen again
+var reconnectAsked = false;
+function reconnectSpotify() {
+    if (typeof BACKEND_URL === 'undefined' || typeof getToken !== 'function') return;
+    window.location.href = BACKEND_URL + '/spotify/login?token=' + encodeURIComponent(getToken() || '');
+}
+// true when the reason was handled (a toast was shown)
+function spotifyProblem(reason, what) {
+    if (reason === 'reconnect') {
+        if (!reconnectAsked) {
+            reconnectAsked = true;
+            toast('reconnect spotify once to turn on ' + (what || 'the new spotify features'), null,
+                { action: 'reconnect', duration: 9000, onAction: reconnectSpotify });
+        }
+        return true;
+    }
+    if (reason === 'not_connected') { toast('connect spotify first'); return true; }
+    return false;
+}
+ 
+function trackIdOf(u) {
+    var m = String(u || '').match(/track[\/:]([A-Za-z0-9]{10,40})/);
+    return m ? m[1] : null;
+}
+ 
+// ── the heart: save songs to your spotify liked songs ──
+// every song with a ▶ gets one. the filled/empty state is checked with spotify
+// in batches (up to 40 songs per request)
+var liked = {};                  // track id → true / false
+var likedWanted = {}, likedTimer = null, likesOff = false;
+ 
+function likeButton(id, small) {
+    var h = document.createElement('button');
+    h.type = 'button';
+    h.className = 'like-btn' + (small ? ' like-btn-sm' : '');
+    h.dataset.id = id;
+    h.setAttribute('aria-pressed', 'false');
+    h.title = 'save to your liked songs';
+    h.setAttribute('aria-label', 'like');
+    h.innerHTML = icon('heart');
+    paintLike(h);
+    if (!(id in liked)) wantLiked(id);
+    return h;
+}
+ 
+function paintLike(b) {
+    var on = liked[b.dataset.id] === true;
+    b.classList.toggle('liked', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.title = on ? 'in your liked songs — tap to remove' : 'save to your liked songs';
+    b.setAttribute('aria-label', on ? 'unlike' : 'like');
+}
+function paintLikes(id) {
+    document.querySelectorAll('.like-btn[data-id="' + id + '"]').forEach(paintLike);
+}
+ 
+function wantLiked(id) {
+    if (likesOff || !id) return;
+    likedWanted[id] = true;
+    clearTimeout(likedTimer);
+    likedTimer = setTimeout(fetchLiked, 250);
+}
+ 
+function fetchLiked() {
+    if (typeof apiCall !== 'function') return;
+    var ids = Object.keys(likedWanted);
+    likedWanted = {};
+    for (var i = 0; i < ids.length; i += 40) {
+        (function(chunk) {
+            apiCall('/spotify/liked?ids=' + chunk.join(','), 'GET', null, function(err, res) {
+                if (err || !res) return;
+                // spotify not connected: no hearts at all
+                if (res.status === 401) { likesOff = true; root.classList.add('likes-off'); return; }
+                if (res.status !== 200 || !res.data) return;    // e.g. needs reconnecting: hearts stay empty until tapped
+                chunk.forEach(function(id) { liked[id] = !!res.data[id]; paintLikes(id); });
+            });
+        })(ids.slice(i, i + 40));
+    }
+}
+ 
+document.addEventListener('click', function(e) {
+    var h = e.target.closest && e.target.closest('.like-btn');
+    if (!h) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (h.disabled) return;
+    var id = h.dataset.id;
+    var was = liked[id] === true;
+    liked[id] = !was;
+    paintLikes(id);
+    if (!was) { h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop'); }
+    h.disabled = true;
+    apiCall('/spotify/liked/' + encodeURIComponent(id), was ? 'DELETE' : 'PUT', null, function(err, res) {
+        h.disabled = false;
+        if (!err && res && res.status === 200) {
+            toast(was ? 'removed from your liked songs' : 'saved to your liked songs');
+            return;
+        }
+        liked[id] = was;                              // spotify said no: put it back
+        paintLikes(id);
+        var reason = res && res.data && res.data.reason;
+        if (!spotifyProblem(reason, 'the heart button')) toast('couldn’t reach spotify — try again');
+    });
+}, true);
+ 
+// ── a playlist cover like the app's: the top 4 album covers in a 2×2 grid ──
+// empty spots get the mood's icon, in the same colours as the covers on the
+// page. calls back with a base64 jpeg (small enough for spotify), or null
+function composeCover(arts, mood, emoji, cb) {
+    var S = 600, H = S / 2;
+    var cv = document.createElement('canvas');
+    cv.width = cv.height = S;
+    var cx = cv.getContext('2d');
+    // the empty-tile colours, taken from the page so every theme matches
+    var tileBg = '#2a2a2a', tileInk = '#9384b8';
+    var sample = document.querySelector('.playlist-cover-empty');
+    if (sample) {
+        var cs = getComputedStyle(sample);
+        if (cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)') tileBg = cs.backgroundColor;
+        if (cs.color) tileInk = cs.color;
+    }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="120" height="120" fill="none" stroke="' + tileInk +
+        '" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (ICON_PATHS[moodIcon(mood, emoji)] || ICON_PATHS.note) + '</svg>';
+    var glyph = new Image();
+    var list = (arts || []).slice(0, 4);
+    var imgs = [null, null, null, null];
+    var left = 5;
+    function done() {
+        if (--left) return;
+        try {
+            for (var i = 0; i < 4; i++) {
+                var x = (i % 2) * H, y = Math.floor(i / 2) * H, im = imgs[i];
+                if (im) {
+                    // crop to a square, like object-fit: cover
+                    var side = Math.min(im.naturalWidth, im.naturalHeight);
+                    cx.drawImage(im, (im.naturalWidth - side) / 2, (im.naturalHeight - side) / 2, side, side, x, y, H, H);
+                } else {
+                    cx.fillStyle = tileBg;
+                    cx.fillRect(x, y, H, H);
+                    if (glyph.complete && glyph.naturalWidth) cx.drawImage(glyph, x + H * 0.3, y + H * 0.3, H * 0.4, H * 0.4);
+                }
+            }
+            var q = 0.86, out = cv.toDataURL('image/jpeg', q);
+            while (out.length > 330000 && q > 0.4) { q -= 0.12; out = cv.toDataURL('image/jpeg', q); }
+            cb(out);
+        } catch (e) { cb(null); }            // a cover image wouldn't let itself be copied
+    }
+    glyph.onload = glyph.onerror = done;
+    glyph.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    for (var i = 0; i < 4; i++) {
+        (function(i) {
+            if (!list[i]) return done();
+            var im = new Image();
+            im.crossOrigin = 'anonymous';
+            im.onload = function() { imgs[i] = im; done(); };
+            im.onerror = function() { done(); };
+            im.src = list[i];
+        })(i);
+    }
 }
  
 // ── empty states ───────────────────────────────────────
@@ -1772,7 +2070,9 @@ window.MoodFX = {
     markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion,
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
-    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive
+    DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive,
+    composeCover: composeCover, spotifyProblem: spotifyProblem, likeButton: likeButton,
+    saveSessionToSpotify: saveSessionToSpotify, sessionSpotifyButton: sessionSpotifyButton, reconnectSpotify: reconnectSpotify, trackIdOf: trackIdOf
 };
  
 })();

@@ -244,6 +244,7 @@ function playNextInSpotify(spotifyUrl, btn) {
         var reason = res && res.data && res.data.reason;
         if (!err && res && res.status === 200) {
             if (btn) { btn.classList.add('done'); setTimeout(function() { btn.classList.remove('done'); }, 1600); }
+            window.dispatchEvent(new CustomEvent('moodtunes:queue-changed'));   // "up next" on the now-playing card
             return window.MoodFX && MoodFX.toast('⏭ playing next in spotify');
         }
         if (reason === 'premium_required') { markSpotifyFree(); return MoodFX.toast('play next needs spotify premium'); }

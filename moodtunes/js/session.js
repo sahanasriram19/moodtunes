@@ -113,6 +113,7 @@ sessionStartBtn.addEventListener('click', function() {
         MoodFX.toast(selectedMood + ' session started — songs you play on spotify will be added automatically', selectedMood);
         if (nowPlayingCard) nowPlayingCard.refresh();
         loadRecommendations(selectedMood);
+        loadSoFar();
     });
 });
 
@@ -127,21 +128,55 @@ function endSession() {
     stopRing();
     apiCall('/sessions/' + activeSession.id + '/end', 'PUT', null, function(err, result) {
         if (err) return;
-        var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date();
+        var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date(), id = activeSession.id;
         var songs = result.data && result.data.songs ? result.data.songs : [];
         activeSession = null;
+        renderSoFar([]);
         localStorage.removeItem('moodtunes_session');
         sessionStartBtn.classList.remove('hidden');
         sessionEndBtn.classList.add('hidden');
         sessionRefreshBtn.classList.add('hidden');
         sessionTimerEl.textContent = '00:00';
-        showSessionSummary(mood, startTime, endTime, songs);
+        showSessionSummary(mood, startTime, endTime, songs, id);
     });
 }
 
-function showSessionSummary(mood, startTime, endTime, songs) {
-    MoodFX.sessionSummary(mood, startTime, endTime, songs);
+function showSessionSummary(mood, startTime, endTime, songs, sessionId) {
+    MoodFX.sessionSummary(mood, startTime, endTime, songs, { sessionId: sessionId });
 }
+
+// ── this session so far ────────────────────────────────
+// the songs added to the running session (by playing them in spotify or with ▶ here)
+var soFar = document.createElement('div');
+soFar.className = 'session-so-far';
+soFar.hidden = true;
+document.getElementById('session-now-playing').insertAdjacentElement('afterend', soFar);
+
+function renderSoFar(songs) {
+    soFar.hidden = !songs.length;
+    if (!songs.length) { soFar.innerHTML = ''; return; }
+    soFar.innerHTML =
+        '<div class="ssf-head">this session · ' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>' +
+        '<div class="ssf-list">' + songs.slice().reverse().map(function(x) {
+            return '<a class="ssf-song" href="' + MoodFX.esc(x.spotify_url || '#') + '" target="_blank" rel="noopener" title="' + MoodFX.esc(x.title + ' — ' + x.artist) + '">' +
+                (x.album_art ? '<img src="' + MoodFX.esc(x.album_art) + '" alt="" />' : '<span class="ssf-empty">' + MoodFX.icon('note') + '</span>') +
+                '<span class="ssf-title">' + MoodFX.esc(x.title) + '</span></a>';
+        }).join('') + '</div>';
+}
+
+var soFarTimer = null;
+function loadSoFar() {
+    clearTimeout(soFarTimer);
+    if (!activeSession) return renderSoFar([]);
+    var id = activeSession.id;
+    soFarTimer = setTimeout(function() {
+        apiCall('/sessions/' + id + '/songs', 'GET', null, function(err, res) {
+            if (err || !res || res.status !== 200 || !activeSession || activeSession.id !== id) return;
+            renderSoFar(Array.isArray(res.data) ? res.data : []);
+        });
+    }, 300);
+}
+window.addEventListener('moodtunes:session-song', loadSoFar);
 
 // ── recommendations ────────────────────────────────────
 function loadRecommendations(mood) {
@@ -154,18 +189,8 @@ function loadRecommendations(mood) {
         }
 
         var logs = result.data;
-        logs.sort(function(a, b) { return b.play_count - a.play_count; });
-        var seed = logs[0];
-
-        var seen = {};
-        var extraArtists = [];
-        logs.forEach(function(l) {
-            var a = l.artist.split(',')[0].trim();
-            if (a !== seed.artist && !seen[a]) { seen[a] = true; extraArtists.push(a); }
-        });
-
-        var recUrl = '/spotify/recommendations?artist=' + encodeURIComponent(seed.artist) + '&title=' + encodeURIComponent(seed.title) + '&mood=' + encodeURIComponent(mood);
-        if (extraArtists.length > 0) recUrl += '&seeds=' + encodeURIComponent(extraArtists.slice(0, 4).join('||'));
+        // picked by the server from the genres of your songs in this mood
+        var recUrl = '/spotify/recommendations?mood=' + encodeURIComponent(mood);
 
         apiCall(recUrl, 'GET', null, function(err2, rec) {
             if (err2 || !rec || !rec.data || !rec.data.tracks || rec.data.tracks.length === 0) {
@@ -195,6 +220,14 @@ function loadRecommendations(mood) {
             }
 
             discoverContent.innerHTML = '';
+            // where these came from: the genres of your songs in this mood
+            var why = document.createElement('p');
+            why.className = 'rec-why';
+            var genres = Array.isArray(rec.data.genres) ? rec.data.genres : [];
+            why.innerHTML = genres.length
+                ? 'picked from the genres in your ' + MoodFX.esc(mood) + ' songs: ' + genres.map(function(g) { return '<span class="rec-genre" style="--mc:' + MoodFX.color(mood) + '">' + MoodFX.esc(g) + '</span>'; }).join('')
+                : 'picked from the artists in your ' + MoodFX.esc(mood) + ' songs';
+            discoverContent.appendChild(why);
             var grid = document.createElement('div');
             grid.className = 'rec-grid';   // columns set in motion.css (6 on desktop, 3 on phones)
 
@@ -230,7 +263,7 @@ document.addEventListener('click', function(e) {
                 session_id: activeSession.id, song_id: e.target.dataset.id,
                 title: e.target.dataset.title, artist: e.target.dataset.artist,
                 album_art: e.target.dataset.art, spotify_url: e.target.dataset.url
-            }, function() {});
+            }, loadSoFar);
         }
     }
     if (e.target.classList.contains('session-add-btn')) {
@@ -285,6 +318,7 @@ if (savedSession) {
             startTimer(new Date(s.startTime));
             nowPlayingCard.refresh();   // log whatever is already playing right away
             loadRecommendations(s.mood);
+            loadSoFar();
         });
     } catch(e) { localStorage.removeItem('moodtunes_session'); }
 }

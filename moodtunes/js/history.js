@@ -220,12 +220,14 @@ function renderSessions() {
                 duration = ' · ' + mins + ' min' + (mins !== 1 ? 's' : '');
             }
 
-            apiCall('/sessions/' + session.id + '/songs', 'GET', null, function(err2, songsResult) {
-                var songs = (!err2 && Array.isArray(songsResult.data)) ? songsResult.data : [];
+            // the card goes in now so sessions stay newest-first; its songs fill in when they arrive
+            var card = document.createElement('div');
+            card.classList.add('session-history-card');
+            card.id = 'session-' + session.id;
+            sessionsList.appendChild(card);
 
-                var card = document.createElement('div');
-                card.classList.add('session-history-card');
-                card.id = 'session-' + session.id;
+            apiCall('/sessions/' + session.id + '/songs', 'GET', null, function(err2, songsResult) {
+                var songs = (!err2 && songsResult && Array.isArray(songsResult.data)) ? songsResult.data : [];
 
                 var songsHTML = songs.length === 0
                     ? '<p class="session-empty">no songs logged during this session</p>'
@@ -251,11 +253,23 @@ function renderSessions() {
                     '<div class="session-history-header">' +
                         '<div class="session-history-mood">' + MoodFX.esc(session.mood) + ' session</div>' +
                         '<div class="session-history-meta">' + startStr + duration + '</div>' +
+                        (songs.length ? '<button type="button" class="session-spotify-btn" data-session-id="' + session.id + '"></button>' : '') +
                         '<button class="session-delete-btn" data-session-id="' + session.id + '">delete session</button>' +
                     '</div>' +
                     songsHTML;
 
-                sessionsList.appendChild(card);
+                // save to spotify as "session N" (or open it, once saved)
+                var spBtn = card.querySelector('.session-spotify-btn');
+                if (spBtn) {
+                    var saved = session.spotify || null;
+                    MoodFX.sessionSpotifyButton(spBtn, saved);
+                    spBtn.addEventListener('click', function() {
+                        if (saved) return openSpotify(saved.url);
+                        MoodFX.saveSessionToSpotify(session.id, session.mood, songs, spBtn, function(r) {
+                            if (r) { saved = r; MoodFX.sessionSpotifyButton(spBtn, r); }
+                        });
+                    });
+                }
             });
         });
     });

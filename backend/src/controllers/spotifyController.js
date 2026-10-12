@@ -103,7 +103,9 @@ module.exports.redirectToSpotify = (req, res, next) => {
             'user-read-recently-played',
             'user-read-playback-state',
             'user-modify-playback-state',
-            'user-library-read'
+            'user-library-read',
+            'user-library-modify',      // the heart button (save to liked songs)
+            'ugc-image-upload'          // playlist covers
         ].join(' ');
 
         const params = new URLSearchParams({
@@ -433,6 +435,10 @@ function getAppToken(callback) {
     })
     .catch(callback);
 }
+
+module.exports.getAppToken = getAppToken;
+module.exports.trackToObj = trackToObj;
+module.exports.resetAppToken = () => { appToken = null; };
 
 module.exports.searchTracks = (req, res, next) => {
     const q = (req.query.q || '').trim();

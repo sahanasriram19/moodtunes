@@ -28,7 +28,7 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));     // room for playlist cover images
 app.use(express.urlencoded({ extended: false }));
 
 // open https://<your-backend>/api/health in a browser to check the server is up

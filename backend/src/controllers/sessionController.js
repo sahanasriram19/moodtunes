@@ -31,7 +31,11 @@ module.exports.endSession = (req, res, next) => {
 module.exports.getAllSessions = (req, res, next) => {
     sessionModel.selectAllByUser({ user_id: res.locals.userId }, (err, results) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
-        res.status(200).json(results);
+        // sessions saved to spotify ("session 3") come with their playlist
+        require('./spotifyExtrasController').sessionPlaylists(res.locals.userId).then((saved) => {
+            results.forEach((s) => { if (saved[s.id]) s.spotify = saved[s.id]; });
+            res.status(200).json(results);
+        });
     });
 };
 
@@ -40,20 +44,22 @@ module.exports.addSongToSession = (req, res, next) => {
         return res.status(400).json({ message: 'song_id and session_id are required' });
     }
     sessionModel.insertSessionLog({
+        user_id:     res.locals.userId,
         session_id:  req.body.session_id,
         song_id:     req.body.song_id,
         title:       req.body.title,
         artist:      req.body.artist,
         album_art:   req.body.album_art,
         spotify_url: req.body.spotify_url
-    }, (err) => {
+    }, (err, result) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
+        if (!result.affectedRows) return res.status(404).json({ message: 'Session not found' });
         res.status(201).json({ message: 'Song added to session' });
     });
 };
 
 module.exports.getSessionSongs = (req, res, next) => {
-    sessionModel.selectSessionLogs({ session_id: req.params.session_id }, (err, results) => {
+    sessionModel.selectSessionLogs({ session_id: req.params.session_id, user_id: res.locals.userId }, (err, results) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         res.status(200).json(results);
     });
@@ -67,7 +73,7 @@ module.exports.deleteSession = (req, res, next) => {
 };
 
 module.exports.deleteSongFromSession = (req, res, next) => {
-    sessionModel.deleteSongFromSession({ session_id: req.params.session_id, song_id: req.params.song_id }, (err) => {
+    sessionModel.deleteSongFromSession({ session_id: req.params.session_id, song_id: req.params.song_id, user_id: res.locals.userId }, (err) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         res.status(200).json({ message: 'Song removed from session' });
     });

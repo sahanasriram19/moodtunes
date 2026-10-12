@@ -26,17 +26,17 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('journal') + 'journal</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by today and yesterday. you can add or edit notes on any log, or delete it — notes sit beside the song title, tap a long one to read it all. play count updates automatically based on what you open from moodtunes in spotify, and each log shows the time you played it (e.g. 1:50 – 2:00 am).</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by today and yesterday. you can add or edit notes on any log, or delete it — notes sit beside the song title, tap a long one to read it all. play count updates automatically based on what you open from moodtunes in spotify, and each log shows the time you played it (e.g. 1:50 – 2:00 am). <b style="color:#ddd;">played on spotify · not logged yet</b> lists songs you played in spotify that aren\'t in your journal — tap a mood to log one on the day you played it (with its play count), or ✕ to hide it.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('playlists') + 'playlists</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">every mood gets its own playlist built from your logged songs. open a playlist to see all tracks, drag to reorder (hold the ⠿ handle on mobile too), and add or edit notes per song. the cover art shows the top 4 songs in the list — newly added songs go to the top, so your latest additions appear on the cover. tap <b style="color:#ddd;">＋ save to spotify</b> to add it to your spotify library (e.g. “moodtunes — chill”) — it then keeps itself up to date as you log songs, and ▶ plays the whole playlist in spotify.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">every mood gets its own playlist built from your logged songs. open a playlist to see all tracks, drag to reorder (hold the ⠿ handle on mobile too), and add or edit notes per song. the cover art shows the top 4 songs in the list — newly added songs go to the top, so your latest additions appear on the cover. tap <b style="color:#ddd;">＋ save to spotify</b> to add it to your spotify library, named after the mood (e.g. “chill”) and with the same 4-cover picture — it then keeps itself (and its cover) up to date as you log songs, and ▶ plays the whole playlist in spotify.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('history') + 'history</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">see everything you\'ve logged organised by date. search for any song to see every day you\'ve listened to it, how many plays, and any notes you left. the sessions tab shows your past listening sessions with the songs played in each.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">see everything you\'ve logged organised by date. search for any song to see every day you\'ve listened to it, how many plays, and any notes you left. the sessions tab shows your past listening sessions with the songs played in each — tap <b style="color:#ddd;">save to spotify</b> on one to keep it as a playlist (“session 1”, “session 2”, …).</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -46,12 +46,12 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('session') + 'session</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood then hit start session to begin a listening session. once started you\'ll get song recommendations based on your mood playlist and similar artists — click ▶ to open in spotify, or + add to log it to your journal. hit ↻ refresh for new recs. end session saves a summary to your history.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood then hit start session to begin a listening session. once started you\'ll get song recommendations picked from the genres of the songs you\'ve logged in that mood — click ▶ to open in spotify, or + add to log it to your journal. hit ↻ refresh for a new batch. songs you play show up under <b style="color:#ddd;">this session</b> as you go. end session shows a summary, where you can save the session to spotify as a playlist.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('note') + 'now playing &amp; sound waves</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. while a song plays, its album cover fills the page background (tinted with your mood colour) and sound waves drift across it in the colour of the art — both fade away when you pause.' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. tap a mood under it to log the song in one tap, and see what\'s <b style="color:#ddd;">up next</b> in your spotify queue. while a song plays, its album cover fills the page background (tinted with your mood colour) and sound waves drift across it in the colour of the art — both fade away when you pause.' +
                     (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches
                         ? ' to make the waves follow the drums and volume, tap <b style="color:#ddd;">sync waves to sound</b> on the card. in the pop-up, pick <b style="color:#ddd;">entire screen</b> (or any window), switch on <b style="color:#ddd;">share with system audio</b> and press share — it works with headphones too. the browser asks again on each page, so tap <b style="color:#ddd;">▶ resume sync</b> after switching pages, and tap the button again to stop. moodtunes only reads the beat and loudness — nothing is recorded or seen.'
                         : ' when spotify\'s beat map is available for a song, the waves hit on its beats and follow its volume automatically.') +
@@ -60,7 +60,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('queue') + 'playing songs &amp; play next</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#ddd;">queue icon</b> beside ▶ (on your logs and on search results) to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#ddd;">queue icon</b> beside ▶ (on your logs and on search results) to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden. the <b style="color:#ddd;">heart</b> saves a song to your spotify liked songs (works on any account) — if it asks you to reconnect spotify, that\'s a one-time step to allow it.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -73,6 +73,7 @@ function showHelpModal() {
                         '<li>mood playlists, saving them to spotify and ▶ opening them in spotify</li>' +
                         '<li>sessions and song recommendations</li>' +
                         '<li>seeing what\'s playing, the sound waves and sync to sound</li>' +
+                        '<li>the heart (liked songs), one-tap logging, not logged yet and saving sessions</li>' +
                     '</ul>' +
                     '<b style="color:#ddd;">needs spotify premium</b>' +
                     '<ul style="margin:4px 0 0 18px;padding:0;">' +

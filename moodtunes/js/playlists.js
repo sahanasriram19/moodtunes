@@ -21,16 +21,56 @@ apiCall('/moods', 'GET', null, function(err, result) {
 });
 
 // ── saved to spotify ───────────────────────────────────
-// "save to spotify" makes a private "moodtunes — <mood>" playlist in your spotify
-// library. the server keeps it up to date when you log or delete songs; reordering
-// here re-saves it. ▶ then opens the whole playlist in spotify.
+// "save to spotify" makes a private playlist named after the mood (e.g. "chill")
+// in your spotify library, with the same 4-cover picture as here. the server keeps
+// it up to date when you log or delete songs; reordering here re-saves it, and the
+// cover is re-uploaded whenever its top 4 songs change. ▶ opens it in spotify.
 var savedSpotify = {};                      // { mood: 'https://open.spotify.com/playlist/…' }
 apiCall('/spotify/playlists', 'GET', null, function(err, res) {
     if (err || !res || res.status !== 200 || !Array.isArray(res.data)) return;
     res.data.forEach(function(p) { savedSpotify[p.mood] = p.url; });
     markSavedCards();
     if (window.__mtRefreshSaveBtn) window.__mtRefreshSaveBtn();
+    syncCovers();
 });
+
+// ── the playlist cover in spotify ──────────────────────
+// the top 4 album covers (in your order), uploaded when they change
+var COVER_KEY = 'moodtunes_cover_' + (localStorage.getItem('moodtunes_username') || '') + '_';
+function coverArts(mood, songIds) {
+    var byId = {};
+    (latestLogs || []).forEach(function(l) { if (l.mood === mood) byId[l.song_id] = l; });
+    var list = songIds
+        ? songIds.map(function(id) { return byId[id]; }).filter(Boolean)
+        : orderedSongs(mood, Object.keys(byId).map(function(k) { return byId[k]; }));
+    return list.slice(0, 4).map(function(x) { return x.album_art || ''; });
+}
+function coverSig(mood, arts) { return arts.join('|') + '|' + (customMoodEmoji[mood] || '') + '|' + (document.documentElement.getAttribute('data-theme') || ''); }
+
+var coverBusy = {};
+function uploadCover(mood, songIds, force) {
+    if (!savedSpotify[mood] || coverBusy[mood]) return;
+    var arts = coverArts(mood, songIds);
+    var sig = coverSig(mood, arts);
+    try { if (!force && localStorage.getItem(COVER_KEY + mood) === sig) return; } catch (e) {}
+    coverBusy[mood] = true;
+    MoodFX.composeCover(arts, mood, customMoodEmoji[mood], function(image) {
+        if (!image) { coverBusy[mood] = false; return; }
+        apiCall('/spotify/playlists/' + encodeURIComponent(mood) + '/cover', 'PUT', { image: image }, function(err, res) {
+            coverBusy[mood] = false;
+            if (!err && res && res.status === 200) {
+                try { localStorage.setItem(COVER_KEY + mood, sig); } catch (e) {}
+                return;
+            }
+            MoodFX.spotifyProblem(res && res.data && res.data.reason, 'playlist covers');
+        });
+    });
+}
+// every saved playlist whose top 4 changed since its cover was last uploaded
+function syncCovers() {
+    if (latestLogs === null || !ordersKnown) return;
+    Object.keys(savedSpotify).forEach(function(mood) { uploadCover(mood); });
+}
 
 function markSavedCards() {
     document.querySelectorAll('.playlist-card[data-mood]').forEach(function(card) {
@@ -62,7 +102,8 @@ function saveToSpotify(mood, songIds, quiet, done) {
         var first = !savedSpotify[mood];
         savedSpotify[mood] = res.data.url;
         markSavedCards();
-        if (!quiet) MoodFX.toast(first ? '“moodtunes — ' + mood + '” is now in your spotify library' : 'updated in spotify', mood);
+        uploadCover(mood, songIds, !quiet);
+        if (!quiet) MoodFX.toast(first ? '“' + mood + '” is now in your spotify library' : 'updated in spotify', mood);
         done && done(res.data.url);
     });
 }
@@ -482,6 +523,7 @@ function renderPlaylists() {
         return;
     }
     renderGrid(groupByMood(latestLogs));
+    syncCovers();
 }
 
 function playlistIsOpen() {
