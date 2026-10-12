@@ -4272,3 +4272,14 @@ body {
 #mood-calendar {
   margin-top: 16px;
 }
+ 
+/* "now playing" and its little moving bars: the same colour as the song title,
+   so they show up on any album colour */
+.np-card .np-label .np-status,
+.np-card .np-eq {
+  color: var(--text-primary, #f6f1ff) !important;
+}
+ 
+.np-card .np-label .np-status {
+  opacity: 0.85;
+}
