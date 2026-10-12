@@ -2116,6 +2116,7 @@ body {
   ) !important;
   transition: border-color 0.2s, box-shadow 0.25s, transform 0.25s var(--ease-out);
 }
+ 
 .log-card.mood-card:hover,
 .song-history-card.mood-card:hover {
   border-color: color-mix(in srgb, var(--mc) 45%, transparent) !important;
@@ -2136,7 +2137,6 @@ body {
 .song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 75%, #fff) !important;
 }
- 
 /* === POP-UP ANIMATIONS === */
 /* profile menu pops out of its button */
 #profile-dropdown {
@@ -4523,4 +4523,71 @@ body {
  
 :root[data-theme="light"] .log-card.mood-card .note-line .log-note {
   color: color-mix(in srgb, var(--mc) 65%, #222) !important;
+}
+ 
+/* song titles stay in the app's normal font (the serif is for headings and notes) */
+.log-card .song-title,
+.np-title,
+.inbox-title,
+.top-song-title,
+.song-history-title {
+  font-family: var(--font-body) !important;
+  font-variation-settings: normal !important;
+  letter-spacing: 0 !important;
+}
+ 
+.log-card .song-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+ 
+.np-title {
+  font-weight: 600 !important;
+}
+ 
+.inbox-title {
+  font-weight: 600 !important;
+}
+ 
+/* === HEADINGS IN OUTFIT === */
+/* the clean rounded font from before, for day headings, section headings,
+   playlist names and stats titles. notes are the normal font in italic */
+:root {
+  --font-serif: 'Outfit', 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+}
+ 
+.timeline-date,
+.section-label,
+.playlist-card-title,
+.playlist-view-title,
+.session-history-mood,
+.stats-card-title,
+.session-summary-title,
+.flashback-title,
+.mt-empty-title,
+.session-hero-label,
+.mc-month {
+  font-variation-settings: normal !important;
+  letter-spacing: -0.01em !important;
+}
+ 
+#logs-list .timeline-date,
+#timeline .timeline-date,
+.playlist-card-title,
+.playlist-view-title {
+  font-weight: 500 !important;
+}
+ 
+.section-label,
+.stats-card-title,
+.session-hero-label {
+  font-weight: 500 !important;
+}
+ 
+.title-row .log-note,
+.note-line .log-note {
+  font-family: var(--font-body) !important;
+  font-variation-settings: normal !important;
+  font-weight: 400 !important;
+  font-size: 13.5px !important;
 }
