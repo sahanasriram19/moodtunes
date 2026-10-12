@@ -879,7 +879,6 @@ function undoable(o) {
 window.addEventListener('pagehide', function() {
     pending.slice().forEach(function(e) { if (!e.done) { e.done = true; e.commit(); } });
 });
- 
 // ── "pick a mood first" nudge (replaces alert()) ───────
 function nudgeMoods(scope) {
     var targets = [];
@@ -2042,7 +2041,7 @@ function watchPage() {
  
     // tap a note that's cut off next to the title to read it in full (tap again to fold it)
     document.addEventListener('click', function(e) {
-        var note = e.target.closest && e.target.closest('.title-row .log-note');
+        var note = e.target.closest && e.target.closest('.title-row .log-note, .note-line .log-note');
         if (note) note.classList.toggle('note-open');
     });
  

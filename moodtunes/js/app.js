@@ -393,8 +393,9 @@ function loadLogs(highlightSongId) {
                     card.innerHTML =
                         '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
                         '<div class="song-info">' +
-                            titleRowHTML(log.title, log.note) +
+                            songTitleHTML(log.title) +
                             '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
+                            (log.note ? noteLineHTML(log.note) : '') +
                             '<div class="log-meta">' +
                                 '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                                 '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +

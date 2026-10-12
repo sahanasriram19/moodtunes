@@ -320,6 +320,20 @@ function titleRowHTML(title, note, noteId) {
     '</div>';
 }
 
+// the song title on its own, and the note on its own line under the artist,
+// with "edit note" right beside it (areaHTML = the edit / add note button area)
+function songTitleHTML(title) {
+    return '<div class="title-row"><div class="song-title">' + MoodFX.esc(title) + '</div></div>';
+}
+function noteLineHTML(note, noteId, areaHTML) {
+    var esc = MoodFX.esc;
+    return '<div class="note-line">' +
+        '<div class="log-note"' + (noteId ? ' id="' + esc(noteId) + '"' : '') + (note ? '' : ' hidden') +
+            ' title="' + esc(note || '') + '">' + (note ? '“' + esc(note) + '”' : '') + '</div>' +
+        (areaHTML || '') +
+    '</div>';
+}
+
 // after a note is saved or cleared, update the note beside the title
 function setTitleNote(noteId, note) {
     var el = document.getElementById(noteId);

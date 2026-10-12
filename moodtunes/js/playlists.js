@@ -278,13 +278,14 @@ function openPlaylist(mood, songs) {
             '<div class="drag-handle" title="drag to reorder">⠿</div>' +
             '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="album art" />' +
             '<div class="song-info">' +
-                titleRowHTML(song.title, song.note, 'pl-note-text-' + song.song_id + '-' + mood) +
+                songTitleHTML(song.title) +
                 '<div class="song-artist">' + MoodFX.esc(song.artist) + '</div>' +
-                '<div class="log-note-area" id="pl-note-area-' + song.song_id + '-' + MoodFX.esc(mood) + '">' +
-                    (song.note
-                        ? '<button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(song.note) + '" data-source="playlist">edit note</button>'
-                        : '<button class="add-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>') +
-                '</div>' +
+                noteLineHTML(song.note, 'pl-note-text-' + song.song_id + '-' + mood,
+                    '<div class="log-note-area" id="pl-note-area-' + song.song_id + '-' + MoodFX.esc(mood) + '">' +
+                        (song.note
+                            ? '<button class="edit-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-note="' + MoodFX.esc(song.note) + '" data-source="playlist">edit note</button>'
+                            : '<button class="add-note-btn" data-song-id="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" data-source="playlist">+ add note</button>') +
+                    '</div>') +
                 '<div class="log-meta">' +
                     '<span class="mood-badge">' + MoodFX.esc(song.mood) + '</span>' +
                     '<span class="plays-text">' + playsLabel(song.play_count) + '</span>' +

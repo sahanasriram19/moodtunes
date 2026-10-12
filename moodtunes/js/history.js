@@ -146,13 +146,14 @@ function renderTimeline(logs) {
                 card.innerHTML =
                     '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
                     '<div class="song-info">' +
-                        titleRowHTML(log.title, log.note, 'note-text-' + log.id) +
+                        songTitleHTML(log.title) +
                         '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
-                        '<div class="log-note-area" id="note-area-' + log.id + '">' +
-                            (log.note
-                                ? '<button class="edit-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-note="' + MoodFX.esc(log.note) + '">edit note</button>'
-                                : '<button class="add-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '">+ add note</button>') +
-                        '</div>' +
+                        noteLineHTML(log.note, 'note-text-' + log.id,
+                            '<div class="log-note-area" id="note-area-' + log.id + '">' +
+                                (log.note
+                                    ? '<button class="edit-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-note="' + MoodFX.esc(log.note) + '">edit note</button>'
+                                    : '<button class="add-note-btn" data-log-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '">+ add note</button>') +
+                            '</div>') +
                         '<div class="log-meta">' +
                             '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                             '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
