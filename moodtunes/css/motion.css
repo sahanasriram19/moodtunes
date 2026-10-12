@@ -1956,7 +1956,7 @@ body {
     position: absolute;
     inset: -10px;
   }
- 
+
   .delete-btn {
     min-width: 36px;
     min-height: 36px;
@@ -2053,7 +2053,7 @@ body {
     column-gap: 12px;
     row-gap: 2px;
   }
-
+ 
   .session-history-mood {
     grid-area: mood;
   }
@@ -4450,4 +4450,23 @@ body {
     max-height: none;
     overflow: visible;
   }
+}
+ 
+/* now playing: the moods sit right under the progress bar */
+.np-card {
+  row-gap: 2px !important;
+}
+ 
+/* "not in your journal yet": a smaller heading and song names */
+.inbox-head .section-label {
+  font-size: 17px !important;
+}
+ 
+.inbox-title {
+  font-size: 13.5px !important;
+}
+ 
+.inbox-meta,
+.inbox-when {
+  font-size: 11.5px !important;
 }
