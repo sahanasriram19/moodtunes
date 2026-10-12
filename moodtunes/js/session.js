@@ -287,6 +287,7 @@ var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('
 // polls spotify, shows the current track, blurs its cover inside the ring,
 // and auto-adds new tracks to the active session
 var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('session-now-playing'), {
+    quickLog: false,             // no "log as" moods here — songs go into the session by themselves
     getSession: function() { return activeSession; },
     onTrack: function(track) {
         if (track.albumArt) {

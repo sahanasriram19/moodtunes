@@ -965,7 +965,6 @@ function visibleMoods() {
     });
     return list;
 }
- 
 // "hidden moods — tap to bring back", shown inside the add-mood panel in manage mode
 function renderRestore() {
     var host = document.getElementById('add-mood-section');
@@ -1026,7 +1025,7 @@ function confetti(baseColor) {
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-
+ 
     var palette = [baseColor, baseColor, '#ffffff', 'color-mix(in srgb, ' + baseColor + ' 50%, white)'];
     // canvas can't parse color-mix — resolve colours through a probe element
     var probe = document.createElement('span');
@@ -1320,6 +1319,13 @@ function nowPlaying(container, opts) {
     // ── one-tap logging ──
     var moodsBox = container.querySelector('.np-moods');
     var likeSlot = container.querySelector('.np-like-slot');
+    // pages that don't want it (the session page): no "log as" row, the heart sits with the controls
+    if (opts.quickLog === false) {
+        var ctr = container.querySelector('.np-controls');
+        ctr.insertBefore(likeSlot, ctr.firstChild);
+        container.querySelector('.np-logrow').remove();
+        card.classList.add('np-nolog');
+    }
     var loggedNow = {};                  // moods this song was logged with from the card
  
     function drawMoods() {
@@ -2074,5 +2080,4 @@ window.MoodFX = {
     composeCover: composeCover, spotifyProblem: spotifyProblem, likeButton: likeButton,
     saveSessionToSpotify: saveSessionToSpotify, sessionSpotifyButton: sessionSpotifyButton, reconnectSpotify: reconnectSpotify, trackIdOf: trackIdOf
 };
- 
 })();

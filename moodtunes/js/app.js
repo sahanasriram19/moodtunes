@@ -526,7 +526,7 @@ inbox.innerHTML =
     '<div class="inbox-list"></div>' +
     '<button type="button" class="inbox-more" hidden></button>';
 var logsSection = document.querySelector('.logs-section');
-logsSection.parentNode.insertBefore(inbox, logsSection);
+logsSection.parentNode.insertBefore(inbox, logsSection.nextSibling);   // below your journal
 
 var INBOX_HIDDEN = 'moodtunes_inbox_hidden_' + (localStorage.getItem('moodtunes_username') || '');
 var INBOX_FOLDED = 'moodtunes_inbox_folded';

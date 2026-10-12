@@ -3283,8 +3283,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid color-mix(in srgb, var(--np-color) 22%, rgba(255, 255, 255, 0.06));
+  padding-top: 2px;
+}
+ 
+/* session page: just "up next" under the song, the heart sits with the controls */
+.np-nolog .np-extra:has(.np-upnext[hidden]) {
+  display: none;
+}
+ 
+.np-controls .np-like-slot .like-btn {
+  margin-right: 4px;
 }
  
 .np-idle .np-extra {
@@ -3433,7 +3441,7 @@ body {
  
 /* === JOURNAL: PLAYED ON SPOTIFY, NOT LOGGED YET === */
 .inbox-section {
-  margin-bottom: 30px;
+  margin-top: 34px;
 }
  
 .inbox-section[hidden] {
@@ -3694,4 +3702,65 @@ body {
 :root[data-theme="light"] .like-btn {
   border-color: rgba(0, 0, 0, 0.14);
   background: rgba(0, 0, 0, 0.03);
+}
+/* === MOOD CHIPS IN THEIR OWN COLOURS === */
+/* every mood button on the page is tinted with its mood colour (like the
+   "log as" chips); the picked one is filled in */
+.mood-chips .chip[data-mood]:not(.selected) {
+  background: color-mix(in srgb, var(--mc) 14%, rgba(24, 14, 44, 0.9)) !important;
+  border-color: color-mix(in srgb, var(--mc) 48%, transparent) !important;
+  color: color-mix(in srgb, var(--mc) 50%, var(--text-primary, #fff)) !important;
+}
+ 
+.mood-chips .chip[data-mood]:not(.selected):hover {
+  background: color-mix(in srgb, var(--mc) 26%, rgba(24, 14, 44, 0.9)) !important;
+  border-color: var(--mc) !important;
+  color: #fff !important;
+}
+ 
+:root[data-theme="light"] .mood-chips .chip[data-mood]:not(.selected) {
+  background: color-mix(in srgb, var(--mc) 10%, #fff) !important;
+  color: color-mix(in srgb, var(--mc) 70%, #222) !important;
+}
+ 
+:root[data-theme="light"] .mood-chips .chip[data-mood]:not(.selected):hover {
+  background: color-mix(in srgb, var(--mc) 20%, #fff) !important;
+  color: #111 !important;
+}
+ 
+/* === "MANAGE MOODS" UP BY THE HEADING, ON THE RIGHT === */
+.mood-section {
+  position: relative;
+}
+ 
+#manage-moods-btn {
+  position: absolute;
+  top: -3px;
+  right: 0;
+  margin-top: 0 !important;
+}
+ 
+@media (max-width: 768px) {
+  /* leave room for the button beside the heading */
+  .mood-section > .section-label {
+    padding-right: 104px;
+  }
+}
+ 
+/* the session page's card is narrower: two songs up next, so the titles fit */
+.np-nolog .np-upnext-list li:nth-child(n + 3) {
+  display: none;
+}
+ 
+@media (max-width: 768px) {
+  /* phones: the heart takes the "previous" button's spot so the song title has room */
+  .np-nolog .np-prev {
+    display: none;
+  }
+ 
+  /* and the card uses the full width of the screen */
+  .session-hero {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }
