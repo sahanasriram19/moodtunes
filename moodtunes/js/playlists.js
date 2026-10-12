@@ -80,7 +80,7 @@ function markSavedCards() {
             badge = document.createElement('span');
             badge.className = 'pl-in-spotify';
             badge.title = 'saved in your spotify library';
-            badge.textContent = '♫ in spotify';
+            badge.textContent = 'in spotify';
             card.appendChild(badge);
         } else if (!saved && badge) badge.remove();
     });
@@ -96,7 +96,7 @@ function spotifyUrlsFor(mood, songIds) {
 function saveToSpotify(mood, songIds, quiet, done) {
     apiCall('/spotify/playlists/' + encodeURIComponent(mood), 'PUT', { songs: spotifyUrlsFor(mood, songIds) }, function(err, res) {
         if (err || !res || res.status >= 400) {
-            if (!quiet) MoodFX.toast((res && res.data && res.data.message) || 'couldn’t save to spotify — try again');
+            if (!quiet) MoodFX.toast((res && res.data && res.data.message) || 'couldn’t save to spotify, try again');
             return done && done(null);
         }
         var first = !savedSpotify[mood];
@@ -128,7 +128,7 @@ function saveOrder(mood, songIds) {
     resaveIfSaved(mood, songIds);
     apiCacheSet('/playlists/order', playlistOrders);
     apiCall('/playlists/order/' + encodeURIComponent(mood), 'PUT', { song_ids: songIds }, function(err, res) {
-        if (err || !res || res.status >= 400) MoodFX.toast('couldn’t sync this order — it will still show on this device');
+        if (err || !res || res.status >= 400) MoodFX.toast('couldn’t sync this order, it will still show on this device');
     });
     try { localStorage.removeItem(LEGACY_ORDER_PREFIX + mood); } catch (e) {}
 }
@@ -228,7 +228,7 @@ function renderGrid(grouped) {
         card.dataset.mood = mood;
         card.innerHTML =
             buildCoverHTML(sorted, mood, 'small') +
-            '<div class="playlist-card-title">' + MoodFX.esc(mood) + ' playlist</div>';
+            '<div class="playlist-card-title">' + MoodFX.esc(mood) + '</div>';
         card.addEventListener('click', (function(m, s) {
             return function() { openPlaylist(m, s); };
         })(mood, sorted));
@@ -251,9 +251,9 @@ function openPlaylist(mood, songs) {
         '<div class="playlist-view-header">' +
             '<div id="playlist-cover-wrap">' + buildCoverHTML(listSongs, mood, 'large') + '</div>' +
             '<div class="playlist-view-info">' +
-                '<div class="playlist-view-title">' + MoodFX.esc(mood) + ' playlist</div>' +
-                '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' · built from your journal</div>' +
-                '<div style="font-size:12px;color:#555;margin-top:4px;">new songs go to the top · drag to reorder · cover shows the top 4</div>' +
+                '<div class="playlist-view-title">' + MoodFX.esc(mood) + '</div>' +
+                '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' from your journal</div>' +
+                '<div class="playlist-view-hint">new songs go to the top, and you can drag to reorder. the cover shows the top 4.</div>' +
                 '<button type="button" class="pl-save-btn" id="pl-save-btn"></button>' +
             '</div>' +
             '<button class="playlist-play-btn" id="sync-btn" title="play in spotify" style="border:none;cursor:pointer;">▶</button>' +
@@ -413,8 +413,8 @@ function openPlaylist(mood, songs) {
     function refreshSaveBtn() {
         var saved = !!savedSpotify[mood];
         saveBtn.classList.toggle('saved', saved);
-        saveBtn.innerHTML = saved ? '✓ in your spotify library · <u>update</u>' : '＋ save to spotify';
-        saveBtn.title = saved ? 'it updates by itself when you log songs — tap to re-save it now' : 'add this playlist to your spotify library';
+        saveBtn.innerHTML = saved ? 'in your spotify library, <u>update it</u>' : 'save to spotify';
+        saveBtn.title = saved ? 'it updates by itself when you log songs, tap to re-save it now' : 'add this playlist to your spotify library';
     }
     window.__mtRefreshSaveBtn = refreshSaveBtn;
     refreshSaveBtn();
@@ -443,7 +443,7 @@ function openPlaylist(mood, songs) {
 function playFromPlaylist(url, songId, mood) {
     openSpotify(url, { onOpen: function() {
         recordPlay(songId, mood, function(ok) {
-            if (!ok) { MoodFX.toast('couldn’t count that play — try again'); return; }
+            if (!ok) { MoodFX.toast('couldn’t count that play, try again'); return; }
             var card = document.getElementById('log-' + songId + '-' + mood);
             var label = card && card.querySelector('.plays-text');
             if (label) {

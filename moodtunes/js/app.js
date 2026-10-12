@@ -15,6 +15,25 @@ var sessionEndBtn = document.getElementById('session-end-btn');
 var sessionLabel  = document.getElementById('session-mood-label');
 var sessionTime   = document.getElementById('session-start-time');
 
+// ── page layout ────────────────────────────────────────
+// wide screens: the journal on the left, now playing and "not in your journal
+// yet" in a column on the right. narrow screens: one column, in the usual order
+var journalMain = document.createElement('div');
+journalMain.className = 'journal-main';
+var journalSide = document.createElement('aside');
+journalSide.className = 'journal-side';
+(function() {
+    var page = document.querySelector('main.container');
+    page.classList.add('journal-layout');
+    journalSide.appendChild(document.getElementById('now-playing'));
+    ['.mood-section', '.search-section', '.logs-section'].forEach(function(sel) {
+        var el = page.querySelector(sel);
+        if (el) journalMain.appendChild(el);
+    });
+    page.appendChild(journalMain);
+    page.appendChild(journalSide);
+})();
+
 // ── custom moods ───────────────────────────────────────
 var EMOJIS = MoodFX.ICON_PICKER;   // [emoji saved to the backend, icon shown]
 var moodChipsContainer = document.querySelector('.mood-chips');
@@ -224,7 +243,7 @@ function doSearch(query) {
     apiCall('/spotify/search-tracks?q=' + encodeURIComponent(query) + '&limit=5', 'GET', null, function(err, res) {
         if (query !== latestQuery) return;               // a newer search already started
         if (err || !res || res.status !== 200 || !Array.isArray(res.data)) {
-            searchResults.innerHTML = MoodFX.emptyState({ art: 'offline', compact: true, title: 'search is taking a break', text: 'couldn’t reach spotify — try again in a moment' });
+            searchResults.innerHTML = MoodFX.emptyState({ art: 'offline', compact: true, title: 'search is taking a break', text: 'couldn’t reach spotify, try again in a moment' });
             return;
         }
         showResults(res.data);
@@ -326,7 +345,7 @@ function showResults(tracks) {
 // ── log song ───────────────────────────────────────────
 function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
     apiCall('/logs', 'POST', { song_id: songId, title: title, artist: artist, album_art: albumArt, spotify_url: spotifyUrl, mood: mood, note: note || '', tz_offset: tzOffset() }, function(err) {
-        if (err) { console.error('log error:', err); MoodFX.toast('couldn’t log that song — try again'); return; }
+        if (err) { console.error('log error:', err); MoodFX.toast('couldn’t log that song, try again'); return; }
         searchResults.innerHTML = '';
         songSearch.value = '';
         MoodFX.toast('logged “' + title + '” as ' + mood, mood);
@@ -343,7 +362,7 @@ function loadLogs(highlightSongId) {
         var logs = Array.isArray(result.data) ? result.data : [];
         logsList.innerHTML = '';
         if (logs.length === 0) {
-            logsList.innerHTML = MoodFX.emptyState({ title: 'your journal is empty', text: 'pick how you’re feeling, then search for the song you’re listening to — it’ll show up here', action: { label: 'search for a song', focus: '#song-search' } });
+            logsList.innerHTML = MoodFX.emptyState({ title: 'your journal is empty', text: 'pick how you’re feeling and search for the song you’re listening to. it’ll show up here', action: { label: 'search for a song', focus: '#song-search' } });
             return;
         }
 
@@ -360,7 +379,7 @@ function loadLogs(highlightSongId) {
             .forEach(function(key) {
                 var dateLabel = document.createElement('div');
                 dateLabel.classList.add('timeline-date');
-                dateLabel.textContent = formatDateOnly(key);
+                dateLabel.textContent = formatDateOnly(new Date(key));
                 logsList.appendChild(dateLabel);
 
                 grouped[key].forEach(function(log) {
@@ -396,7 +415,7 @@ document.addEventListener('click', function(e) {
         openSpotify(playBtn.dataset.url, { onOpen: function() {
             recordPlay(playBtn.dataset.songId, playBtn.dataset.mood, function(ok) {
                 if (ok) loadLogs(playBtn.dataset.songId);
-                else MoodFX.toast('couldn’t count that play — try again');
+                else MoodFX.toast('couldn’t count that play, try again');
             });
         } });
     }
@@ -419,7 +438,7 @@ function startSession(mood) {
         activeSession = { id: result.data.session_id, mood: mood, startTime: new Date() };
         localStorage.setItem('moodtunes_session', JSON.stringify({ id: result.data.session_id, mood: mood, startTime: new Date().toISOString() }));
         MoodFX.setMood(mood);
-        MoodFX.toast(mood + ' session started — songs you play on spotify will be added automatically', mood);
+        MoodFX.toast(mood + ' session started. songs you play on spotify are added automatically', mood);
         showSessionPanel(mood);
     });
 }
@@ -521,12 +540,11 @@ var inbox = document.createElement('section');
 inbox.className = 'inbox-section';
 inbox.hidden = true;
 inbox.innerHTML =
-    '<div class="inbox-head"><p class="section-label">played on spotify · not logged yet <span class="inbox-count"></span></p>' +
+    '<div class="inbox-head"><p class="section-label">not in your journal yet <span class="inbox-count"></span></p>' +
     '<button type="button" class="inbox-toggle"></button></div>' +
     '<div class="inbox-list"></div>' +
     '<button type="button" class="inbox-more" hidden></button>';
-var logsSection = document.querySelector('.logs-section');
-logsSection.parentNode.insertBefore(inbox, logsSection.nextSibling);   // below your journal
+journalSide.appendChild(inbox);       // under now playing (below the journal on phones)
 
 var INBOX_HIDDEN = 'moodtunes_inbox_hidden_' + (localStorage.getItem('moodtunes_username') || '');
 var INBOX_FOLDED = 'moodtunes_inbox_folded';
@@ -551,7 +569,7 @@ function renderInbox() {
     if (!items.length) return;
     var folded = inboxFolded();
     inbox.classList.toggle('folded', folded);
-    inbox.querySelector('.inbox-count').textContent = '(' + items.length + ')';
+    inbox.querySelector('.inbox-count').textContent = items.length;
     inbox.querySelector('.inbox-toggle').textContent = folded ? 'show' : 'hide';
     var shown = inboxAll ? items : items.slice(0, 3);
     var more = inbox.querySelector('.inbox-more');
@@ -566,7 +584,8 @@ function renderInbox() {
             (it.albumArt ? '<img class="inbox-art" src="' + MoodFX.esc(it.albumArt) + '" alt="" />' : '<div class="inbox-art"></div>') +
             '<div class="inbox-info">' +
                 '<div class="inbox-title">' + MoodFX.esc(it.title) + '</div>' +
-                '<div class="inbox-meta">' + MoodFX.esc(it.artist) + ' · ' + it.plays + ' play' + (it.plays !== 1 ? 's' : '') + ' · ' + inboxWhen(it) + '</div>' +
+                '<div class="inbox-meta">' + MoodFX.esc(it.artist) + '</div>' +
+                '<div class="inbox-when">' + (it.plays > 1 ? it.plays + ' plays, ' : '') + inboxWhen(it) + '</div>' +
                 '<div class="inbox-moods" role="group" aria-label="log as">' + order.map(function(m) {
                     var chip = document.querySelector('.mood-chips .chip[data-mood="' + CSS.escape(m) + '"]');
                     return '<button type="button" class="np-mood' + (m === it.usual_mood ? ' usual' : '') + '" data-mood="' + MoodFX.esc(m) + '" style="--mc:' + MoodFX.color(m) + '"' +
@@ -627,10 +646,10 @@ inbox.addEventListener('click', function(e) {
         if (err || !res || res.status >= 400) {
             el.querySelectorAll('.np-mood').forEach(function(x) { x.disabled = false; });
             b.classList.remove('is-starting');
-            return MoodFX.toast('couldn’t log that — try again');
+            return MoodFX.toast('couldn’t log that, try again');
         }
         var n = res.data && res.data.plays || it.plays;
-        MoodFX.toast('“' + it.title + '” logged as ' + mood + (n > 1 ? ' · ' + n + ' plays' : ''), mood);
+        MoodFX.toast('“' + it.title + '” logged as ' + mood + (n > 1 ? ', ' + n + ' plays' : ''), mood);
         dropInboxItem(el, key);
         loadLogs(it.id);
     });

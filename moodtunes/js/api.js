@@ -92,7 +92,7 @@ function apiCallCached(endpoint, callback) {
         var failed = err || !result || result.status !== 200;
         var serverTrouble = err || (result && result.status >= 500);
         if (failed && serverTrouble && !cachedText && attempt < RETRY_DELAYS.length) {
-            if (attempt === 0 && window.MoodFX) MoodFX.toast('waking up the server — this can take up to a minute');
+            if (attempt === 0 && window.MoodFX) MoodFX.toast('waking up the server, this can take up to a minute');
             setTimeout(load, RETRY_DELAYS[attempt++]);
             return;
         }
@@ -116,7 +116,7 @@ function loginExpired() {
     if (_loginExpired || /login\.html/.test(location.pathname)) return;
     _loginExpired = true;
     localStorage.removeItem('moodtunes_token');
-    if (window.MoodFX) MoodFX.toast('you’ve been logged out — please log in again');
+    if (window.MoodFX) MoodFX.toast('you’ve been logged out. log in again to carry on');
     setTimeout(function() { window.location.href = 'login.html'; }, 1200);
 }
 
@@ -250,7 +250,7 @@ function playNextInSpotify(spotifyUrl, btn) {
         if (reason === 'premium_required') { markSpotifyFree(); return MoodFX.toast('play next needs spotify premium'); }
         if (reason === 'no_active_device') return MoodFX.toast('start playing something in spotify first, then add songs to play next');
         if (reason === 'not_connected') return MoodFX.toast('connect spotify to use play next');
-        MoodFX.toast('couldn’t add that to your queue — try again');
+        MoodFX.toast('couldn’t add that to your queue, try again');
     });
 }
 
@@ -380,9 +380,9 @@ function formatDateOnly(isoString) {
         return 'yesterday';
     }
 
-    return date.toLocaleDateString('en-SG', {
-        month: 'short',
-        day: 'numeric'
-    });
+    // older days read like a diary entry: "friday 10 october" (with the year if it isn't this one)
+    var opts = { weekday: 'long', day: 'numeric', month: 'long' };
+    if (date.getFullYear() !== today.getFullYear()) opts.year = 'numeric';
+    return date.toLocaleDateString('en-GB', opts).replace(',', '').toLowerCase();
 }
 // service worker disabled

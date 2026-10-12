@@ -137,7 +137,7 @@ function renderTimeline(logs) {
         .forEach(function(key) {
             var group = document.createElement('div');
             group.classList.add('timeline-group');
-            group.innerHTML = '<div class="timeline-date">' + formatDateOnly(key) + '</div>';
+            group.innerHTML = '<div class="timeline-date">' + formatDateOnly(new Date(key)) + '</div>';
 
             grouped[key].forEach(function(log) {
                 var card = document.createElement('div');
@@ -217,7 +217,7 @@ function renderSessions() {
             var duration = '';
             if (session.end_time) {
                 var mins = Math.floor((new Date(session.end_time) - new Date(session.start_time)) / 60000);
-                duration = ' · ' + mins + ' min' + (mins !== 1 ? 's' : '');
+                duration = ', ' + mins + ' min' + (mins !== 1 ? 's' : '');
             }
 
             // the card goes in now so sessions stay newest-first; its songs fill in when they arrive
@@ -299,7 +299,7 @@ document.addEventListener('click', function(e) {
         openSpotify(playBtn.dataset.url, { onOpen: function() {
             recordPlay(playBtn.dataset.songId, playBtn.dataset.mood, function(ok) {
                 if (ok) refreshHistory();
-                else MoodFX.toast('couldn’t count that play — try again');
+                else MoodFX.toast('couldn’t count that play, try again');
             });
         } });
     }

@@ -1924,7 +1924,7 @@ body {
   .container {
     margin-top: 16px;
   }
-
+ 
   /* === TAP TARGETS (PHONES) === */
   /* small controls get an invisible 40px+ touch area without looking any bigger */
   .delete-btn,
@@ -2102,7 +2102,6 @@ body {
     font-size: 12px;
   }
 }
- 
 /* === MOOD-TINTED SONG CARDS === */
 /* every logged song picks up its mood's colour: an accent edge, a soft wash and
    a glow under the album art (set up by js/mood.js from the card's mood badge) */
@@ -3853,4 +3852,417 @@ body {
  
 .np-body > .np-progress {
   margin-top: 8px;
+}
+/* =====================================================================
+   QUIETER AND MORE PERSONAL
+   one bold thing (the album art behind the page and the waves); everything
+   else reads like a diary: a soft serif for songs and headings, rows instead
+   of glowing boxes, normal-case headings, no decorative glows or lifts
+   ===================================================================== */
+:root {
+  --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --rule: color-mix(in srgb, var(--text-primary, #f0f0f0) 10%, transparent);
+}
+ 
+/* -- fewer effects -- */
+#mood-ambient .mt-particles,
+#mood-ambient .mt-grain,
+#mood-ambient .mt-vignette {
+  display: none !important;
+}
+ 
+.mt-in {
+  animation: none !important;
+}
+ 
+.log-card:hover,
+.song-history-card:hover,
+.playlist-card:hover,
+.rec-tile:hover,
+.stats-card:hover,
+.session-history-card:hover,
+.queue-btn:hover,
+.like-btn:hover,
+.np-mood:hover,
+.session-spotify-btn:hover,
+.chip:hover {
+  transform: none !important;
+}
+ 
+.log-card .song-art,
+.log-card.mood-card .song-art,
+.song-history-card.mood-card .song-history-header img,
+.ssf-song img,
+.ssf-empty,
+.np-art-wrap,
+.np-toggle,
+.stat-box,
+.playlist-card,
+.chip.selected {
+  box-shadow: none !important;
+}
+ 
+/* -- type: a soft serif for what you'd read, the sans for everything else -- */
+.timeline-date,
+.section-label,
+.playlist-card-title,
+.playlist-view-title,
+.session-history-mood,
+.stats-card-title,
+.session-summary-title,
+.flashback-title,
+.mt-empty-title,
+.np-title,
+.log-card .song-title,
+.song-history-title,
+.top-song-title,
+.inbox-title,
+.session-hero-label,
+.mc-month {
+  font-family: var(--font-serif) !important;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  letter-spacing: -0.005em;
+}
+ 
+/* no all-caps labels */
+.section-label,
+.stats-card-title,
+.session-hero-label,
+.ssf-head,
+.np-label,
+.np-logas,
+.np-upnext-label,
+.flashback-label,
+.stat-box-label,
+.stat-label,
+.history-tab,
+.ring-sub {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+ 
+.section-label {
+  font-size: 21px !important;
+  font-weight: 400 !important;
+  color: var(--text-primary, #f0f0f0) !important;
+  opacity: 1 !important;
+  margin-bottom: 14px !important;
+}
+ 
+.stats-card-title {
+  font-size: 19px !important;
+  font-weight: 400 !important;
+  color: var(--text-primary, #f0f0f0) !important;
+  opacity: 0.92;
+}
+ 
+.session-hero-label {
+  font-size: 20px !important;
+  font-weight: 400 !important;
+}
+ 
+.np-label,
+.np-logas,
+.np-upnext-label,
+.ssf-head {
+  font-size: 12.5px !important;
+}
+ 
+.stat-box-label,
+.stat-label {
+  font-size: 13px !important;
+}
+ 
+/* -- the journal reads like a diary: a day, then its songs -- */
+#logs-list .timeline-date,
+#timeline .timeline-date {
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 36px 0 4px;
+  color: var(--text-primary, #f0f0f0);
+}
+ 
+#logs-list .timeline-date:first-child,
+#timeline .timeline-date:first-child {
+  margin-top: 0;
+}
+ 
+#timeline .timeline-group + .timeline-group {
+  margin-top: 36px;
+}
+ 
+#logs-list .log-card,
+#timeline .log-card,
+.song-history-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 14px 2px !important;
+  gap: 16px;
+}
+ 
+#logs-list .log-card .song-art,
+#timeline .log-card .song-art {
+  width: 54px;
+  height: 54px;
+  border-radius: 4px;
+}
+ 
+.log-card .song-title {
+  font-size: 18px !important;
+  font-weight: 500 !important;
+}
+ 
+/* notes look like something you wrote in the margin */
+.title-row .log-note {
+  font-family: var(--font-serif);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-size: 15px;
+  font-weight: 300;
+}
+ 
+/* the mood is a coloured dot and a word, not a pill */
+#logs-list .mood-badge,
+#timeline .mood-badge,
+.song-history-card .mood-badge {
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: color-mix(in srgb, var(--mc, #aaa) 55%, var(--text-primary, #fff)) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+ 
+#logs-list .mood-badge::before,
+#timeline .mood-badge::before,
+.song-history-card .mood-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mc, #aaa);
+}
+ 
+#logs-list .log-meta,
+#timeline .log-meta {
+  gap: 14px;
+}
+ 
+/* quieter row buttons: the heart and play next are plain icons, ▶ stays green */
+#logs-list .like-btn,
+#logs-list .queue-btn,
+#timeline .like-btn,
+#timeline .queue-btn,
+.song-history-card .like-btn,
+.song-history-card .queue-btn,
+.result-item .like-btn,
+.result-item .queue-btn {
+  background: transparent;
+  border-color: transparent;
+}
+ 
+:root[data-theme="light"] #logs-list .log-card,
+:root[data-theme="light"] #timeline .log-card {
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+}
+ 
+/* -- mood chips: a coloured dot, the icon only on the one you picked -- */
+.chip:not(.selected) .chip-emoji .mt-icon,
+.np-mood:not(.done) .mt-icon {
+  display: none;
+}
+ 
+.chip:not(.selected) .chip-emoji::before,
+.np-mood:not(.done)::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mc);
+}
+ 
+/* -- "not in your journal yet": rows too -- */
+.inbox-item {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+  padding: 12px 0 !important;
+  animation: none !important;
+}
+ 
+.inbox-meta {
+  margin: 1px 0 0;
+}
+ 
+.inbox-item {
+  align-items: flex-start !important;
+}
+ 
+.inbox-when {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  margin: 2px 0 8px;
+}
+ 
+.inbox-count {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  margin-left: 4px;
+}
+ 
+/* -- playlists look like record sleeves: the mood name on the cover -- */
+.playlist-card {
+  border-radius: 3px !important;
+  overflow: hidden;
+  padding: 0 !important;
+  background: #000 !important;
+  border: 0 !important;
+}
+ 
+.playlist-card .playlist-cover {
+  border-radius: 0 !important;
+}
+ 
+.playlist-card-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 !important;
+  padding: 48px 14px 12px;
+  font-size: 26px !important;
+  font-weight: 500 !important;
+  line-height: 1.1;
+  color: #fff !important;
+  text-transform: lowercase;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72));
+}
+ 
+.pl-in-spotify {
+  top: 10px;
+  right: 10px;
+  padding: 2px 8px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #8ef0b4;
+  font-weight: 500;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+ 
+.playlist-view-title {
+  font-size: 38px !important;
+  font-weight: 400 !important;
+  text-transform: lowercase;
+}
+ 
+.playlist-view-hint {
+  font-size: 12.5px;
+  color: var(--text-muted, #888);
+  margin-top: 4px;
+}
+ 
+/* -- journal page: two columns on wide screens -- */
+.journal-layout {
+  display: flex;
+  flex-direction: column;
+}
+ 
+.journal-layout .journal-main,
+.journal-layout .journal-side {
+  display: contents;
+}
+ 
+.journal-layout #now-playing { order: 0; }
+.journal-layout .mood-section { order: 1; }
+.journal-layout .search-section { order: 2; }
+.journal-layout .logs-section { order: 3; }
+.journal-layout .inbox-section { order: 4; }
+ 
+@media (min-width: 1100px) {
+  .container.journal-layout {
+    max-width: 1180px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    column-gap: 56px;
+    align-items: start;
+  }
+ 
+  .journal-layout .journal-main,
+  .journal-layout .journal-side {
+    display: block;
+  }
+ 
+  .journal-side {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-bottom: 12px;
+  }
+ 
+  .journal-side::-webkit-scrollbar {
+    display: none;
+  }
+ 
+  .journal-side #now-playing {
+    margin-bottom: 28px;
+  }
+ 
+  .journal-side .inbox-section {
+    margin-top: 0;
+  }
+ 
+  /* the now-playing card stacks in the narrow column */
+  .journal-side .np-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+ 
+  .journal-side .np-body > .np-controls {
+    grid-column: 1;
+    grid-row: 4;
+    justify-self: start;
+    margin-top: 10px;
+  }
+ 
+  .journal-side .np-body > .np-progress {
+    grid-row: 5;
+  }
+ 
+  .journal-side .np-moods,
+  .journal-side .inbox-moods {
+    flex-wrap: wrap;
+    overflow: visible;
+    mask-image: none;
+  }
+ 
+  .journal-side .np-logrow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+ 
+  .journal-side .np-upnext {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+ 
+  .journal-side .np-upnext-list {
+    flex-direction: column;
+    gap: 7px;
+  }
+ 
+  .journal-side .np-upnext-list li {
+    max-width: 100%;
+  }
 }

@@ -110,7 +110,7 @@ sessionStartBtn.addEventListener('click', function() {
         sessionRefreshBtn.classList.remove('hidden');
         startTimer(startTime);
         MoodFX.setMood(selectedMood);
-        MoodFX.toast(selectedMood + ' session started — songs you play on spotify will be added automatically', selectedMood);
+        MoodFX.toast(selectedMood + ' session started. songs you play on spotify are added automatically', selectedMood);
         if (nowPlayingCard) nowPlayingCard.refresh();
         loadRecommendations(selectedMood);
         loadSoFar();
@@ -156,9 +156,9 @@ function renderSoFar(songs) {
     soFar.hidden = !songs.length;
     if (!songs.length) { soFar.innerHTML = ''; return; }
     soFar.innerHTML =
-        '<div class="ssf-head">this session · ' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>' +
+        '<div class="ssf-head">so far this session, ' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</div>' +
         '<div class="ssf-list">' + songs.slice().reverse().map(function(x) {
-            return '<a class="ssf-song" href="' + MoodFX.esc(x.spotify_url || '#') + '" target="_blank" rel="noopener" title="' + MoodFX.esc(x.title + ' — ' + x.artist) + '">' +
+            return '<a class="ssf-song" href="' + MoodFX.esc(x.spotify_url || '#') + '" target="_blank" rel="noopener" title="' + MoodFX.esc(x.title + ', ' + x.artist) + '">' +
                 (x.album_art ? '<img src="' + MoodFX.esc(x.album_art) + '" alt="" />' : '<span class="ssf-empty">' + MoodFX.icon('note') + '</span>') +
                 '<span class="ssf-title">' + MoodFX.esc(x.title) + '</span></a>';
         }).join('') + '</div>';
@@ -184,7 +184,7 @@ function loadRecommendations(mood) {
 
     apiCall('/logs/mood/' + mood, 'GET', null, function(err, result) {
         if (err || !result.data || result.data.length === 0) {
-            discoverContent.innerHTML = MoodFX.emptyState({ title: 'no ' + mood + ' songs yet', text: 'recommendations are based on what you’ve logged — add a few ' + mood + ' songs in your journal first', action: { label: 'go to journal', href: 'index.html' } });
+            discoverContent.innerHTML = MoodFX.emptyState({ title: 'no ' + mood + ' songs yet', text: 'recommendations are based on what you’ve logged. add a few ' + mood + ' songs in your journal first', action: { label: 'go to journal', href: 'index.html' } });
             return;
         }
 
@@ -215,7 +215,7 @@ function loadRecommendations(mood) {
             }).slice(0, 18);
 
             if (tracks.length === 0) {
-                discoverContent.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'you’ve heard them all', text: 'no new songs this round — refresh for another batch', action: { label: '↻ refresh', click: '#session-refresh-btn' } });
+                discoverContent.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'you’ve heard them all', text: 'no new songs this round, refresh for another batch', action: { label: '↻ refresh', click: '#session-refresh-btn' } });
                 return;
             }
 

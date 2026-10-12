@@ -36,13 +36,13 @@ function render(data) {
         '</div>';
 
     // mood calendar (filled in once the per-day logs arrive)
-    html += '<div class="stats-card mood-cal" id="mood-calendar"><div class="stats-card-title">MOOD CALENDAR</div>' + MoodFX.skeleton('block') + '</div>';
+    html += '<div class="stats-card mood-cal" id="mood-calendar"><div class="stats-card-title">your month in moods</div>' + MoodFX.skeleton('block') + '</div>';
 
     // flashback
     if (flashback.length > 0) {
         var fbMood = flashback[0].mood;
         html += '<div class="flashback-card">' +
-            '<div class="flashback-label">' + MoodFX.icon('calendar') + 'FLASHBACK — A MONTH AGO</div>' +
+            '<div class="flashback-label">' + MoodFX.icon('calendar') + 'a month ago</div>' +
             '<div class="flashback-subtitle">you were feeling ' + fbMood + ' and listening to these</div>' +
             '<div class="flashback-songs">' +
             flashback.map(function(s) {
@@ -58,7 +58,7 @@ function render(data) {
     html += '<div class="stats-grid">';
 
     // mood breakdown
-    html += '<div class="stats-card"><div class="stats-card-title">MOOD BREAKDOWN</div>';
+    html += '<div class="stats-card"><div class="stats-card-title">moods</div>';
     moods.forEach(function(m) {
         var pct = Math.round((m.total_plays / maxMoodPlays) * 100);
         html += '<div class="mood-bar-row">' +
@@ -70,7 +70,7 @@ function render(data) {
     html += '</div>';
 
     // time of day
-    html += '<div class="stats-card"><div class="stats-card-title">WHEN YOU LISTEN</div>' +
+    html += '<div class="stats-card"><div class="stats-card-title">when you listen</div>' +
         '<div class="time-bar-row"><div class="time-bar-label">morning</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.morning||0)/maxTime)*100) + '%;"></div></div></div>' +
         '<div class="time-bar-row"><div class="time-bar-label">afternoon</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.afternoon||0)/maxTime)*100) + '%;"></div></div></div>' +
         '<div class="time-bar-row"><div class="time-bar-label">evening</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.evening||0)/maxTime)*100) + '%;"></div></div></div>' +
@@ -81,11 +81,11 @@ function render(data) {
     html += '</div>'; // close stats-grid
 
     // mood activity graph placeholder
-    html += '<div class="stats-card" id="mood-graph-container" style="margin-bottom:16px;"><div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div>' + MoodFX.skeleton('block') + '</div>';
+    html += '<div class="stats-card" id="mood-graph-container" style="margin-bottom:16px;"><div class="stats-card-title">the last two weeks</div>' + MoodFX.skeleton('block') + '</div>';
 
     // top songs
     if (topSongs.length > 0) {
-        html += '<div class="stats-card"><div class="stats-card-title">YOUR MOST PLAYED</div>';
+        html += '<div class="stats-card"><div class="stats-card-title">most played</div>';
         topSongs.forEach(function(s, i) {
             html += '<div class="top-song-row">' +
                 '<div class="top-song-num">' + (i + 1) + '</div>' +
@@ -121,7 +121,7 @@ function buildLineGraph(logs) {
     var moods = Object.keys(moodSet);
     if (dates.length < 2) {
         var c0 = document.getElementById('mood-graph-container');
-        if (c0) c0.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div><p style="color:#888;font-size:13px;">log songs on a couple of different days to see your mood graph</p>';
+        if (c0) c0.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:#888;font-size:13px;">log songs on a couple of different days to see your mood graph</p>';
         return;
     }
 
@@ -185,7 +185,7 @@ function buildLineGraph(logs) {
     legend += '</div>';
 
     var container = document.getElementById('mood-graph-container');
-    if (container) container.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY — LAST 14 DAYS</div>' + svg + legend;
+    if (container) container.innerHTML = '<div class="stats-card-title">the last two weeks</div>' + svg + legend;
 }
 
 // ── mood calendar ──────────────────────────────────────
@@ -319,7 +319,7 @@ var MoodCalendar = (function() {
 
         box.innerHTML =
             '<div class="mc-head">' +
-                '<div class="stats-card-title" style="margin:0;">MOOD CALENDAR</div>' +
+                '<div class="stats-card-title" style="margin:0;">your month in moods</div>' +
                 '<div class="mc-nav">' +
                     '<button type="button" class="mc-arrow" data-step="-1" aria-label="previous month"' + (canBack ? '' : ' disabled') + '>' + chevron(-1) + '</button>' +
                     '<span class="mc-month">' + MONTHS[view.m] + ' ' + view.y + '</span>' +
@@ -342,7 +342,7 @@ var MoodCalendar = (function() {
         var label = date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }).toLowerCase();
         var songs = info.songs.slice().sort(function(a, b) { return (Number(b.play_count) || 0) - (Number(a.play_count) || 0); });
         return '<div class="mc-detail-head">' + MoodFX.esc(label) +
-                '<span>' + info.total + ' play' + (info.total === 1 ? '' : 's') + ' · mostly ' + MoodFX.esc(mainMood(info)) + '</span></div>' +
+                '<span>' + info.total + ' play' + (info.total === 1 ? '' : 's') + ', mostly ' + MoodFX.esc(mainMood(info)) + '</span></div>' +
             songs.map(function(s) {
                 var c = MoodFX.color(s.mood);
                 return '<div class="mc-song" style="--mc:' + c + '">' +
@@ -392,6 +392,6 @@ apiCallCached('/logs/stats', function(err, result) {
     // fetch per-day logs for the graph
     apiCallCached('/logs/perday', function(err2, r2) {
         if (!err2 && r2 && r2.data) { buildLineGraph(r2.data); MoodCalendar.show(r2.data); }
-        else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">MOOD ACTIVITY</div><p style="color:#555;font-size:13px;">not enough data yet</p>'; }
+        else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:#555;font-size:13px;">not enough data yet</p>'; }
     });
 });

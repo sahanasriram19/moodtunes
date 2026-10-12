@@ -395,7 +395,7 @@ var Beat = (function() {
             if (!d.available) {
                 if (d.reason === 'blocked') {
                     try { sessionStorage.setItem(BLOCKED_KEY, String(Date.now())); } catch (e) {}
-                    log('spotify doesn’t share beat maps with this app — use “sync to sound” to follow the drums');
+                    log('spotify doesn’t share beat maps with this app, use “sync to sound” to follow the drums');
                 } else log('no beat map for “' + track.title + '”');
                 maps[track.id] = false;
                 return cb(false);
@@ -517,7 +517,7 @@ var Beat = (function() {
             stream.getVideoTracks().forEach(function(t) { t.stop(); });   // only the sound is needed
             if (!audio.length) {
                 stream.getTracks().forEach(function(t) { t.stop(); });
-                if (typeof toast === 'function') toast('no sound was shared — choose “Entire screen” and switch on “Share system audio”');
+                if (typeof toast === 'function') toast('no sound was shared, choose “Entire screen” and switch on “Share system audio”');
                 setWant(null);
                 emit();
                 return;
@@ -879,7 +879,7 @@ function undoable(o) {
 window.addEventListener('pagehide', function() {
     pending.slice().forEach(function(e) { if (!e.done) { e.done = true; e.commit(); } });
 });
-
+ 
 // ── "pick a mood first" nudge (replaces alert()) ───────
 function nudgeMoods(scope) {
     var targets = [];
@@ -981,7 +981,7 @@ function renderRestore() {
     box.style.display = '';
     var label = document.createElement('div');
     label.className = 'restore-label';
-    label.textContent = 'hidden moods — tap to bring one back';
+    label.textContent = 'hidden moods, tap to bring one back';
     box.appendChild(label);
     var row = document.createElement('div');
     row.className = 'restore-row';
@@ -1065,7 +1065,6 @@ function confetti(baseColor) {
         if (t < 2400) requestAnimationFrame(frame); else canvas.remove();
     })(start);
 }
- 
 // ── count-up numbers ───────────────────────────────────
 function countUp(el, to, ms) {
     if (reduceMotion || !to) { el.textContent = to; return; }
@@ -1101,7 +1100,7 @@ function saveSessionToSpotify(sessionId, mood, songs, btn, done) {
             if (err || !res || res.status >= 400) {
                 if (btn) btn.innerHTML = label;
                 var reason = res && res.data && res.data.reason;
-                if (!spotifyProblem(reason, 'saving to spotify')) toast((res && res.data && res.data.message) || 'couldn’t save to spotify — try again');
+                if (!spotifyProblem(reason, 'saving to spotify')) toast((res && res.data && res.data.message) || 'couldn’t save to spotify, try again');
                 return done && done(null);
             }
             if (res.data.cover === 'reconnect') spotifyProblem('reconnect', 'playlist covers');
@@ -1115,7 +1114,7 @@ function saveSessionToSpotify(sessionId, mood, songs, btn, done) {
 function sessionSpotifyButton(btn, saved) {
     btn.classList.toggle('saved', !!saved);
     btn.innerHTML = saved
-        ? icon('playlists') + '<span>session ' + saved.number + ' in spotify · <u>open</u></span>'
+        ? icon('playlists') + '<span>session ' + saved.number + ' is in spotify, <u>open it</u></span>'
         : icon('playlists') + '<span>save to spotify</span>';
     btn.title = saved ? 'open “session ' + saved.number + '” in spotify' : 'save this session as a playlist in your spotify library';
 }
@@ -1294,7 +1293,7 @@ function nowPlaying(container, opts) {
             var text, tip;
             if (i.listening && !i.hearing) {
                 text = '○ no sound coming through';
-                tip = 'nothing is playing through the shared sound — check “Share system audio” was on. tap to stop syncing';
+                tip = 'nothing is playing through the shared sound, check “Share system audio” was on. tap to stop syncing';
             } else if (i.listening) {
                 text = '● synced to sound';
                 tip = 'the waves are following your computer’s sound. tap to stop syncing';
@@ -1302,9 +1301,9 @@ function nowPlaying(container, opts) {
                 text = 'sync to sound…'; tip = '';
             } else if (i.want === 'system') {
                 text = '▶ resume sync';
-                tip = 'the browser asks again on each page — tap to share your computer’s sound';
+                tip = 'the browser asks again on each page, tap to share your computer’s sound';
             } else if (i.hasMap) {
-                text = '● on the beat · sync to sound';
+                text = '● on the beat';
                 tip = 'following spotify’s beat map. tap to follow your computer’s sound instead';
             } else {
                 text = 'sync waves to sound';
@@ -1363,7 +1362,7 @@ function nowPlaying(container, opts) {
         }, function(err, res) {
             b.disabled = false;
             b.classList.remove('is-starting');
-            if (err || !res || res.status >= 400) return toast('couldn’t log that — try again');
+            if (err || !res || res.status >= 400) return toast('couldn’t log that, try again');
             loggedNow[t.id + '|' + m] = true;
             if (state.track && state.track.id === t.id) drawMoods();
             flashAdded('✓ logged as ' + m);
@@ -1386,7 +1385,7 @@ function nowPlaying(container, opts) {
                 var next = res.status === 200 && res.data && Array.isArray(res.data.next) ? res.data.next : [];
                 upnext.hidden = !next.length;
                 upnextList.innerHTML = next.map(function(t) {
-                    return '<li title="' + esc(t.title + ' — ' + t.artist) + '">' +
+                    return '<li title="' + esc(t.title + ', ' + t.artist) + '">' +
                         (t.albumArt ? '<img src="' + esc(t.albumArt) + '" alt="" />' : '') +
                         '<span class="np-upnext-title">' + esc(t.title) + '</span><span class="np-upnext-artist">' + esc(t.artist) + '</span></li>';
                 }).join('');
@@ -1515,7 +1514,7 @@ function nowPlaying(container, opts) {
  
     var PLAYBACK_ERRORS = {
         premium_required: 'controlling playback needs Spotify Premium',
-        no_active_device: 'open Spotify on a device first — nothing is active to control',
+        no_active_device: 'open spotify on a device first, nothing is playing there to control',
         not_connected: 'connect Spotify to control playback'
     };
  
@@ -1543,7 +1542,7 @@ function nowPlaying(container, opts) {
                 status.textContent = state.playing ? 'now playing' : 'paused';
                 syncToggle();
                 var reason = res && res.data && res.data.reason;
-                toast(PLAYBACK_ERRORS[reason] || 'couldn’t reach spotify — try again');
+                toast(PLAYBACK_ERRORS[reason] || 'couldn’t reach spotify, try again');
                 return;
             }
             // skipping changes the song: check what's playing now
@@ -1576,7 +1575,7 @@ function nowPlaying(container, opts) {
             }
             failures = 0;
             if (res.status === 401) { showIdle('connect spotify to see what you’re playing'); stopped = true; return; }
-            if (res.status >= 400) { showIdle('couldn’t reach spotify — retrying'); return schedule(); }
+            if (res.status >= 400) { showIdle('couldn’t reach spotify, retrying'); return schedule(); }
             apply(res.data);
             schedule();
         });
@@ -1654,7 +1653,7 @@ function paintLike(b) {
     var on = liked[b.dataset.id] === true;
     b.classList.toggle('liked', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.title = on ? 'in your liked songs — tap to remove' : 'save to your liked songs';
+    b.title = on ? 'in your liked songs, tap to remove' : 'save to your liked songs';
     b.setAttribute('aria-label', on ? 'unlike' : 'like');
 }
 function paintLikes(id) {
@@ -1706,7 +1705,7 @@ document.addEventListener('click', function(e) {
         liked[id] = was;                              // spotify said no: put it back
         paintLikes(id);
         var reason = res && res.data && res.data.reason;
-        if (!spotifyProblem(reason, 'the heart button')) toast('couldn’t reach spotify — try again');
+        if (!spotifyProblem(reason, 'the heart button')) toast('couldn’t reach spotify, try again');
     });
 }, true);
  
@@ -1966,7 +1965,7 @@ window.addEventListener('appinstalled', function() {
     installPrompt = null;
     var b = document.getElementById('install-btn');
     if (b) b.remove();
-    toast('moodtunes is installed — open it from your home screen');
+    toast('moodtunes is installed, open it from your home screen');
 });
  
 function isIOS() {
@@ -2000,7 +1999,7 @@ function maybeShowIOSHint() {
 }
  
 // ── connection status ──────────────────────────────────
-window.addEventListener('offline', function() { toast('you’re offline — showing what’s saved'); });
+window.addEventListener('offline', function() { toast('you’re offline, showing what’s saved'); });
 window.addEventListener('online', function() { toast('back online'); });
  
 // ── prerendered pages ──────────────────────────────────
