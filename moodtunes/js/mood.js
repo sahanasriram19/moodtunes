@@ -1014,7 +1014,6 @@ function ripple(el, evt) {
     el.appendChild(s);
     setTimeout(function() { s.remove(); }, 600);
 }
- 
 // ── confetti ───────────────────────────────────────────
 function confetti(baseColor) {
     if (reduceMotion) return;
@@ -1065,6 +1064,7 @@ function confetti(baseColor) {
         if (t < 2400) requestAnimationFrame(frame); else canvas.remove();
     })(start);
 }
+ 
 // ── count-up numbers ───────────────────────────────────
 function countUp(el, to, ms) {
     if (reduceMotion || !to) { el.textContent = to; return; }
@@ -1286,30 +1286,32 @@ function nowPlaying(container, opts) {
             toast('in the pop-up, choose “Entire screen” and switch on “Share system audio”');
             Beat.start();
         });
+        // a switch: on while the waves follow your computer's sound
+        syncBtn.setAttribute('role', 'switch');
+        syncBtn.innerHTML = '<span class="np-switch" aria-hidden="true"><i></i></span><span class="np-sync-text">sync waves</span>';
+        var syncText = syncBtn.querySelector('.np-sync-text');
         Beat.onChange(function(i) {
-            syncBtn.classList.toggle('on', i.listening || i.want === 'system');
-            syncBtn.classList.toggle('map', !i.listening && i.want !== 'system' && i.hasMap);
-            syncBtn.setAttribute('aria-pressed', i.listening ? 'true' : 'false');
-            var text, tip;
+            var on = i.listening || i.want === 'system';
+            syncBtn.classList.toggle('on', on);
+            syncBtn.classList.toggle('map', !on && i.hasMap);
+            syncBtn.setAttribute('aria-checked', on ? 'true' : 'false');
+            var text = 'sync waves', tip;
             if (i.listening && !i.hearing) {
-                text = '○ no sound coming through';
-                tip = 'nothing is playing through the shared sound, check “Share system audio” was on. tap to stop syncing';
+                text = 'no sound';
+                tip = 'nothing is playing through the shared sound. check “Share system audio” was on, or tap to turn syncing off';
             } else if (i.listening) {
-                text = '● synced to sound';
-                tip = 'the waves are following your computer’s sound. tap to stop syncing';
+                tip = 'the waves are following your computer’s sound. tap to turn it off';
             } else if (i.starting) {
-                text = 'sync to sound…'; tip = '';
+                text = 'starting…'; tip = '';
             } else if (i.want === 'system') {
-                text = '▶ resume sync';
-                tip = 'the browser asks again on each page, tap to share your computer’s sound';
+                text = 'tap to resume';
+                tip = 'the browser asks again on each page. tap to share your computer’s sound again';
             } else if (i.hasMap) {
-                text = '● on the beat';
-                tip = 'following spotify’s beat map. tap to follow your computer’s sound instead';
+                tip = 'the waves follow spotify’s beat map. turn this on to follow your computer’s sound instead';
             } else {
-                text = 'sync waves to sound';
                 tip = 'make the background waves follow the drums and volume of what you’re playing (nothing is recorded)';
             }
-            syncBtn.textContent = text;
+            syncText.textContent = text;
             syncBtn.title = tip;
         });
     }
