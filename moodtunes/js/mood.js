@@ -879,7 +879,7 @@ function undoable(o) {
 window.addEventListener('pagehide', function() {
     pending.slice().forEach(function(e) { if (!e.done) { e.done = true; e.commit(); } });
 });
- 
+
 // ── "pick a mood first" nudge (replaces alert()) ───────
 function nudgeMoods(scope) {
     var targets = [];
@@ -956,6 +956,7 @@ function syncHidden() {
         applyHidden();
     });
 }
+ 
 // the moods currently on the page: visible built-ins + the user's custom ones
 function visibleMoods() {
     var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
@@ -1316,16 +1317,17 @@ function nowPlaying(container, opts) {
  
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
  
-    // layout: play / skip on the right above the progress bar (under "sync waves"),
-    // the heart right beside the song title
+    // layout: the heart and play / skip on the right above the progress bar
+    // (under "sync waves")
     var npBody = container.querySelector('.np-body');
     var likeSlot = container.querySelector('.np-like-slot');
     var titleRow = document.createElement('div');
     titleRow.className = 'np-titlerow';
     title.parentNode.insertBefore(titleRow, title);
     titleRow.appendChild(title);
-    titleRow.appendChild(likeSlot);
-    npBody.appendChild(container.querySelector('.np-controls'));
+    var npControls = container.querySelector('.np-controls');
+    npControls.insertBefore(likeSlot, npControls.firstChild);     // the heart, just left of ⏮ ⏯ ⏭
+    npBody.appendChild(npControls);
  
     // ── one-tap logging ──
     var moodsBox = container.querySelector('.np-moods');

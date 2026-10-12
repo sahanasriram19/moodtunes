@@ -1924,6 +1924,7 @@ body {
   .container {
     margin-top: 16px;
   }
+
   /* === TAP TARGETS (PHONES) === */
   /* small controls get an invisible 40px+ touch area without looking any bigger */
   .delete-btn,
@@ -3795,7 +3796,7 @@ body {
  
 /* === NOW PLAYING: LAYOUT === */
 /*  [art]  NOW PLAYING                      (sync waves)
-           Title ♡                          ⏮  ⏯  ⏭
+           Title                         ♡  ⏮  ⏯  ⏭
            artist
            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  1:02 / 3:20   */
 .np-body {
@@ -3835,20 +3836,15 @@ body {
   white-space: nowrap;
 }
  
-.np-titlerow .np-like-slot {
-  flex-shrink: 0;
+.np-controls .np-like-slot {
   display: inline-flex;
+  margin-right: 4px;
 }
  
-.np-titlerow .like-btn {
-  width: 28px;
-  height: 28px;
+.np-controls .like-btn {
+  width: 34px;
+  height: 34px;
   margin: 0;
-}
- 
-.np-titlerow .like-btn .mt-icon {
-  width: 14px;
-  height: 14px;
 }
  
 .np-idle .np-like-slot {
