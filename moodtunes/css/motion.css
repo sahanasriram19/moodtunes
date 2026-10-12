@@ -1971,7 +1971,6 @@ body {
   .history-tab {
     min-height: 44px;
   }
- 
   /* === NO ZOOM ON FOCUS (PHONES) === */
   /* iPhones zoom into any text box under 16px when you tap it */
   input,
@@ -3792,4 +3791,36 @@ body {
 :root[data-theme="light"] .song-history-card.mood-card .edit-note-btn,
 :root[data-theme="light"] .song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 65%, #222) !important;
+}
+ 
+/* === NOW PLAYING: CONTROLS ON THE PROGRESS LINE === */
+/* play / skip sit at the end of the progress bar, and the heart lines up
+   under them at the end of the "log as" row */
+.np-progress .np-controls {
+  margin-left: 6px;
+}
+ 
+.np-progress {
+  margin-top: 4px;
+}
+ 
+.np-progress:has(.np-controls) .np-bar {
+  min-width: 60px;
+}
+ 
+.np-like-slot .like-btn {
+  width: 36px;
+  height: 36px;
+}
+ 
+.np-logrow .np-like-slot {
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+ 
+@media (max-width: 520px) {
+  /* phones: time under the bar would crowd it, so it goes */
+  .np-progress:has(.np-controls) .np-time {
+    display: none;
+  }
 }
