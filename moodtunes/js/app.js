@@ -571,10 +571,8 @@ function renderInbox() {
     inbox.classList.toggle('folded', folded);
     inbox.querySelector('.inbox-count').textContent = items.length;
     inbox.querySelector('.inbox-toggle').textContent = folded ? 'show' : 'hide';
-    var shown = inboxAll ? items : items.slice(0, 3);
-    var more = inbox.querySelector('.inbox-more');
-    more.hidden = folded || items.length <= 3;
-    more.textContent = inboxAll ? 'show fewer' : 'show ' + (items.length - 3) + ' more';
+    var shown = items;                       // all of them: the box scrolls
+    inbox.querySelector('.inbox-more').hidden = true;
     var moods = MoodFX.visibleMoods();
     inbox.querySelector('.inbox-list').innerHTML = folded ? '' : shown.map(function(it) {
         var order = it.usual_mood && moods.indexOf(it.usual_mood) !== -1

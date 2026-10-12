@@ -2053,7 +2053,7 @@ body {
     column-gap: 12px;
     row-gap: 2px;
   }
- 
+
   .session-history-mood {
     grid-area: mood;
   }
@@ -2378,7 +2378,7 @@ body {
   width: 18px;
   height: 18px;
 }
-
+ 
 .restore-chip .mt-icon {
   width: 14px;
   height: 14px;
@@ -4353,5 +4353,101 @@ body {
   /* titles only here, the artist would not fit */
   .journal-side .np-upnext-artist {
     display: none;
+  }
+}
+/* === "SYNC WAVES": JUST THE WORDS AND THE SWITCH === */
+.np-sync,
+.np-sync.on,
+.np-sync:hover {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 2px 0 !important;
+}
+ 
+.np-sync .np-sync-text {
+  font-size: 12.5px;
+}
+ 
+/* === PLAYLIST COVERS: NO STRIP UNDERNEATH === */
+.playlist-card .playlist-cover {
+  margin-bottom: 0 !important;
+  display: grid;
+}
+ 
+.playlist-card {
+  line-height: 0;
+}
+ 
+.playlist-card .playlist-card-title,
+.playlist-card .pl-in-spotify {
+  line-height: 1.1;
+}
+ 
+/* === NOW PLAYING: A LITTLE MORE ROOM AT THE TOP, LESS IN THE MIDDLE === */
+.np-card {
+  padding-top: 20px !important;
+  padding-bottom: 16px !important;
+  row-gap: 10px;
+}
+ 
+.np-extra {
+  padding-top: 0;
+  gap: 10px;
+}
+ 
+.np-body > .np-label {
+  margin-bottom: 6px;
+}
+ 
+/* === NOT IN YOUR JOURNAL YET: IN A BOX THAT SCROLLS === */
+.inbox-section {
+  padding: 16px 16px 6px;
+  border-radius: 16px;
+  background: var(--glass, var(--bg-card, #141414));
+  border: 1px solid var(--glass-edge, rgba(255, 255, 255, 0.1));
+}
+ 
+.inbox-head .section-label {
+  margin-bottom: 6px !important;
+}
+ 
+.inbox-list {
+  max-height: 430px;
+  overflow-y: auto;
+  margin-right: -8px;
+  padding-right: 8px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+ 
+.inbox-list::-webkit-scrollbar {
+  width: 6px;
+}
+ 
+.inbox-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 3px;
+}
+ 
+.inbox-list .inbox-item:last-child {
+  border-bottom: 0 !important;
+}
+ 
+.inbox-section.folded {
+  padding-bottom: 12px;
+}
+ 
+:root[data-theme="light"] .inbox-section {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+ 
+/* the side column scrolls with the page now that "not in your journal yet" has its own scroller */
+@media (min-width: 1100px) {
+  .journal-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 }

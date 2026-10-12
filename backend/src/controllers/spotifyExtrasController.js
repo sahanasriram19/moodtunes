@@ -352,7 +352,16 @@ pool.query(
 // { session_id: { number, url } } for the history page
 module.exports.sessionPlaylists = async (userId) => {
     try {
-        const rows = await query('SELECT session_id, number, playlist_id FROM SessionPlaylist WHERE user_id = ?', [userId]);
+        let rows = await query('SELECT session_id, number, playlist_id FROM SessionPlaylist WHERE user_id = ?', [userId]);
+        // deleted in spotify: forget it, so "save to spotify" shows again
+        const still = await lists.inLibrary(userId, rows.map((r) => r.playlist_id));
+        if (still) {
+            const gone = rows.filter((r) => !still.has(r.playlist_id));
+            if (gone.length) {
+                await query('DELETE FROM SessionPlaylist WHERE user_id = ? AND playlist_id IN (?)', [userId, gone.map((r) => r.playlist_id)]);
+                rows = rows.filter((r) => still.has(r.playlist_id));
+            }
+        }
         const out = {};
         rows.forEach((r) => { out[r.session_id] = { number: r.number, url: lists.playlistUrl(r.playlist_id) }; });
         return out;
@@ -386,7 +395,7 @@ module.exports.saveSession = async (req, res) => {
         if (existing.length) {
             number = existing[0].number;
             id = existing[0].playlist_id;
-            try { await lists.replaceAll(userId, id, uris); }
+            try { await lists.replaceAll(userId, id, uris); await lists.follow(userId, id); }
             catch (e) {
                 if (e.status !== 404 && e.status !== 403) throw e;
                 id = null;                                   // deleted in spotify: make it again

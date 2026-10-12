@@ -26,9 +26,12 @@ apiCall('/moods', 'GET', null, function(err, result) {
 // it up to date when you log or delete songs; reordering here re-saves it, and the
 // cover is re-uploaded whenever its top 4 songs change. ▶ opens it in spotify.
 var savedSpotify = {};                      // { mood: 'https://open.spotify.com/playlist/…' }
-apiCall('/spotify/playlists', 'GET', null, function(err, res) {
-    if (err || !res || res.status !== 200 || !Array.isArray(res.data)) return;
-    res.data.forEach(function(p) { savedSpotify[p.mood] = p.url; });
+// (playlists you've deleted in spotify don't come back in this list)
+apiCall('/spotify/playlists?v=2', 'GET', null, function(err, res) {
+    if (err || !res || res.status !== 200 || !res.data) return;
+    var list = Array.isArray(res.data) ? res.data : (res.data.playlists || []);
+    if (res.data.reconnect) MoodFX.spotifyProblem('reconnect', 'noticing playlists you delete in spotify');
+    list.forEach(function(p) { savedSpotify[p.mood] = p.url; });
     markSavedCards();
     if (window.__mtRefreshSaveBtn) window.__mtRefreshSaveBtn();
     syncCovers();

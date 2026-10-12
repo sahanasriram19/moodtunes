@@ -105,7 +105,9 @@ module.exports.redirectToSpotify = (req, res, next) => {
             'user-modify-playback-state',
             'user-library-read',
             'user-library-modify',      // the heart button (save to liked songs)
-            'ugc-image-upload'          // playlist covers
+            'ugc-image-upload',         // playlist covers
+            'playlist-read-private',    // noticing playlists you've deleted in spotify
+            'user-follow-read'
         ].join(' ');
 
         const params = new URLSearchParams({

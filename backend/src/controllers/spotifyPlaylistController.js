@@ -155,13 +155,56 @@ function fail(res, e, what) {
     res.status(502).json({ message: 'spotify didn’t respond — try again in a moment' });
 }
 
-// GET /api/spotify/playlists → [{ mood, playlist_id, url }]
-module.exports.listSaved = async (req, res) => {
+// which of these playlists are still in your spotify library. deleting a playlist
+// in spotify only takes it out of your library, so this is how moodtunes notices.
+// returns a Set of ids, or null when spotify couldn't say (then nothing changes)
+async function inLibrary(userId, ids, why) {
+    if (!ids.length) return new Set();
     try {
-        const rows = await query('SELECT mood, playlist_id FROM SpotifyPlaylist WHERE user_id = ?', [res.locals.userId]);
-        res.json(rows.map((r) => ({ mood: r.mood, playlist_id: r.playlist_id, url: playlistUrl(r.playlist_id) })));
+        const out = new Set();
+        for (let i = 0; i < ids.length; i += 40) {
+            const chunk = ids.slice(i, i + 40);
+            const uris = chunk.map((id) => 'spotify:playlist:' + id).join(',');
+            const flags = await call(userId, 'get', '/me/library/contains?uris=' + encodeURIComponent(uris));
+            if (!Array.isArray(flags)) return null;
+            chunk.forEach((id, k) => { if (flags[k]) out.add(id); });
+        }
+        return out;
     } catch (e) {
-        res.json([]);
+        if (why && needsReconnect(e)) why.reconnect = true;
+        return null;
+    }
+}
+
+// put a playlist (back) in your library, e.g. when you save one you'd removed in spotify
+async function follow(userId, playlistId) {
+    try { await call(userId, 'put', '/me/library?uris=' + encodeURIComponent('spotify:playlist:' + playlistId)); }
+    catch (e) { /* it still saves; it just may not show in the library */ }
+}
+module.exports.inLibrary = inLibrary;
+module.exports.follow = follow;
+
+// GET /api/spotify/playlists → [{ mood, playlist_id, url }]
+// playlists you've deleted in spotify are forgotten here too
+module.exports.listSaved = async (req, res) => {
+    const userId = res.locals.userId;
+    try {
+        let rows = await query('SELECT mood, playlist_id FROM SpotifyPlaylist WHERE user_id = ?', [userId]);
+        const why = {};
+        const still = await inLibrary(userId, rows.map((r) => r.playlist_id), why);
+        if (still) {
+            const gone = rows.filter((r) => !still.has(r.playlist_id));
+            if (gone.length) {
+                await query('DELETE FROM SpotifyPlaylist WHERE user_id = ? AND playlist_id IN (?)', [userId, gone.map((r) => r.playlist_id)]);
+                rows = rows.filter((r) => still.has(r.playlist_id));
+            }
+        }
+        const list = rows.map((r) => ({ mood: r.mood, playlist_id: r.playlist_id, url: playlistUrl(r.playlist_id) }));
+        // ?v=2: also says when spotify needs reconnecting for this check
+        if (req.query.v === '2') return res.json({ playlists: list, reconnect: !!why.reconnect });
+        res.json(list);
+    } catch (e) {
+        res.json(req.query.v === '2' ? { playlists: [] } : []);
     }
 };
 
@@ -185,7 +228,10 @@ module.exports.savePlaylist = async (req, res) => {
             created = true;
             await replaceAll(userId, id, uris);
         }
-        if (!created) await renameTo(userId, id, mood);
+        if (!created) {
+            await renameTo(userId, id, mood);
+            await follow(userId, id);
+        }
         res.json({ playlist_id: id, url: playlistUrl(id), created, songs: uris.length });
     } catch (e) {
         fail(res, e, 'saving the ' + mood + ' playlist to spotify');
