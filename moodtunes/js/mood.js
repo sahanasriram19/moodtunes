@@ -956,7 +956,6 @@ function syncHidden() {
         applyHidden();
     });
 }
- 
 // the moods currently on the page: visible built-ins + the user's custom ones
 function visibleMoods() {
     var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
@@ -965,6 +964,7 @@ function visibleMoods() {
     });
     return list;
 }
+ 
 // "hidden moods — tap to bring back", shown inside the add-mood panel in manage mode
 function renderRestore() {
     var host = document.getElementById('add-mood-section');
@@ -1316,16 +1316,21 @@ function nowPlaying(container, opts) {
  
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
  
-    // the play / skip buttons sit on the same line as the progress bar
-    container.querySelector('.np-progress').appendChild(container.querySelector('.np-controls'));
+    // layout: play / skip on the right above the progress bar (under "sync waves"),
+    // the heart right beside the song title
+    var npBody = container.querySelector('.np-body');
+    var likeSlot = container.querySelector('.np-like-slot');
+    var titleRow = document.createElement('div');
+    titleRow.className = 'np-titlerow';
+    title.parentNode.insertBefore(titleRow, title);
+    titleRow.appendChild(title);
+    titleRow.appendChild(likeSlot);
+    npBody.appendChild(container.querySelector('.np-controls'));
  
     // ── one-tap logging ──
     var moodsBox = container.querySelector('.np-moods');
-    var likeSlot = container.querySelector('.np-like-slot');
-    // pages that don't want it (the session page): no "log as" row, the heart sits with the controls
+    // pages that don't want it (the session page): no "log as" row
     if (opts.quickLog === false) {
-        var ctr = container.querySelector('.np-controls');
-        ctr.insertBefore(likeSlot, ctr.firstChild);
         container.querySelector('.np-logrow').remove();
         card.classList.add('np-nolog');
     }
@@ -2083,4 +2088,5 @@ window.MoodFX = {
     composeCover: composeCover, spotifyProblem: spotifyProblem, likeButton: likeButton,
     saveSessionToSpotify: saveSessionToSpotify, sessionSpotifyButton: sessionSpotifyButton, reconnectSpotify: reconnectSpotify, trackIdOf: trackIdOf
 };
+ 
 })();

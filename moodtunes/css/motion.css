@@ -1924,7 +1924,6 @@ body {
   .container {
     margin-top: 16px;
   }
- 
   /* === TAP TARGETS (PHONES) === */
   /* small controls get an invisible 40px+ touch area without looking any bigger */
   .delete-btn,
@@ -1971,6 +1970,7 @@ body {
   .history-tab {
     min-height: 44px;
   }
+ 
   /* === NO ZOOM ON FOCUS (PHONES) === */
   /* iPhones zoom into any text box under 16px when you tap it */
   input,
@@ -3793,34 +3793,68 @@ body {
   color: color-mix(in srgb, var(--mc) 65%, #222) !important;
 }
  
-/* === NOW PLAYING: CONTROLS ON THE PROGRESS LINE === */
-/* play / skip sit at the end of the progress bar, and the heart lines up
-   under them at the end of the "log as" row */
-.np-progress .np-controls {
-  margin-left: 6px;
+/* === NOW PLAYING: LAYOUT === */
+/*  [art]  NOW PLAYING                      (sync waves)
+           Title ♡                          ⏮  ⏯  ⏭
+           artist
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  1:02 / 3:20   */
+.np-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 14px;
+  align-items: center;
 }
  
-.np-progress {
-  margin-top: 4px;
+.np-body > .np-label,
+.np-body > .np-progress {
+  grid-column: 1 / -1;
 }
  
-.np-progress:has(.np-controls) .np-bar {
-  min-width: 60px;
+.np-body > .np-titlerow,
+.np-body > .np-artist {
+  grid-column: 1;
 }
  
-.np-like-slot .like-btn {
-  width: 36px;
-  height: 36px;
+.np-body > .np-controls {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  justify-self: end;
 }
  
-.np-logrow .np-like-slot {
+.np-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+ 
+.np-titlerow .np-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ 
+.np-titlerow .np-like-slot {
   flex-shrink: 0;
-  margin-left: 4px;
+  display: inline-flex;
 }
  
-@media (max-width: 520px) {
-  /* phones: time under the bar would crowd it, so it goes */
-  .np-progress:has(.np-controls) .np-time {
-    display: none;
-  }
+.np-titlerow .like-btn {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
+ 
+.np-titlerow .like-btn .mt-icon {
+  width: 14px;
+  height: 14px;
+}
+ 
+.np-idle .np-like-slot {
+  display: none;
+}
+ 
+.np-body > .np-progress {
+  margin-top: 8px;
 }
