@@ -879,6 +879,7 @@ function undoable(o) {
 window.addEventListener('pagehide', function() {
     pending.slice().forEach(function(e) { if (!e.done) { e.done = true; e.commit(); } });
 });
+ 
 // ── "pick a mood first" nudge (replaces alert()) ───────
 function nudgeMoods(scope) {
     var targets = [];
@@ -1063,7 +1064,6 @@ function confetti(baseColor) {
         if (t < 2400) requestAnimationFrame(frame); else canvas.remove();
     })(start);
 }
- 
 // ── count-up numbers ───────────────────────────────────
 function countUp(el, to, ms) {
     if (reduceMotion || !to) { el.textContent = to; return; }
@@ -1335,6 +1335,12 @@ function nowPlaying(container, opts) {
     if (opts.quickLog === false) {
         container.querySelector('.np-logrow').remove();
         card.classList.add('np-nolog');
+    } else {
+        // "log as" and the moods go at the top of the card, the song under them
+        var npTop = document.createElement('div');
+        npTop.className = 'np-top';
+        npTop.appendChild(container.querySelector('.np-logrow'));
+        card.insertBefore(npTop, card.querySelector('.np-art-wrap'));
     }
     var loggedNow = {};                  // moods this song was logged with from the card
  
