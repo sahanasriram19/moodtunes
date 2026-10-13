@@ -2137,6 +2137,7 @@ body {
 .song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 75%, #fff) !important;
 }
+ 
 /* === POP-UP ANIMATIONS === */
 /* profile menu pops out of its button */
 #profile-dropdown {
@@ -2312,7 +2313,6 @@ body {
   animation: enter 0.35s var(--ease-out) backwards;
   transition: background 0.9s, border-color 0.9s, box-shadow 0.9s;
 }
- 
 .result-item.selected {
   border-radius: 10px;
   box-shadow: inset 3px 0 0 var(--mood);
@@ -4590,4 +4590,38 @@ body {
   font-variation-settings: normal !important;
   font-weight: 400 !important;
   font-size: 13.5px !important;
+}
+ 
+/* === EACH DAY'S SONGS IN A BOX === */
+/* the songs from one day sit together in one panel (like "not in your journal
+   yet"), so they read clearly over the album-art background */
+.day-box {
+  padding: 4px 18px;
+  border-radius: 16px;
+  background: var(--glass, var(--bg-card, #141414));
+  border: 1px solid var(--glass-edge, rgba(255, 255, 255, 0.1));
+}
+ 
+.day-box .log-card:last-child {
+  border-bottom: 0 !important;
+}
+ 
+#logs-list .timeline-date,
+#timeline .timeline-date {
+  margin-bottom: 10px !important;
+}
+ 
+:root[data-theme="light"] .day-box {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+ 
+@media (max-width: 768px) {
+  .day-box {
+    padding: 2px 12px;
+  }
+}
+ 
+.log-meta .date-text {
+  white-space: nowrap;
 }

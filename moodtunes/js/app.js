@@ -381,6 +381,10 @@ function loadLogs(highlightSongId) {
                 dateLabel.classList.add('timeline-date');
                 dateLabel.textContent = formatDateOnly(new Date(key));
                 logsList.appendChild(dateLabel);
+                // each day's songs sit together in one box
+                var dayBox = document.createElement('div');
+                dayBox.className = 'day-box';
+                logsList.appendChild(dayBox);
 
                 grouped[key].forEach(function(log) {
                     var card = document.createElement('div');
@@ -403,7 +407,7 @@ function loadLogs(highlightSongId) {
                             '</div>' +
                         '</div>' +
                         '<button class="play-btn log-play-btn" data-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-title="' + MoodFX.esc(log.title) + '" data-artist="' + MoodFX.esc(log.artist) + '" data-art="' + MoodFX.esc(log.album_art) + '" data-url="' + MoodFX.esc(log.spotify_url) + '">▶</button>';
-                    logsList.appendChild(card);
+                    dayBox.appendChild(card);
                 });
             });
     });

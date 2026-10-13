@@ -137,7 +137,8 @@ function renderTimeline(logs) {
         .forEach(function(key) {
             var group = document.createElement('div');
             group.classList.add('timeline-group');
-            group.innerHTML = '<div class="timeline-date">' + formatDateOnly(new Date(key)) + '</div>';
+            group.innerHTML = '<div class="timeline-date">' + formatDateOnly(new Date(key)) + '</div><div class="day-box"></div>';
+            var dayBox = group.querySelector('.day-box');      // each day's songs sit together in one box
 
             grouped[key].forEach(function(log) {
                 var card = document.createElement('div');
@@ -162,7 +163,7 @@ function renderTimeline(logs) {
                     '</div>' +
                     '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '" data-song-id="' + MoodFX.esc(log.song_id) + '" data-mood="' + MoodFX.esc(log.mood) + '">▶</button>' +
                     '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>';
-                group.appendChild(card);
+                dayBox.appendChild(card);
             });
 
             timeline.appendChild(group);
