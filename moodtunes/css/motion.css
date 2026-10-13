@@ -2281,7 +2281,6 @@ body {
     transform: translateY(100%);
   }
 }
- 
 /* buttons that open things give a little press feedback */
 /* (the profile menu lives inside its button, so only the icon shrinks — otherwise
    tapping a menu row would shrink the whole menu) */
@@ -2313,6 +2312,7 @@ body {
   animation: enter 0.35s var(--ease-out) backwards;
   transition: background 0.9s, border-color 0.9s, box-shadow 0.9s;
 }
+ 
 .result-item.selected {
   border-radius: 10px;
   box-shadow: inset 3px 0 0 var(--mood);
@@ -4624,4 +4624,32 @@ body {
  
 .log-meta .date-text {
   white-space: nowrap;
+}
+ 
+/* no line under the last song in a day's box */
+#logs-list .day-box .log-card:last-child,
+#timeline .day-box .log-card:last-child {
+  border-bottom: 0 !important;
+}
+ 
+/* now playing: "log as" and the moods across the top, the song under them */
+.np-top {
+  flex: 1 0 100%;
+  min-width: 0;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}
+ 
+.np-idle .np-top {
+  display: none;
+}
+ 
+.np-card:has(.np-top) {
+  padding-top: 16px !important;
+}
+ 
+/* no divider under the last song in a day's box */
+#logs-list .day-box .log-card:last-child,
+#timeline .day-box .log-card:last-child {
+  border-bottom: 0 !important;
 }
