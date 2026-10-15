@@ -83,12 +83,16 @@ function renderStats(logs) {
     var totalPlays = logs.reduce(function(sum, l) { return sum + l.play_count; }, 0);
     var moodCounts = {};
     logs.forEach(function(l) { moodCounts[l.mood] = (moodCounts[l.mood] || 0) + 1; });
-    var topMood = Object.keys(moodCounts).sort(function(a, b) { return moodCounts[b] - moodCounts[a]; })[0] || '—';
+    var topMood = Object.keys(moodCounts).sort(function(a, b) { return moodCounts[b] - moodCounts[a]; })[0] || '-';
 
-    statsGrid.innerHTML =
-        '<div class="stat-card"><div class="stat-num">' + logs.length + '</div><div class="stat-label">songs logged</div></div>' +
-        '<div class="stat-card"><div class="stat-num">' + totalPlays + '</div><div class="stat-label">total plays</div></div>' +
-        '<div class="stat-card"><div class="stat-num">' + topMood + '</div><div class="stat-label">top mood</div></div>';
+    // one sentence instead of number boxes: "6 songs logged, 27 plays, mostly ● nostalgic."
+    var num = function(n) { return '<span class="ss-num">' + n + '</span>'; };
+    statsGrid.className = 'stats-sentence-wrap';
+    statsGrid.innerHTML = logs.length
+        ? '<p class="stats-sentence">' + num(logs.length) + (logs.length === 1 ? ' song' : ' songs') + ' logged, ' +
+            num(totalPlays) + (totalPlays === 1 ? ' play' : ' plays') +
+            (moodCounts[topMood] ? ', mostly <span class="ss-mood" style="--mc:' + MoodFX.color(topMood) + '">' + MoodFX.esc(topMood) + '</span>' : '') + '.</p>'
+        : '<p class="stats-sentence">nothing logged yet.</p>';
 }
 
 // ── flashback ──────────────────────────────────────────

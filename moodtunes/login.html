@@ -25,11 +25,14 @@
   <div class="auth-container">
     <div class="auth-box">
       <img src="images/moodtunes_logo.png" class="auth-logo-img" alt="moodtunes logo">
-      <p class="auth-tagline">your music. your mood. your story.</p>
+      <p class="auth-tagline">a journal for the songs you play on spotify, sorted by how they make you feel.</p>
+      <ul class="auth-moods" aria-label="the moods you start with">
+        <li style="--c:#f2c84b">happy</li><li style="--c:#378add">sad</li><li style="--c:#b07a50">hype</li><li style="--c:#d4537e">heartbreak</li><li style="--c:#7f77dd">nostalgic</li><li style="--c:#1D9E75">focused</li><li style="--c:#888780">chill</li>
+      </ul>
 
       <div class="auth-tabs">
-        <button class="auth-tab active" id="login-tab">login</button>
-        <button class="auth-tab" id="register-tab">register</button>
+        <button class="auth-tab active" id="login-tab">log in</button>
+        <button class="auth-tab" id="register-tab">sign up</button>
       </div>
 
       <div id="login-form">
@@ -41,7 +44,7 @@
           <label>password</label>
           <input type="password" id="login-password" placeholder="your password" />
         </div>
-        <button class="auth-btn" id="login-btn">login</button>
+        <button class="auth-btn" id="login-btn">log in</button>
         <p class="auth-error" id="login-error"></p>
       </div>
 

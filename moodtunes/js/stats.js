@@ -6,13 +6,28 @@ var MOOD_COLORS = {
     heartbreak: '#d4537e', nostalgic: '#7f77dd', focused: '#1D9E75', chill: '#888780'
 };
 
+// built-in moods use MOOD_COLORS; custom moods use their own colour (see MoodFX.color)
 function getMoodColor(mood) {
-    return MOOD_COLORS[mood] || '#7f77dd';
+    return MOOD_COLORS[mood] || MoodFX.color(mood);
 }
 
 function getPeakTime(tod) {
     var times = { morning: tod.morning || 0, afternoon: tod.afternoon || 0, evening: tod.evening || 0, 'late night': tod.late_night || 0 };
     return Object.keys(times).reduce(function(a, b) { return times[a] > times[b] ? a : b; });
+}
+
+// "248 plays of 97 songs over 31 days, mostly ● nostalgic."
+function plural(n, one, many) { return n === 1 ? one : many; }
+function statsSentence(stats, moods) {
+    var plays = Number(stats.total_plays) || 0, songs = Number(stats.unique_songs) || 0, days = Number(stats.days_active) || 0;
+    var num = function(n) { return '<span class="ss-num">' + n + '</span>'; };
+    var top = moods.length > 0 ? moods[0].mood : null;
+    if (!plays && !songs) return '<p class="stats-sentence">nothing logged yet. pick a mood in your journal and play something.</p>';
+    return '<p class="stats-sentence">' +
+        num(plays) + ' ' + plural(plays, 'play', 'plays') + ' of ' + num(songs) + ' ' + plural(songs, 'song', 'songs') +
+        ' over ' + num(days) + ' ' + plural(days, 'day', 'days') +
+        (top ? ', mostly <span class="ss-mood" style="--mc:' + getMoodColor(top) + '">' + MoodFX.esc(top) + '</span>' : '') + '.' +
+    '</p>';
 }
 
 function render(data) {
@@ -27,13 +42,8 @@ function render(data) {
     var peakTime = getPeakTime(tod);
 
     var html =
-        // summary stats
-        '<div class="stats-summary">' +
-            '<div class="stat-box"><div class="stat-box-num">' + (stats.total_plays || 0) + '</div><div class="stat-box-label">total plays</div></div>' +
-            '<div class="stat-box"><div class="stat-box-num">' + (stats.unique_songs || 0) + '</div><div class="stat-box-label">unique songs</div></div>' +
-            '<div class="stat-box"><div class="stat-box-num">' + (stats.days_active || 0) + '</div><div class="stat-box-label">days active</div></div>' +
-            '<div class="stat-box"><div class="stat-box-num">' + (moods.length > 0 ? moods[0].mood : '—') + '</div><div class="stat-box-label">top mood</div></div>' +
-        '</div>';
+        // summary: one sentence, like a journal entry, instead of a row of number boxes
+        statsSentence(stats, moods);
 
     // flashback
     if (flashback.length > 0) {
@@ -152,7 +162,7 @@ function buildLineGraph(logs) {
 
     // lines per mood
     moods.forEach(function(mood) {
-        var color = MOOD_COLORS[mood] || '#7f77dd';
+        var color = getMoodColor(mood);
         var pts = dates.map(function(d, i) {
             return x(i) + ',' + y((byDate[d] && byDate[d][mood]) || 0);
         });
@@ -179,7 +189,7 @@ function buildLineGraph(logs) {
     // legend
     var legend = '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px;">';
     moods.forEach(function(mood) {
-        var color = MOOD_COLORS[mood] || '#7f77dd';
+        var color = getMoodColor(mood);
         legend += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:#888;">' + MoodFX.esc(mood) + '</span></div>';
     });
     legend += '</div>';

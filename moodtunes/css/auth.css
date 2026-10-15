@@ -147,3 +147,73 @@ input {
   padding: calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right))
     calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
 }
+/* === LOGIN: SAME NIGHT PURPLE AS THE APP === */
+/* the page used to be a plain black box with a slogan and capital labels. now it
+   sits on the app's own background, says plainly what moodtunes is, and shows the
+   seven moods you start with in their colours */
+.auth-container {
+  background:
+    radial-gradient(70% 55% at 15% 0%, rgba(140, 100, 220, 0.30), transparent 70%),
+    #120a20;
+}
+.auth-box {
+  max-width: 380px;
+  padding: 34px 30px 26px;
+  background: rgba(42, 26, 74, 0.62);
+  border: 1px solid rgba(196, 170, 255, 0.16);
+  border-radius: 14px;
+}
+.auth-logo-img { width: 150px; margin: 0 0 14px -16px; }   /* the logo image has blank space on its left */
+.auth-tagline {
+  text-align: left;
+  font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #c9bde6;
+  margin: 0 0 14px;
+}
+.auth-moods {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0 0 28px;
+  padding: 0;
+  font-size: 13px;
+}
+.auth-moods li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: color-mix(in srgb, var(--c) 60%, #fff);
+}
+.auth-moods li::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.auth-tabs { border-bottom-color: rgba(196, 170, 255, 0.16) !important; }
+.auth-tab { color: #9384b8; }
+.auth-tab.active { color: #f6f1ff; border-bottom-color: #b99cff; }
+.auth-field label {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 13px;
+  color: #c9bde6;
+}
+.auth-field input {
+  background: rgba(24, 12, 44, 0.85);
+  border-color: rgba(196, 170, 255, 0.22);
+  color: #f6f1ff;
+}
+.auth-field input::placeholder { color: #7d6fa3; }
+.auth-field input:focus { border-color: #b99cff; }
+.auth-btn { background: #9b6fc2; border-radius: 10px; }
+.auth-btn:focus-visible,
+.auth-tab:focus-visible { outline: 2px solid #b99cff; outline-offset: 2px; }
+.auth-error { text-align: left; }
+@media (max-width: 420px) {
+  .auth-box { padding: 28px 22px 22px; }
+}

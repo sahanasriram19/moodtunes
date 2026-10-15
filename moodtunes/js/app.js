@@ -187,6 +187,7 @@ document.getElementById('save-new-mood').addEventListener('click', function() {
                 document.querySelectorAll('.chip.custom-chip').forEach(function(c) { c.closest('.chip-wrap').remove(); });
                 apiCall('/moods', 'GET', null, function(e2, r2) {
                     if (e2 || !r2.data) return;
+                    MoodFX.setMoodColors(Array.isArray(r2.data) ? r2.data : []);
                     (Array.isArray(r2.data) ? r2.data : []).forEach(function(m) {
                         var chip = addChip(m.name, m.emoji, m.id);
                         if (managingMoods) chip.parentNode.querySelector('.chip-delete-btn').style.display = 'block';
@@ -200,6 +201,7 @@ document.getElementById('save-new-mood').addEventListener('click', function() {
             document.getElementById('save-new-mood').insertAdjacentElement('afterend', msg);
             return;
         }
+        MoodFX.setMoodColors([result.data]);   // its own colour, different from every other mood
         var chip = addChip(result.data.name, result.data.emoji, result.data.id);
         chip.parentNode.querySelector('.chip-delete-btn').style.display = 'block';
         document.getElementById('new-mood-input').value = '';
