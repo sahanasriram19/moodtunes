@@ -1129,36 +1129,50 @@ function sessionSummary(mood, startTime, endTime, songs, opts) {
     overlay.style.setProperty('--mc', c);
     overlay.style.setProperty('--mc-ink', ink(c));
  
-    var covers = songs.length > 0
-        ? '<div class="sum-covers">' + songs.map(function(s, i) {
-            return '<a class="sum-cover" style="--i:' + i + '" href="' + esc(s.spotify_url || '#') + '" target="_blank" rel="noopener" title="' + esc(s.title) + '">' +
-                (s.album_art ? '<img src="' + esc(s.album_art) + '" alt="" />' : '<span class="sum-cover-empty">' + icon('note') + '</span>') +
-                '<span class="sum-cover-title">' + esc(s.title) + '</span>' +
-            '</a>';
-          }).join('') + '</div>'
-        : '<p class="sum-empty">no songs logged during this session</p>';
+    // the session as you heard it: its covers, how long it ran, and when each song came on
+    var clock = function(d) { return d.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s?(am|pm)$/i, ''); };
+    var ampm = function(d) { return d.toLocaleTimeString('en-SG', { hour: 'numeric', hour12: true }).replace(/^[\d\s]+/, '').toLowerCase(); };
+    var span = clock(startTime) + (ampm(startTime) !== ampm(endTime) ? ' ' + ampm(startTime) : '') + ' to ' + clock(endTime) + ' ' + ampm(endTime);
+    var length = mins < 1 ? 'under a minute' : mins === 1 ? '1 minute' : mins + ' minutes';
+ 
+    var arts = [];
+    songs.forEach(function(s) { if (arts.indexOf(s.album_art || '') === -1) arts.push(s.album_art || ''); });
+    var shown = arts.slice(0, 5);
+    var covers = songs.length
+        ? '<div class="sx-covers" aria-hidden="true">' + shown.map(function(a, i) {
+            return a ? '<img src="' + esc(a) + '" alt="" style="z-index:' + (10 - i) + '" />'
+                     : '<span class="sx-cover-blank" style="z-index:' + (10 - i) + '">' + icon('note') + '</span>';
+          }).join('') + (arts.length > 5 ? '<span class="sx-more">+' + (arts.length - 5) + '</span>' : '') + '</div>'
+        : '';
+ 
+    var list = songs.length > 0
+        ? '<ol class="sx-list">' + songs.map(function(s) {
+            var at = s.played_at ? new Date(s.played_at) : null;
+            var when = at && !isNaN(at) ? clock(at) : '';
+            return '<li><a class="sx-row" href="' + esc(s.spotify_url || '#') + '" target="_blank" rel="noopener">' +
+                '<time class="sx-when">' + esc(when) + '</time>' +
+                '<span class="sx-text"><span class="sx-song">' + esc(s.title) + '</span><span class="sx-artist">' + esc(s.artist || '') + '</span></span>' +
+            '</a></li>';
+          }).join('') + '</ol>'
+        : '<p class="sx-empty">nothing played while this session was running.</p>';
  
     overlay.innerHTML =
-        '<div class="session-summary-box" role="dialog" aria-modal="true" aria-labelledby="sum-title">' +
-            '<div class="sum-glow" aria-hidden="true"></div>' +
-            '<div class="sum-emoji" aria-hidden="true">' + icon(moodIcon(mood)) + '</div>' +
-            '<div class="session-summary-title" id="sum-title">' + esc(mood) + ' session complete</div>' +
-            '<div class="session-summary-meta">' + fmt(startTime) + ' – ' + fmt(endTime) + '</div>' +
-            '<div class="sum-stats">' +
-                '<div class="sum-stat"><b data-count="' + mins + '">0</b><span>minute' + (mins !== 1 ? 's' : '') + '</span></div>' +
-                '<div class="sum-stat"><b data-count="' + songs.length + '">0</b><span>song' + (songs.length !== 1 ? 's' : '') + '</span></div>' +
-            '</div>' +
+        '<div class="sx-box" role="dialog" aria-modal="true" aria-labelledby="sum-title" tabindex="-1">' +
             covers +
-            (songs.length && opts.sessionId ? '<button type="button" class="sum-spotify session-spotify-btn" id="sum-spotify"></button>' : '') +
-            '<button class="session-summary-close" id="close-summary">done</button>' +
+            '<h2 class="sx-title" id="sum-title">' + length + ' of ' + esc(mood) + '</h2>' +
+            '<p class="sx-meta">' + span + ', ' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + '</p>' +
+            list +
+            '<div class="sx-actions">' +
+                (songs.length && opts.sessionId ? '<button type="button" class="session-spotify-btn sx-spotify" id="sum-spotify"></button>' : '') +
+                '<button type="button" class="sx-close" id="close-summary">close</button>' +
+            '</div>' +
         '</div>';
- 
-    document.body.appendChild(overlay);
+        document.body.appendChild(overlay);
     requestAnimationFrame(function() { overlay.classList.add('open'); });
-    overlay.querySelectorAll('[data-count]').forEach(function(el) {
-        setTimeout(function() { countUp(el, parseInt(el.dataset.count, 10), 900); }, 250);
-    });
-    setTimeout(function() { confetti(c); }, 200);
+    // focus the dialog itself (keyboard users tab from there) so no ring sits on a button
+    var box = overlay.querySelector('.sx-box');
+    if (box) box.focus({ preventScroll: true });
+    overlay.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
  
     function close() {
         overlay.classList.remove('open');
@@ -1227,6 +1241,109 @@ function markSessionSong(sessionId, songId) {
 function sessionHasSong(sessionId, songId) {
     return sessionSeen(sessionId).indexOf(songId) !== -1;
 }
+ 
+// ── songs "+ add"-ed from session recommendations ──────
+// they only go into your journal once they've actually played: straight away if
+// the now-playing card sees them, otherwise checked against spotify when the session ends
+function pendingKey(sessionId) { return 'moodtunes_pending_logs_' + sessionId; }
+function pendingLogs(sessionId) {
+    try { return JSON.parse(localStorage.getItem(pendingKey(sessionId)) || '{}') || {}; }
+    catch (e) { return {}; }
+}
+function setPendingLogs(sessionId, map) {
+    try {
+        if (Object.keys(map).length) localStorage.setItem(pendingKey(sessionId), JSON.stringify(map));
+        else localStorage.removeItem(pendingKey(sessionId));
+    } catch (e) {}
+}
+function addPendingLog(sessionId, song) {
+    var map = pendingLogs(sessionId);
+    map[song.song_id] = song;
+    setPendingLogs(sessionId, map);
+}
+function isPendingLog(sessionId, songId) { return !!pendingLogs(sessionId)[songId]; }
+ 
+// a pending song is playing: log it now (as a real play)
+function logPendingIfPlaying(session, track) {
+    if (!session || !session.id || !track || !track.id) return;
+    var map = pendingLogs(session.id);
+    var p = map[track.id];
+    if (!p) return;
+    delete map[track.id];
+    setPendingLogs(session.id, map);
+    apiCall('/logs', 'POST', {
+        song_id: track.id, title: track.title, artist: track.artist, album_art: track.albumArt,
+        spotify_url: track.spotifyUrl, mood: p.mood, played: true, tz_offset: tzOffset()
+    }, function(err, res) {
+        if (err || !res || res.status >= 400) { map[track.id] = p; setPendingLogs(session.id, map); return; }
+        toast('“' + track.title + '” is playing, logged as ' + p.mood, p.mood);
+        window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: { song_id: track.id, mood: p.mood, logged: true } }));
+    });
+}
+ 
+// ends a session: sends the still-pending songs so the server can log the ones
+// spotify played, then tidies up. cb(err, result) like apiCall
+function endSessionRequest(session, cb) {
+    var map = pendingLogs(session.id);
+    var pending = Object.keys(map).map(function(k) { return map[k]; });
+    var since = session.startTime instanceof Date ? session.startTime.toISOString() : session.startTime;
+    apiCall('/sessions/' + session.id + '/end', 'PUT', { pending: pending, since: since }, function(err, result) {
+        if (!err && result && result.status < 400) {
+            setPendingLogs(session.id, {});
+            var logged = result.data && Array.isArray(result.data.logged) ? result.data.logged.length : 0;
+            if (logged) toast(logged + ' song' + (logged !== 1 ? 's' : '') + ' you added got played and went into your journal', session.mood);
+        }
+        cb(err, result);
+    });
+}
+ 
+// ── navbar session button ──────────────────────────────
+// on every page with one: "■ end session" while a session runs (ends it right
+// there and shows the summary), otherwise "▶ start session" (goes to the session page).
+// the journal page runs its own version (app.js sets window.mtSessionNavHandled)
+function setupNavSession() {
+    var btn = document.getElementById('session-btn');
+    if (!btn || window.mtSessionNavHandled) return;
+    var session = null;
+    function show() {
+        btn.textContent = session ? '■ end session' : '▶ start session';
+        btn.classList.toggle('active-session', !!session);
+        btn.title = session ? 'end your ' + session.mood + ' session' : 'start a listening session';
+    }
+    try {
+        var s = JSON.parse(localStorage.getItem('moodtunes_session') || 'null');
+        if (s && s.id) session = { id: s.id, mood: s.mood, startTime: new Date(s.startTime) };
+    } catch (e) {}
+    show();
+    if (session) {
+        // make sure it's still running (it may have been ended on another device)
+        apiCall('/sessions/active', 'GET', null, function(err, res) {
+            if (err || !res) return;
+            if (res.status !== 200 || !res.data || res.data.id !== session.id) {
+                session = null;
+                try { localStorage.removeItem('moodtunes_session'); } catch (e) {}
+                setSessionLive(false);
+                show();
+            }
+        });
+    }
+    btn.addEventListener('click', function() {
+        if (!session) { window.location.href = 'session.html'; return; }
+        var s = session;
+        btn.disabled = true;
+        endSessionRequest(s, function(err, res) {
+            btn.disabled = false;
+            if (err || !res || res.status >= 400) { toast('couldn’t end the session, try again', s.mood); return; }
+            session = null;
+            try { localStorage.removeItem('moodtunes_session'); } catch (e) {}
+            setSessionLive(false);
+            show();
+            sessionSummary(s.mood, s.startTime, new Date(), (res.data && res.data.songs) || [], { sessionId: s.id });
+        });
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupNavSession);
+else setTimeout(setupNavSession, 0);
  
 // ── live now-playing card ──────────────────────────────
 // opts: { compact, hideWhenIdle, getSession() -> {id, mood} | null, onTrack(track), onIdle() }
@@ -1446,6 +1563,7 @@ function nowPlaying(container, opts) {
     function autoLog(track) {
         var s = opts.getSession ? opts.getSession() : null;
         if (!s || !s.id || !track.id) return;
+        logPendingIfPlaying(s, track);
         if (sessionHasSong(s.id, track.id)) return;
         markSessionSong(s.id, track.id);
         apiCall('/sessions/songs', 'POST', {
@@ -2083,7 +2201,8 @@ window.MoodFX = {
     setMood: setMood, getMood: function() { return currentMood; },
     skeleton: skeleton, toast: toast, confetti: confetti, countUp: countUp,
     sessionSummary: sessionSummary, nowPlaying: nowPlaying,
-    markSessionSong: markSessionSong, esc: esc, reduceMotion: reduceMotion,
+    markSessionSong: markSessionSong, esc: esc,
+    addPendingLog: addPendingLog, isPendingLog: isPendingLog, endSessionRequest: endSessionRequest, reduceMotion: reduceMotion,
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
     DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive,

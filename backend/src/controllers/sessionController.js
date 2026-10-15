@@ -18,12 +18,33 @@ module.exports.getActiveSession = (req, res, next) => {
 
 module.exports.endSession = (req, res, next) => {
     const data = { session_id: req.params.session_id, user_id: res.locals.userId };
-    sessionModel.endSession(data, (err, results) => {
+    const body = req.body || {};
+    sessionModel.endSession(data, async (err, results) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         if (results.affectedRows === 0) return res.status(404).json({ message: 'Session not found' });
+
+        // catch up on spotify: songs played during the session, and "+ add"-ed songs that got played
+        let sync = { added: 0, logged: [] };
+        try {
+            const rows = await new Promise((ok, no) => require('../services/db').query(
+                'SELECT mood, start_time FROM Session WHERE id = ? AND user_id = ?', [data.session_id, data.user_id],
+                (e, r) => e ? no(e) : ok(r)));
+            if (rows.length) {
+                let since = Date.parse(body.since);
+                const dbStart = new Date(rows[0].start_time).getTime();
+                if (isNaN(since) || Math.abs(since - dbStart) > 6 * 3600 * 1000) since = dbStart;   // trust the client's clock unless it's way off
+                let tz = parseInt(req.get('X-Timezone-Offset'), 10);
+                if (isNaN(tz) || Math.abs(tz) > 14 * 60) tz = 0;
+                if (!isNaN(since)) {
+                    sync = await require('./spotifyExtrasController').syncSessionPlays(
+                        data.user_id, data.session_id, rows[0].mood, since, body.pending, tz);
+                }
+            }
+        } catch (e) { /* spotify unavailable: end the session anyway */ }
+
         sessionModel.selectSessionLogs(data, (err2, logs) => {
             if (err2) return res.status(500).json({ message: 'Internal server error' });
-            res.status(200).json({ message: 'Session ended', songs: logs });
+            res.status(200).json({ message: 'Session ended', songs: logs, logged: sync.logged, caught_up: sync.added });
         });
     });
 };

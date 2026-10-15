@@ -222,6 +222,62 @@ module.exports.logFromSpotify = async (req, res) => {
     });
 };
 
+// ── when a session ends: catch up on what spotify played during it ──────────
+// - songs played while the session ran but missed by the app (tab closed, phone
+//   asleep) are added to the session
+// - songs you "+ add"-ed from the recommendations are only logged to your journal
+//   if spotify says they were actually played during the session
+// returns { added: n, logged: [song ids] }
+module.exports.syncSessionPlays = async (userId, sessionId, mood, sinceMs, pending, tz) => {
+    const out = { added: 0, logged: [] };
+    let items;
+    try { items = await recentlyPlayed(userId); } catch (e) { return out; }
+    const during = items.filter((it) => it.track && it.track.id && it.track.type === 'track' && Date.parse(it.played_at) >= sinceMs);
+    if (!during.length) return out;
+
+    // 1. missing session songs
+    try {
+        const have = new Set((await query('SELECT song_id FROM SessionLog WHERE session_id = ?', [sessionId])).map((r) => r.song_id));
+        const seen = new Set();
+        for (const it of during.slice().sort((a, b) => Date.parse(a.played_at) - Date.parse(b.played_at))) {
+            const t = it.track;
+            if (have.has(t.id) || seen.has(t.id)) continue;
+            seen.add(t.id);
+            const o = spotify.trackToObj(t);
+            const startSec = (Date.parse(it.played_at) - (Number(t.duration_ms) || 0)) / 1000;
+            await query(
+                'INSERT INTO SessionLog (session_id, song_id, title, artist, album_art, spotify_url, played_at)' +
+                ' SELECT id, ?, ?, ?, ?, ?, FROM_UNIXTIME(?) FROM Session WHERE id = ? AND user_id = ?',
+                [o.id, o.title, o.artist, o.albumArt, o.spotifyUrl, Math.max(startSec, sinceMs / 1000), sessionId, userId]
+            );
+            out.added++;
+        }
+    } catch (e) { console.error('session catch-up failed:', e.message); }
+
+    // 2. "+ add"-ed songs that really were played → journal, with spotify's play count
+    const wanted = new Map((Array.isArray(pending) ? pending : []).map((p) => [trackIdOf(p.song_id), p]).filter((x) => x[0]));
+    if (!wanted.size) return out;
+    const groups = playsByDay(during.filter((it) => wanted.has(it.track.id)), tz);
+    for (const g of groups.values()) {
+        const p = wanted.get(g.track.id);
+        const t = spotify.trackToObj(g.track);
+        const m = String(p.mood || mood || '').slice(0, 50);
+        if (!m) continue;
+        await new Promise((resolve) => logs.recordPlay({
+            user_id: userId, song_id: t.id, mood: m, title: t.title, artist: t.artist,
+            album_art: t.albumArt, spotify_url: t.spotifyUrl, note: '', plays: g.plays,
+            log_date: g.day, first_ms: g.first_ms, last_ms: g.last_ms
+        }, (err, result) => {
+            if (!err) {
+                out.logged.push(t.id);
+                if (result && result.affectedRows === 1) lists.songAdded(userId, t.id, m, t.spotifyUrl);
+            }
+            resolve();
+        }));
+    }
+    return out;
+};
+
 // ── recommendations from the GENRES of the songs you logged in a mood ───────
 // 1. your most-played songs in the mood → their artists → each artist's genres
 //    (spotify's genres first; many artists have none on spotify, so last.fm's
@@ -294,28 +350,66 @@ async function searchTracks(q, offset, limit) {
     } catch (e) { return []; }
 }
 
-// last.fm's top songs for a genre, looked up on spotify (from a random page so refresh gives new songs)
-async function lastfmGenreTracks(genre, howMany) {
-    const page = 1 + Math.floor(Math.random() * 4);
-    const d = await lastfm({ method: 'tag.gettoptracks', tag: genre, limit: 50, page });
-    const list = shuffle(((d && d.tracks && d.tracks.track) || []).slice()).slice(0, howMany);
-    const found = await Promise.all(list.map(async (t) => {
-        const artist = t.artist && (t.artist.name || t.artist['#text']);
-        if (!t.name || !artist) return null;
-        const hits = await searchTracks('track:"' + t.name + '" artist:"' + artist + '"', 0, 1);
-        return hits[0] || null;
-    }));
+// what each built-in mood sounds like: spotify genre names (for genre: search)
+// and last.fm mood tags (for "songs tagged chill/sad/..."). custom moods use their own name as the tag
+const MOOD_PROFILE = {
+    happy:      { genres: ['dance pop', 'funk', 'indie pop', 'disco', 'afrobeats'],        tags: ['happy', 'feel good', 'upbeat'] },
+    sad:        { genres: ['indie folk', 'acoustic', 'singer-songwriter', 'sad', 'piano'],  tags: ['sad', 'melancholy', 'melancholic'] },
+    hype:       { genres: ['trap', 'hip hop', 'edm', 'drill', 'phonk'],                    tags: ['energetic', 'hype', 'party'] },
+    heartbreak: { genres: ['r&b', 'soul', 'sad', 'pop', 'alt r&b'],                         tags: ['heartbreak', 'breakup', 'sad'] },
+    nostalgic:  { genres: ['2000s', '90s', 'classic rock', 'motown', 'synthpop'],            tags: ['nostalgic', 'nostalgia', '00s'] },
+    focused:    { genres: ['lo-fi', 'ambient', 'classical', 'post-rock', 'chillhop'],         tags: ['instrumental', 'study', 'focus'] },
+    chill:      { genres: ['lo-fi', 'chillhop', 'bedroom pop', 'neo soul', 'chillwave'],      tags: ['chill', 'mellow', 'chillout'] }
+};
+function moodProfile(mood) {
+    const m = String(mood || '').toLowerCase();
+    return MOOD_PROFILE[m] || { genres: [], tags: [m] };
+}
+
+// does an artist's genre list overlap with yours? ("indie pop" matches "indie")
+function genreMatch(artistGenres, yours) {
+    return artistGenres.some((g) => yours.some((y) => g === y || g.includes(y) || y.includes(g)));
+}
+
+// last.fm's top songs for a mood tag, kept only when the artist is in one of your genres,
+// then looked up on spotify. this is the "your genre AND this mood" bucket
+async function moodInYourGenres(tags, yourGenres, howMany) {
+    if (!LASTFM_KEY || !tags.length || !yourGenres.length) return [];
+    const pages = await Promise.all(tags.slice(0, 2).map((tag) =>
+        lastfm({ method: 'tag.gettoptracks', tag, limit: 100, page: 1 + Math.floor(Math.random() * 3) })));
+    const candidates = shuffle(pages.flatMap((d) => (d && d.tracks && d.tracks.track) || [])
+        .map((t) => ({ name: t.name, artist: t.artist && (t.artist.name || t.artist['#text']) }))
+        .filter((t) => t.name && t.artist));
+    const artists = [...new Set(candidates.map((c) => c.artist))].slice(0, 45);
+    const ok = new Set();
+    await Promise.all(artists.map(async (a) => { if (genreMatch(await lastfmGenresOf(a), yourGenres)) ok.add(a); }));
+    const picked = [];
+    const perArtist = new Map();
+    for (const c of candidates) {
+        if (!ok.has(c.artist) || (perArtist.get(c.artist) || 0) >= 1) continue;
+        perArtist.set(c.artist, 1);
+        picked.push(c);
+        if (picked.length >= howMany) break;
+    }
+    const found = await Promise.all(picked.map(async (c) =>
+        (await searchTracks('track:"' + c.name + '" artist:"' + c.artist + '"', 0, 1))[0] || null));
     return found.filter(Boolean);
 }
 
-// the recommendation list itself, used by the session page and by "start in spotify"
+// the recommendation list itself, used by the session page and by "start in spotify".
+// a blend of three kinds of picks, each tagged with why it's there:
+//   mood  — songs that fit the mood and your genres (last.fm), or the mood's own genres
+//   genre — songs from the genres of the artists you log in this mood
+//   artist — other songs by the artists you log in this mood
 async function buildRecommendations(userId, mood, max) {
+    max = max || 24;
     const rows = await query(
         'SELECT song_id, artist, SUM(play_count) AS plays FROM Log WHERE user_id = ? AND mood = ? GROUP BY song_id, artist ORDER BY plays DESC',
         [userId, mood]
     );
     if (!rows.length) return { tracks: [], genres: [], source: 'none', mine: [] };
     const logged = new Set(rows.map((r) => trackIdOf(r.song_id)).filter(Boolean));
+    const profile = moodProfile(mood);
 
     // 1. artists of your top songs in this mood (and how much you play them)
     const top = rows.slice(0, 12);
@@ -328,7 +422,7 @@ async function buildRecommendations(userId, mood, max) {
         } catch (e) { /* skip songs spotify can't find */ }
     }));
 
-    // 2. their genres, scored by how much you play those artists
+    // 2. their genres (spotify, else last.fm), scored by how much you play those artists
     const artistIds = [...artistWeight.keys()].sort((a, b) => artistWeight.get(b) - artistWeight.get(a)).slice(0, 10);
     const genreScore = new Map();
     const artistNames = [];
@@ -337,50 +431,63 @@ async function buildRecommendations(userId, mood, max) {
             const info = await infoOfArtist(a);
             artistNames.push(info.name);
             let genres = info.genres;
-            if (!genres.length) genres = await lastfmGenresOf(info.name);   // spotify has none for this artist
+            if (!genres.length) genres = await lastfmGenresOf(info.name);
             genres.forEach((g, i) => genreScore.set(g, (genreScore.get(g) || 0) + artistWeight.get(a) / (1 + i * 0.5)));
         } catch (e) { /* skip */ }
     }));
-    const genres = [...genreScore.keys()].sort((a, b) => genreScore.get(b) - genreScore.get(a)).slice(0, 4);
+    let genres = [...genreScore.keys()].sort((a, b) => genreScore.get(b) - genreScore.get(a)).slice(0, 4);
+    if (!artistNames.length) artistNames.push(...new Set(rows.map((r) => String(r.artist || '').split(',')[0].trim()).filter(Boolean)));
 
-    // 3. songs in those genres: spotify's genre search, topped up with last.fm's genre charts
-    let found = [];
-    let source = 'genre';
-    if (genres.length) {
-        const pages = await Promise.all(genres.flatMap((g) => {
-            const start = Math.floor(Math.random() * 6) * 10;
-            return [searchTracks('genre:"' + g + '"', start), searchTracks('genre:"' + g + '"', start + 10)];
-        }));
-        found = pages.flat();
-        if (found.length < 20 && LASTFM_KEY) {
-            const more = await Promise.all(genres.slice(0, 3).map((g) => lastfmGenreTracks(g, 8)));
-            found = found.concat(more.flat());
-        }
-    }
-    // no genres anywhere (rare once last.fm is set up): your artists' other songs
-    if (!genres.length || found.length < 8) {
-        source = genres.length ? 'mixed' : 'artist';
-        const names = artistNames.length ? artistNames : [...new Set(rows.map((r) => String(r.artist || '').split(',')[0].trim()).filter(Boolean))];
-        const pages = await Promise.all(names.slice(0, 4).map((n) => searchTracks('artist:"' + n + '"', Math.floor(Math.random() * 3) * 10)));
-        found = found.concat(pages.flat());
-    }
+    // 3. the three buckets, fetched together
+    const genrePage = (g) => searchTracks('genre:"' + g + '"', Math.floor(Math.random() * 6) * 10);
+    const [moodHits, genreHits, moodGenreHits, artistHits] = await Promise.all([
+        moodInYourGenres(profile.tags, genres, 10),
+        Promise.all(genres.flatMap((g) => [genrePage(g), genrePage(g)])).then((p) => p.flat()),
+        // the mood's own genres: always available, even with no last.fm key and no genres on your artists
+        Promise.all(shuffle(profile.genres.slice()).slice(0, 3).map(genrePage)).then((p) => p.flat()),
+        Promise.all(shuffle(artistNames.slice()).slice(0, 4).map((n) => searchTracks('artist:"' + n + '"', Math.floor(Math.random() * 3) * 10))).then((p) => p.flat())
+    ]);
 
+    // 4. blend: about 40% mood, 35% genre, 25% artist; any bucket that comes up short is filled from the others
     const seen = new Set();
     const perArtist = new Map();
-    const tracks = shuffle(found).filter((t) => {
-        if (!t || !t.id || seen.has(t.id) || logged.has(t.id) || !t.album) return false;
-        seen.add(t.id);
-        const a = t.artists && t.artists[0] && t.artists[0].id;
-        const n = perArtist.get(a) || 0;
-        if (n >= 2) return false;
-        perArtist.set(a, n + 1);
-        return true;
-    }).slice(0, max || 24).map(spotify.trackToObj);
+    const take = (list, why, n) => {
+        const out = [];
+        for (const t of shuffle(list.slice())) {
+            if (out.length >= n) break;
+            if (!t || !t.id || seen.has(t.id) || logged.has(t.id) || !t.album) continue;
+            const a = t.artists && t.artists[0] && t.artists[0].id;
+            if ((perArtist.get(a) || 0) >= 2) continue;
+            seen.add(t.id);
+            perArtist.set(a, (perArtist.get(a) || 0) + 1);
+            out.push(Object.assign(spotify.trackToObj(t), { why }));
+        }
+        return out;
+    };
+    const moodWhy  = mood;
+    const moodPool = moodHits.concat(moodGenreHits);
+    let picks = [
+        ...take(moodPool, 'mood', Math.round(max * 0.4)),
+        ...take(genreHits, 'genre', Math.round(max * 0.35)),
+        ...take(artistHits, 'artist', Math.round(max * 0.25))
+    ];
+    if (picks.length < max) picks = picks.concat(take(moodPool.concat(genreHits, artistHits), 'mix', max - picks.length));
 
-    // your own most-played songs in this mood (for "mix in my songs")
+    // interleave so the kinds are spread through the list (and the queue)
+    const byKind = { mood: [], genre: [], artist: [], mix: [] };
+    picks.forEach((p) => byKind[p.why].push(p));
+    const tracks = [];
+    while (tracks.length < picks.length) {
+        ['mood', 'genre', 'mood', 'artist', 'genre', 'mix'].forEach((k) => { if (byKind[k].length) tracks.push(byKind[k].shift()); });
+    }
+    tracks.forEach((t) => { t.why = t.why === 'mood' ? moodWhy : t.why === 'genre' ? 'your genres' : t.why === 'artist' ? 'your artists' : ''; });
+
+    const source = genreHits.length ? 'genre' : moodPool.length ? 'mood' : 'artist';
     const mine = rows.map((r) => uriOf(r.song_id)).filter(Boolean);
-
-    return { tracks, genres: source === 'artist' ? [] : genres.slice(0, 3), source, mine };
+    // genres shown on the page: yours first, then the mood's
+    const shown = genres.slice(0, 3);
+    if (shown.length < 3) profile.genres.forEach((g) => { if (shown.length < 3 && shown.indexOf(g) === -1) shown.push(g); });
+    return { tracks: tracks.slice(0, max), genres: shown, yourGenres: genres.slice(0, 3), mood, source, mine };
 }
 module.exports.buildRecommendations = buildRecommendations;
 
@@ -390,7 +497,7 @@ module.exports.recommendations = async (req, res) => {
     if (!mood) return res.status(400).json({ message: 'mood required' });
     try {
         const r = await buildRecommendations(res.locals.userId, mood);
-        res.json({ tracks: r.tracks, genres: r.genres, source: r.source });
+        res.json({ tracks: r.tracks, genres: r.genres, yourGenres: r.yourGenres, source: r.source });
     } catch (e) {
         console.error('recommendations failed:', e.response ? JSON.stringify(e.response.data) : e.message);
         res.status(502).json({ message: 'couldn’t get recommendations' });

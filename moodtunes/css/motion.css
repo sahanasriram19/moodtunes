@@ -2725,7 +2725,6 @@ body {
   stroke-width: 10;
   opacity: calc(var(--o) * 0.3);
 }
- 
 /* no tempo known and not listening: a slow, calm swell (not pretending to be the beat) */
 :root.np-live .mt-waves .wave-line,
 :root.np-live .mt-waves .wave-glow {
@@ -4652,4 +4651,164 @@ body {
 #logs-list .day-box .log-card:last-child,
 #timeline .day-box .log-card:last-child {
   border-bottom: 0 !important;
+}
+/* === SESSION SUMMARY ===
+   what you heard: the session's covers fanned out, how long it ran, and the
+   time each song came on. flat surface, no glass or glow; the covers carry it */
+.mt-summary {
+  backdrop-filter: none;
+  background: rgba(8, 7, 10, 0.78) !important;
+}
+.mt-summary .sx-box {
+  position: relative;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  max-height: min(84vh, 660px);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 24px 24px 18px;
+  border-radius: 10px;
+  background: #1a181e;
+  border: 1px solid #2c2932;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  color: #ece9f0;
+  transform: translateY(10px);
+  transition: transform 0.3s cubic-bezier(.2, .8, .2, 1);
+}
+.mt-summary.open .sx-box { transform: none; }
+.mt-summary.closing .sx-box { transform: translateY(6px); transition-duration: 0.2s; }
+ 
+/* the covers, overlapping like sleeves pulled from a crate */
+.sx-covers { display: flex; align-items: center; margin: 0 0 18px; }
+.sx-covers img,
+.sx-cover-blank {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex: none;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px #1a181e, 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+.sx-covers > * + * { margin-left: -20px; }
+.sx-cover-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--mc) 35%, #1a181e);
+  color: color-mix(in srgb, var(--mc) 70%, #fff);
+}
+.sx-cover-blank .mt-icon { width: 20px; height: 20px; }
+.sx-more {
+  margin-left: 10px !important;
+  font-size: 13px;
+  color: #8f8a98;
+  font-variant-numeric: tabular-nums;
+}
+.mt-summary.open .sx-covers > * { animation: sx-deal 0.42s cubic-bezier(.2, .8, .2, 1) both; }
+.mt-summary.open .sx-covers > :nth-child(2) { animation-delay: 0.05s; }
+.mt-summary.open .sx-covers > :nth-child(3) { animation-delay: 0.10s; }
+.mt-summary.open .sx-covers > :nth-child(4) { animation-delay: 0.15s; }
+.mt-summary.open .sx-covers > :nth-child(5) { animation-delay: 0.20s; }
+.mt-summary.open .sx-covers > :nth-child(6) { animation-delay: 0.25s; }
+@keyframes sx-deal { from { opacity: 0; transform: translateX(-14px); } }
+ 
+.sx-title {
+  margin: 0 0 4px;
+  font-family: 'Outfit', var(--font-body, 'DM Sans'), system-ui, sans-serif;
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #f4f2f7;
+}
+.sx-meta {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #8f8a98;
+  font-variant-numeric: tabular-nums;
+}
+ 
+.sx-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+  border-top: 1px solid #2c2932;
+}
+.sx-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 -10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+.sx-row:hover { background: #232028; }
+.sx-when {
+  font-size: 12px;
+  color: #6f6a78;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.sx-text { min-width: 0; display: flex; flex-direction: column; }
+.sx-song,
+.sx-artist { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sx-song { font-size: 14px; color: #ece9f0; }
+.sx-artist { font-size: 12.5px; color: #8f8a98; }
+.sx-empty {
+  margin: 0;
+  padding: 16px 0 6px;
+  font-size: 14px;
+  color: #8f8a98;
+  border-top: 1px solid #2c2932;
+}
+ 
+.sx-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #2c2932;
+}
+.sx-actions .sx-spotify { margin: 0; }
+.sx-close {
+  margin-left: auto;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: #b9b4c2;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.sx-close:hover { color: #fff; }
+.mt-summary .sx-box:focus,
+.sx-box :focus { outline: none; }
+.sx-box :focus-visible { outline: 2px solid var(--mc); outline-offset: 2px; border-radius: 4px; }
+ 
+:root[data-theme="light"] .mt-summary .sx-box { background: #fff; border-color: #e6e3ea; color: #1d1b21; }
+:root[data-theme="light"] .sx-title,
+:root[data-theme="light"] .sx-song { color: #1d1b21; }
+:root[data-theme="light"] .sx-covers img,
+:root[data-theme="light"] .sx-cover-blank { box-shadow: 0 0 0 2px #fff, 0 6px 14px rgba(0, 0, 0, 0.15); }
+:root[data-theme="light"] .sx-row:hover { background: #f4f2f6; }
+:root[data-theme="light"] .sx-list,
+:root[data-theme="light"] .sx-empty,
+:root[data-theme="light"] .sx-actions { border-color: #ece9ef; }
+:root[data-theme="light"] .sx-close { color: #4a4652; }
+ 
+@media (max-width: 768px) {
+  .mt-summary .sx-box { width: calc(100% - 32px); padding: 20px 18px 14px; }
+  .sx-title { font-size: 23px; }
+  .sx-close { min-height: 44px; padding: 8px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mt-summary.open .sx-covers > * { animation: none; }
+  .mt-summary .sx-box { transition: none; }
 }

@@ -11,6 +11,7 @@ var logsList      = document.getElementById('logs-list');
 var sessionPanel  = document.getElementById('session-panel');
 var sessionRecs   = document.getElementById('session-recommendations');
 var sessionBtn    = document.getElementById('session-btn');
+window.mtSessionNavHandled = true;   // this page runs its own navbar session button (mood.js does it on the others)
 var sessionEndBtn = document.getElementById('session-end-btn');
 var sessionLabel  = document.getElementById('session-mood-label');
 var sessionTime   = document.getElementById('session-start-time');
@@ -453,7 +454,7 @@ function showSessionPanel(mood) {
     sessionPanel.classList.remove('hidden');
     sessionLabel.textContent = mood + ' session active';
     sessionTime.textContent  = '· started at ' + new Date().toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true });
-    sessionBtn.textContent   = '■ session active';
+    sessionBtn.textContent   = '■ end session';
     sessionBtn.classList.add('active-session');
     loadSessionRecs(mood);
 }
@@ -489,13 +490,8 @@ function loadSessionRecs(mood) {
                     '<div class="rec-artist">' + MoodFX.esc(track.artist) + '</div>';
                 card.addEventListener('click', (function(t) {
                     return function() {
+                        // added to the session by the now-playing card once spotify actually plays it
                         openSpotify(t.spotifyUrl);
-                        if (activeSession) {
-                            var tid = t.spotifyUrl.split('/track/')[1];
-                            if (tid) tid = tid.split('?')[0];
-                            MoodFX.markSessionSong(activeSession.id, tid || t.id);
-                            apiCall('/sessions/songs', 'POST', { session_id: activeSession.id, song_id: tid || t.id, title: t.title, artist: t.artist, album_art: t.albumArt, spotify_url: t.spotifyUrl }, function() {});
-                        }
                     };
                 })(track));
                 sessionRecs.appendChild(card);
@@ -506,8 +502,8 @@ function loadSessionRecs(mood) {
 
 function endSession() {
     if (!activeSession) return;
-    apiCall('/sessions/' + activeSession.id + '/end', 'PUT', null, function(err, result) {
-        if (err) return;
+    MoodFX.endSessionRequest(activeSession, function(err, result) {
+        if (err || !result || result.status >= 400) return;
         var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date(), id = activeSession.id;
         var songs = result.data && result.data.songs ? result.data.songs : [];
         activeSession = null;
@@ -689,7 +685,7 @@ if (savedSession) {
             sessionPanel.classList.remove('hidden');
             sessionLabel.textContent = s.mood + ' session active';
             sessionTime.textContent  = '· started at ' + new Date(s.startTime).toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true });
-            sessionBtn.textContent   = '■ session active';
+            sessionBtn.textContent   = '■ end session';
             sessionBtn.classList.add('active-session');
             loadSessionRecs(s.mood);
             if (nowPlayingCard) nowPlayingCard.refresh();   // log whatever is already playing

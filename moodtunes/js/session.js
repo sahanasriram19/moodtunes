@@ -306,8 +306,8 @@ function endSession() {
     if (!activeSession) return;
     clearInterval(timerInterval);
     stopRing();
-    apiCall('/sessions/' + activeSession.id + '/end', 'PUT', null, function(err, result) {
-        if (err) return;
+    MoodFX.endSessionRequest(activeSession, function(err, result) {
+        if (err || !result || result.status >= 400) { startTimer(activeSession.startTime); return; }
         var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date(), id = activeSession.id;
         var songs = result.data && result.data.songs ? result.data.songs : [];
         activeSession = null;
@@ -424,9 +424,12 @@ function renderRecs(mood, data, logs) {
             var lead = '';
             if (!logs && activeSession && activeSession.queueMode) lead = 'going into your spotify queue. ';
             else if (activeSession && activeSession.account === 'free') lead = 'save these as a playlist to play them on shuffle in spotify. ';
-            why.innerHTML = lead + (genres.length
-                ? 'picked from the genres in your ' + MoodFX.esc(mood) + ' songs: ' + genres.map(function(g) { return '<span class="rec-genre" style="--mc:' + MoodFX.color(mood) + '">' + MoodFX.esc(g) + '</span>'; }).join('')
-                : 'picked from the artists in your ' + MoodFX.esc(mood) + ' songs (no genres found for them)');
+            // a blend of songs that fit the mood, songs from your genres and more from your artists
+            var yours = Array.isArray(rec.data.yourGenres) ? rec.data.yourGenres : null;
+            var chip = function(g) { return '<span class="rec-genre" style="--mc:' + MoodFX.color(mood) + '">' + MoodFX.esc(g) + '</span>'; };
+            why.innerHTML = lead + (yours
+                ? 'a mix of ' + MoodFX.esc(mood) + ' songs, ' + (yours.length ? 'your genres ' + yours.map(chip).join('') + ' ' : '') + 'and more from your artists'
+                : (genres.length ? 'picked from the genres in your ' + MoodFX.esc(mood) + ' songs: ' + genres.map(chip).join('') : 'picked from the artists in your ' + MoodFX.esc(mood) + ' songs'));
             discoverContent.appendChild(why);
             var grid = document.createElement('div');
             grid.className = 'rec-grid';   // columns set in motion.css (6 on desktop, 3 on phones)
@@ -445,8 +448,10 @@ function renderRecs(mood, data, logs) {
                         '</div>' +
                     '</div>' +
                     '<div style="font-size:12px;color:#f0f0f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">' + MoodFX.esc(track.title) + '</div>' +
-                    '<div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;width:100%;">' + MoodFX.esc(track.artist) + '</div>' +
+                    '<div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:' + (track.why ? '2' : '6') + 'px;width:100%;">' + MoodFX.esc(track.artist) + '</div>' +
+                    (track.why ? '<div class="rec-tile-why" style="--mc:' + MoodFX.color(mood) + '">' + MoodFX.esc(track.why) + '</div>' : '') +
                     '<button class="session-add-btn" data-id="' + track.id + '" data-title="' + MoodFX.esc(track.title) + '" data-artist="' + MoodFX.esc(track.artist) + '" data-art="' + MoodFX.esc(track.albumArt||'') + '" data-url="' + MoodFX.esc(track.spotifyUrl) + '" data-mood="' + MoodFX.esc(mood) + '" style="background:none;border:1px solid #333;border-radius:14px;color:#888;font-size:11px;padding:3px 10px;cursor:pointer;width:100%;margin-top:auto;">+ add</button>';
+                if (activeSession && MoodFX.isPendingLog(activeSession.id, track.id)) markAdded(card.querySelector('.session-add-btn'));
                 grid.appendChild(card);
             });
 
@@ -454,6 +459,12 @@ function renderRecs(mood, data, logs) {
 }
 
 // ── click handlers ─────────────────────────────────────
+function markAdded(btn) {
+    btn.textContent = '✓ added';
+    btn.disabled = true;
+    btn.title = 'goes into your journal once it plays';
+    btn.style.color = '#1DB954'; btn.style.borderColor = '#1DB954';
+}
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('session-play-btn')) {
         var pb = e.target;
@@ -466,19 +477,21 @@ document.addEventListener('click', function(e) {
             return;   // the now-playing poller adds it to the session once it's actually playing
         }
         openSpotify(pb.dataset.url);
-        if (activeSession) {
-            MoodFX.markSessionSong(activeSession.id, e.target.dataset.id);
-            apiCall('/sessions/songs', 'POST', {
-                session_id: activeSession.id, song_id: e.target.dataset.id,
-                title: e.target.dataset.title, artist: e.target.dataset.artist,
-                album_art: e.target.dataset.art, spotify_url: e.target.dataset.url
-            }, loadSoFar);
-        }
+        // not added to the session here: the now-playing card adds it once spotify is actually playing it
     }
     if (e.target.classList.contains('session-add-btn')) {
         var btn = e.target;
+        if (activeSession) {
+            // during a session it's only logged once it actually plays (see addPendingLog in mood.js)
+            MoodFX.addPendingLog(activeSession.id, {
+                song_id: btn.dataset.id, title: btn.dataset.title, artist: btn.dataset.artist,
+                album_art: btn.dataset.art, spotify_url: btn.dataset.url, mood: btn.dataset.mood
+            });
+            markAdded(btn);
+            MoodFX.toast('added. it goes into your journal once it plays', btn.dataset.mood);
+            return;
+        }
         btn.textContent = '...'; btn.disabled = true;
-        // adding isn't playing: the song goes into today's journal with no play counted
         apiCall('/logs', 'POST', {
             song_id: btn.dataset.id, title: btn.dataset.title, artist: btn.dataset.artist,
             album_art: btn.dataset.art, spotify_url: btn.dataset.url, mood: btn.dataset.mood,

@@ -347,8 +347,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-var sessionBtn = document.getElementById('session-btn');
-if (sessionBtn) sessionBtn.addEventListener('click', function() { window.location.href = 'index.html'; });
+// the navbar session button is set up in mood.js (start, or end a running session)
 
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 

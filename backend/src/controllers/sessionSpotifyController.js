@@ -92,7 +92,7 @@ module.exports.start = async (req, res) => {
         try { q = await queueAll(userId, uris); }
         catch (e) { q = { queued: 0, left: uris, reason: reasonOf(e) }; }
 
-        res.json(Object.assign({ tracks: rec.tracks, genres: rec.genres, source: rec.source, uris }, q));
+        res.json(Object.assign({ tracks: rec.tracks, genres: rec.genres, yourGenres: rec.yourGenres, source: rec.source, uris }, q));
     } catch (e) {
         lists.fail(res, e, 'starting session ' + sessionId + ' in spotify');
     }

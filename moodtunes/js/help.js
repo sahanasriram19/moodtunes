@@ -46,7 +46,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('session') + 'session</div>' +
-                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood then hit start session to begin a listening session. once started you\'ll get song recommendations picked from the genres of the songs you\'ve logged in that mood. click ▶ to open in spotify, or + add to log it to your journal. hit ↻ refresh for a new batch. songs you play show up under <b style="color:#ddd;">this session</b> as you go. end session shows a summary, where you can save the session to spotify as a playlist.</div>' +
+                '<div style="font-size:13px;color:#aaa;line-height:1.6;">pick a mood then hit start session to begin a listening session. once started you\'ll get song recommendations picked from the genres of the songs you\'ve logged in that mood. with spotify premium every song is added to your spotify queue, and you can save the session as a playlist (on free, save it as a playlist and play it on shuffle). ▶ plays a song, and + add puts it in your journal once it has actually played. hit ↻ refresh for a new batch. songs you play show up under <b style="color:#ddd;">this session</b> as you go. end session shows a summary, where you can save the session to spotify as a playlist.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
