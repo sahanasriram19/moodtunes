@@ -217,3 +217,14 @@ input {
 @media (max-width: 420px) {
   .auth-box { padding: 28px 22px 22px; }
 }
+
+/* hover: the same slight, smooth lift as the rest of the app */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .auth-btn,
+  .auth-tab {
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, opacity 0.2s ease;
+  }
+  .auth-btn:hover,
+  .auth-tab:hover { transform: translateY(-2px); }
+  .auth-btn:hover { opacity: 1; }
+}
