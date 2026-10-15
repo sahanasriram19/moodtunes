@@ -11,6 +11,8 @@ const { call, uriOf, query } = lists;
 //  - spotify playing (or paused) somewhere → all songs are queued straight away
 //  - spotify not open yet → the app keeps retrying until it is, then queues them
 //  - free account → the songs stay in the app, ▶ opens them in spotify
+// either way, "save as playlist" puts the session's songs in a new private
+// playlist in your spotify (free accounts can listen to it on shuffle)
 // the now-playing poller then adds whatever you listen to into the session.
 
 const MAX_QUEUE = 25;
@@ -122,5 +124,28 @@ module.exports.playTrack = async (req, res) => {
         res.json({ playing: true });
     } catch (e) {
         res.json({ playing: false, reason: reasonOf(e) });
+    }
+};
+
+// POST /api/sessions/:session_id/spotify/playlist   body: { uris: [...] }
+// saves the session's songs as a new private playlist, e.g. "chill session · 15 oct"
+// → { url, uri, songs }
+module.exports.savePlaylist = async (req, res) => {
+    const userId = res.locals.userId;
+    const sessionId = parseInt(req.params.session_id, 10);
+    const uris = [...new Set((Array.isArray(req.body && req.body.uris) ? req.body.uris : []).map(uriOf).filter(Boolean))].slice(0, 100);
+    if (!uris.length) return res.status(400).json({ message: 'no songs to save' });
+    try {
+        const s = await ownSession(userId, sessionId);
+        if (!s) return res.status(404).json({ message: 'session not found' });
+        const day = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toLowerCase();
+        const made = await call(userId, 'post', '/me/playlists', {
+            name: s.mood + ' session · ' + day, public: false,
+            description: 'made with moodtunes from the genres of your ' + s.mood + ' songs'
+        });
+        await lists.replaceAll(userId, made.id, uris);
+        res.json({ url: lists.playlistUrl(made.id), uri: 'spotify:playlist:' + made.id, songs: uris.length });
+    } catch (e) {
+        lists.fail(res, e, 'saving session ' + sessionId + ' as a playlist');
     }
 };

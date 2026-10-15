@@ -121,6 +121,8 @@ sessionStartBtn.addEventListener('click', function() {
 // if "mix in my songs" is on) and adds them all to the queue of whatever spotify
 // is playing. if spotify isn't open yet, it keeps trying until it is. on a free
 // account spotify doesn't allow queueing, so ▶ opens songs in spotify as before.
+// "save as spotify playlist" (optional on premium, the main way on free) puts the
+// session's songs in a new private playlist, which free accounts play on shuffle.
 var MIX_KEY = 'moodtunes_session_mix';
 var mixMine = true;
 try { mixMine = localStorage.getItem(MIX_KEY) !== '0'; } catch (e) {}
@@ -147,23 +149,69 @@ queueBtn.addEventListener('click', function() {
     queuePending(activeSession.id, true);
 });
 
+// save the session's songs as a playlist in spotify
+var saveBtn = document.createElement('button');
+saveBtn.id = 'session-save-playlist-btn';
+saveBtn.className = 'hidden';
+document.querySelector('.session-hero-actions').appendChild(saveBtn);
+saveBtn.addEventListener('click', function() {
+    if (!activeSession || !sessionUris.length) return;
+    var s = activeSession;
+    if (s.playlist && s.playlist.songs === sessionUris.length) { openSpotify(s.playlist.url); return; }
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'saving…';
+    apiCall('/sessions/' + s.id + '/spotify/playlist', 'POST', { uris: sessionUris }, function(err, res) {
+        if (activeSession !== s) return;
+        if (err || !res || res.status !== 200) {
+            setSpotifyButton();
+            MoodFX.toast((res && res.data && res.data.message) || 'couldn’t save the playlist, try again', s.mood);
+            return;
+        }
+        s.playlist = { url: res.data.url, songs: sessionUris.length };
+        saveSessionLocal();
+        setSpotifyButton();
+        MoodFX.toast('saved “' + s.mood + ' session” to your spotify' + (s.account === 'free' ? ', play it on shuffle there' : ''), s.mood);
+        openSpotify(res.data.url);
+    });
+});
+
+// "how sessions work" starts open the first time you visit
+try {
+    if (!localStorage.getItem('moodtunes_session_how_seen')) {
+        document.getElementById('session-how').open = true;
+        localStorage.setItem('moodtunes_session_how_seen', '1');
+    }
+} catch (e) {}
+
 var pendingUris = [];       // songs not in the spotify queue yet
+var sessionUris = [];       // every song this session recommended (what "save as playlist" saves)
 var queueRetry  = null;
 
 function saveSessionLocal() {
     if (!activeSession) return;
     localStorage.setItem('moodtunes_session', JSON.stringify({
         id: activeSession.id, mood: activeSession.mood,
-        startTime: activeSession.startTime.toISOString(), queueMode: !!activeSession.queueMode
+        startTime: activeSession.startTime.toISOString(), queueMode: !!activeSession.queueMode,
+        account: activeSession.account || null, uris: sessionUris, playlist: activeSession.playlist || null
     }));
 }
 
 function setSpotifyButton() {
-    var show = !!(activeSession && activeSession.queueMode && pendingUris.length);
+    var s = activeSession;
+    var show = !!(s && s.queueMode && pendingUris.length);
     queueBtn.classList.toggle('hidden', !show);
     queueBtn.disabled = false;
     queueBtn.textContent = '+ add ' + pendingUris.length + ' to spotify queue';
-    mixToggle.classList.toggle('hidden', !!activeSession);
+
+    saveBtn.classList.toggle('hidden', !(s && sessionUris.length));
+    saveBtn.disabled = false;
+    var saved = s && s.playlist && s.playlist.songs === sessionUris.length;
+    saveBtn.textContent = saved ? 'open playlist in spotify' : (s && s.account === 'free' ? 'save as spotify playlist' : 'also save as playlist');
+    // free: saving is the main way to listen, so it gets the green button
+    saveBtn.classList.toggle('primary', !!(s && s.account === 'free'));
+
+    mixToggle.classList.toggle('hidden', !!s);
+    document.body.dataset.spotifyAccount = (s && s.account) || '';
 }
 
 function startInSpotify(session) {
@@ -177,9 +225,12 @@ function startInSpotify(session) {
             return;
         }
         var d = res.data;
-        renderRecs(session.mood, d, null);
         activeSession.queueMode = d.reason !== 'premium_required' && d.reason !== 'not_connected' && d.reason !== 'reconnect';
+        if (d.reason === 'premium_required') activeSession.account = 'free';
+        else if (d.queued) activeSession.account = 'premium';
         pendingUris = Array.isArray(d.left) ? d.left : [];
+        sessionUris = Array.isArray(d.uris) ? d.uris : [];
+        renderRecs(session.mood, d, null);
         saveSessionLocal();
         setSpotifyButton();
         afterQueue(session, d, false);
@@ -190,13 +241,14 @@ function startInSpotify(session) {
 function afterQueue(session, d, manual) {
     clearTimeout(queueRetry);
     var mood = session.mood;
+    if (d.queued && session.account !== 'premium') { session.account = 'premium'; saveSessionLocal(); setSpotifyButton(); }
     if (d.queued && !pendingUris.length) {
         MoodFX.toast(d.queued + ' ' + mood + ' songs added to your spotify queue' + (d.device ? ' on ' + d.device : ''), mood);
         return;
     }
     if (d.reason === 'premium_required') {
-        activeSession.queueMode = false; saveSessionLocal(); setSpotifyButton();
-        MoodFX.toast('spotify only lets premium accounts add to the queue. press ▶ on a song to open it in spotify', mood);
+        activeSession.queueMode = false; activeSession.account = 'free'; saveSessionLocal(); setSpotifyButton();
+        MoodFX.toast('spotify free can’t add songs to the queue. save the session as a playlist and play it on shuffle', mood, { duration: 7000 });
         return;
     }
     if (d.reason === 'no_active_device') {
@@ -241,10 +293,12 @@ sessionRefreshBtn.addEventListener('click', function() {
 });
 // a fresh batch during a session: offer to put it in the spotify queue too
 window.addEventListener('moodtunes:recs', function(e) {
-    if (!refreshAsked || !activeSession || !activeSession.queueMode) return;
+    if (!refreshAsked || !activeSession) return;
     refreshAsked = false;
-    pendingUris = e.detail.uris;
-    activeSession.waitTries = 0;
+    // new songs join what "save as playlist" saves
+    e.detail.uris.forEach(function(u) { if (sessionUris.indexOf(u) === -1) sessionUris.push(u); });
+    if (activeSession.queueMode) { pendingUris = e.detail.uris; activeSession.waitTries = 0; }
+    saveSessionLocal();
     setSpotifyButton();
 });
 
@@ -259,6 +313,7 @@ function endSession() {
         activeSession = null;
         clearTimeout(queueRetry);
         pendingUris = [];
+        sessionUris = [];
         setSpotifyButton();
         renderSoFar([]);
         localStorage.removeItem('moodtunes_session');
@@ -366,8 +421,10 @@ function renderRecs(mood, data, logs) {
             var why = document.createElement('p');
             why.className = 'rec-why';
             var genres = Array.isArray(rec.data.genres) ? rec.data.genres : [];
-            var inQueue = !logs && activeSession && activeSession.queueMode;
-            why.innerHTML = (inQueue ? 'going into your spotify queue. ' : '') + (genres.length
+            var lead = '';
+            if (!logs && activeSession && activeSession.queueMode) lead = 'going into your spotify queue. ';
+            else if (activeSession && activeSession.account === 'free') lead = 'save these as a playlist to play them on shuffle in spotify. ';
+            why.innerHTML = lead + (genres.length
                 ? 'picked from the genres in your ' + MoodFX.esc(mood) + ' songs: ' + genres.map(function(g) { return '<span class="rec-genre" style="--mc:' + MoodFX.color(mood) + '">' + MoodFX.esc(g) + '</span>'; }).join('')
                 : 'picked from the artists in your ' + MoodFX.esc(mood) + ' songs (no genres found for them)');
             discoverContent.appendChild(why);
@@ -461,7 +518,8 @@ if (savedSession) {
             if (err || result.status !== 200 || result.data.id !== s.id) {
                 localStorage.removeItem('moodtunes_session'); return;
             }
-            activeSession = { id: s.id, mood: s.mood, startTime: new Date(s.startTime), queueMode: !!s.queueMode };
+            activeSession = { id: s.id, mood: s.mood, startTime: new Date(s.startTime), queueMode: !!s.queueMode, account: s.account || null, playlist: s.playlist || null };
+            sessionUris = Array.isArray(s.uris) ? s.uris : [];
             setSpotifyButton();
             selectedMood = s.mood;
             document.querySelectorAll('.chip').forEach(function(c) { if (c.dataset.mood === s.mood) c.classList.add('selected'); });

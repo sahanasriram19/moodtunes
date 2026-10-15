@@ -22,6 +22,8 @@ Built as a personal portfolio project to explore full-stack development with rea
 ### Sessions
 - Start a listening session for a chosen mood
 - Starting a session adds all its recommended songs to your Spotify queue, while Spotify plays in the background (Premium). If Spotify isn't open yet, they're added as soon as you play something there
+- "Save as spotify playlist" keeps a session's songs as a private playlist: optional on Premium, and the way Free accounts listen to a session (on shuffle)
+- A "how sessions work" section on the session page explains the Premium and Free flows
 - Recommendations come from the **genres** of the artists in that mood's songs (Spotify genres, with Last.fm genre tags when Spotify has none)
 - Optional "mix in my songs" puts your own songs from that mood between the new picks
 - Log songs as you listen during the session
@@ -233,7 +235,7 @@ During a session, moodtunes takes your most-played songs in the current mood, lo
 
 ## Known limitations
 
-- Spotify only allows adding to the queue with Premium and an active device. Free accounts get the recommendations in the app, and ▶ opens each song in Spotify.
+- Spotify only allows adding to the queue with Premium and an active device. Free accounts save the session as a playlist instead and play it on shuffle.
 - Spotify's queue can't be cleared by apps, so ending a session leaves any unplayed session songs in your queue.
 - The Spotify Recommendations endpoint was deprecated for new apps in late 2024, so Last.fm is used as the recommendation source instead.
 
