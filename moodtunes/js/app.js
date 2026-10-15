@@ -506,19 +506,26 @@ function endSession() {
         if (err || !result || result.status >= 400) return;
         var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date(), id = activeSession.id;
         var songs = result.data && result.data.songs ? result.data.songs : [];
+        var listenedMs = result.listenedMs;
         activeSession = null;
         localStorage.removeItem('moodtunes_session');
         MoodFX.setSessionLive(false);
         sessionPanel.classList.add('hidden');
         sessionBtn.textContent = '▶ start session';
         sessionBtn.classList.remove('active-session');
-        showSessionSummary(mood, startTime, endTime, songs, id);
+        showSessionSummary(mood, startTime, endTime, songs, id, listenedMs);
     });
 }
 
-function showSessionSummary(mood, startTime, endTime, songs, sessionId) {
-    MoodFX.sessionSummary(mood, startTime, endTime, songs, { sessionId: sessionId });
+function showSessionSummary(mood, startTime, endTime, songs, sessionId, listenedMs) {
+    MoodFX.sessionSummary(mood, startTime, endTime, songs, { sessionId: sessionId, listenedMs: listenedMs });
 }
+
+// the session pauses while nothing plays on spotify (see the session clock in mood.js)
+window.addEventListener('moodtunes:session-clock', function(e) {
+    if (!activeSession) return;
+    sessionLabel.textContent = activeSession.mood + (e.detail.paused ? ' session paused, nothing playing' : ' session active');
+});
 
 sessionBtn.addEventListener('click', function() {
     if (activeSession) { endSession(); }

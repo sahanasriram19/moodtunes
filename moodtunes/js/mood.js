@@ -1120,7 +1120,8 @@ function sessionSpotifyButton(btn, saved) {
  
 function sessionSummary(mood, startTime, endTime, songs, opts) {
     opts = opts || {};
-    var mins = Math.max(0, Math.floor((endTime - startTime) / 60000));
+    // listening time (pauses left out) when we know it, else start to end
+    var mins = Math.max(0, Math.floor((opts.listenedMs != null ? opts.listenedMs : endTime - startTime) / 60000));
     var fmt = function(d) { return d.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true }); };
     var c = color(mood);
  
@@ -1167,7 +1168,8 @@ function sessionSummary(mood, startTime, endTime, songs, opts) {
                 '<button type="button" class="sx-close" id="close-summary">close</button>' +
             '</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+ 
+    document.body.appendChild(overlay);
     requestAnimationFrame(function() { overlay.classList.add('open'); });
     // focus the dialog itself (keyboard users tab from there) so no ring sits on a button
     var box = overlay.querySelector('.sx-box');
@@ -1194,7 +1196,6 @@ function sessionSummary(mood, startTime, endTime, songs, opts) {
     overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
     return overlay;
 }
- 
 // ── dominant colour of an album cover ──────────────────
 function artColor(url, cb) {
     if (!url) return cb(null);
@@ -1242,6 +1243,81 @@ function sessionHasSong(sessionId, songId) {
     return sessionSeen(sessionId).indexOf(songId) !== -1;
 }
  
+// ── session clock: pauses while nothing is playing ─────
+// the time a session counts is listening time. when spotify has had nothing
+// playing (stopped or paused) for a few seconds, the session pauses from the moment
+// the music stopped, and picks up again as soon as something plays. the paused
+// time is kept with the saved session (localStorage) so every page agrees on it.
+var PAUSE_GRACE_MS = 12000;            // gaps shorter than this (between songs) don't pause
+var clockIdleSince = null, clockLastPlaying = null, clockGrace = null;
+ 
+function storedSession() {
+    try { return JSON.parse(localStorage.getItem('moodtunes_session') || 'null'); } catch (e) { return null; }
+}
+function storeSession(obj) {
+    try { localStorage.setItem('moodtunes_session', JSON.stringify(obj)); } catch (e) {}
+}
+function emitClock(paused) {
+    window.dispatchEvent(new CustomEvent('moodtunes:session-clock', { detail: { paused: paused } }));
+}
+function commitPause(sessionId) {
+    var s = storedSession();
+    if (!s || s.id !== sessionId || s.pausedAt || clockIdleSince === null) return;
+    if (Date.now() - clockIdleSince < PAUSE_GRACE_MS) return;
+    s.pausedAt = Math.max(clockIdleSince, Date.parse(s.startTime) || 0);
+    storeSession(s);
+    emitClock(true);
+}
+// called by the now-playing card on every check while a session runs
+function noteSessionPlayState(sessionId, playing) {
+    var s = storedSession();
+    if (!s || s.id !== sessionId) return;
+    var now = Date.now();
+    if (playing) {
+        clockLastPlaying = now;
+        clockIdleSince = null;
+        clearTimeout(clockGrace);
+        if (s.pausedAt) {
+            s.pausedMs = (s.pausedMs || 0) + Math.max(0, now - s.pausedAt);
+            s.pausedAt = null;
+            storeSession(s);
+            emitClock(false);
+        }
+        return;
+    }
+    if (s.pausedAt) return;
+    if (clockIdleSince === null) {
+        clockIdleSince = now;
+        // we weren't watching when it stopped (page just opened, or the tab was in the
+        // background): spotify's history says when the last song finished
+        if (clockLastPlaying === null || now - clockLastPlaying > 15000) {
+            var floor = Math.max(Date.parse(s.startTime) || 0, clockLastPlaying || 0);
+            apiCall('/spotify/recently-played', 'GET', null, function(err, res) {
+                var items = res && res.status === 200 && Array.isArray(res.data) ? res.data : [];
+                var last = items.length ? Date.parse(items[0].played_at) : NaN;
+                if (clockIdleSince !== null && !isNaN(last) && last < clockIdleSince) {
+                    clockIdleSince = Math.max(last, floor);
+                    commitPause(sessionId);
+                }
+            });
+        }
+    }
+    clearTimeout(clockGrace);
+    clockGrace = setTimeout(function() { commitPause(sessionId); }, Math.max(0, PAUSE_GRACE_MS - (now - clockIdleSince)) + 50);
+}
+// listening time so far (ms), not counting pauses
+function sessionListenedMs(sessionId, startTime) {
+    var s = storedSession() || {};
+    var start = startTime instanceof Date ? startTime.getTime() : Date.parse(startTime || s.startTime);
+    var now = Date.now();
+    var paused = (s.id === sessionId ? (s.pausedMs || 0) + (s.pausedAt ? now - s.pausedAt : 0) : 0);
+    return Math.max(0, now - start - paused);
+}
+function isSessionPaused(sessionId) {
+    var s = storedSession();
+    return !!(s && s.id === sessionId && s.pausedAt);
+}
+ 
 // ── songs "+ add"-ed from session recommendations ──────
 // they only go into your journal once they've actually played: straight away if
 // the now-playing card sees them, otherwise checked against spotify when the session ends
@@ -1287,8 +1363,13 @@ function endSessionRequest(session, cb) {
     var map = pendingLogs(session.id);
     var pending = Object.keys(map).map(function(k) { return map[k]; });
     var since = session.startTime instanceof Date ? session.startTime.toISOString() : session.startTime;
-    apiCall('/sessions/' + session.id + '/end', 'PUT', { pending: pending, since: since }, function(err, result) {
+    var listened = sessionListenedMs(session.id, session.startTime);
+    var startMs = session.startTime instanceof Date ? session.startTime.getTime() : Date.parse(session.startTime);
+    var pausedMs = Math.max(0, Date.now() - startMs - listened);
+    apiCall('/sessions/' + session.id + '/end', 'PUT', { pending: pending, since: since, paused_ms: pausedMs }, function(err, result) {
         if (!err && result && result.status < 400) {
+            result.listenedMs = listened;
+            clearTimeout(clockGrace); clockIdleSince = null; clockLastPlaying = null;
             setPendingLogs(session.id, {});
             var logged = result.data && Array.isArray(result.data.logged) ? result.data.logged.length : 0;
             if (logged) toast(logged + ' song' + (logged !== 1 ? 's' : '') + ' you added got played and went into your journal', session.mood);
@@ -1338,7 +1419,7 @@ function setupNavSession() {
             try { localStorage.removeItem('moodtunes_session'); } catch (e) {}
             setSessionLive(false);
             show();
-            sessionSummary(s.mood, s.startTime, new Date(), (res.data && res.data.songs) || [], { sessionId: s.id });
+            sessionSummary(s.mood, s.startTime, new Date(), (res.data && res.data.songs) || [], { sessionId: s.id, listenedMs: res.listenedMs });
         });
     });
 }
@@ -1578,7 +1659,13 @@ function nowPlaying(container, opts) {
     }
  
     function apply(data) {
-        if (!data || !data.playing || !data.track) { showIdle('nothing playing on spotify right now'); return; }
+        var cs = opts.getSession ? opts.getSession() : null;
+        if (!data || !data.playing || !data.track) {
+            if (cs && cs.id) noteSessionPlayState(cs.id, false);
+            showIdle('nothing playing on spotify right now');
+            return;
+        }
+        if (cs && cs.id) noteSessionPlayState(cs.id, !!data.is_playing);
         var t = data.track;
         var changed = !state.track || state.track.id !== t.id;
  
@@ -2202,7 +2289,8 @@ window.MoodFX = {
     skeleton: skeleton, toast: toast, confetti: confetti, countUp: countUp,
     sessionSummary: sessionSummary, nowPlaying: nowPlaying,
     markSessionSong: markSessionSong, esc: esc,
-    addPendingLog: addPendingLog, isPendingLog: isPendingLog, endSessionRequest: endSessionRequest, reduceMotion: reduceMotion,
+    addPendingLog: addPendingLog, isPendingLog: isPendingLog, endSessionRequest: endSessionRequest,
+    sessionListenedMs: sessionListenedMs, isSessionPaused: isSessionPaused, reduceMotion: reduceMotion,
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
     DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive,

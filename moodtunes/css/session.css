@@ -192,3 +192,22 @@ body[data-spotify-account="free"] .session-how-card[data-plan="premium"] { opaci
   .session-how-grid { grid-template-columns: 1fr; }
   #session-save-playlist-btn { min-height: 44px; }
 }
+
+/* why a recommendation is there: the mood, your genres or your artists */
+.rec-tile-why {
+  font-size: 10.5px;
+  color: color-mix(in srgb, var(--mc, #9b6fc2) 75%, #ccc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+  width: 100%;
+}
+
+/* paused: nothing playing on spotify, so the clock stands still */
+.session-hero.paused .session-timer-circle,
+.session-hero.paused .session-timer-circle * { animation-play-state: paused !important; }
+.session-hero.paused .session-hero-timer { opacity: 0.5; transition: opacity 0.3s; }
+.session-hero.paused .ring-progress,
+.session-hero.paused .ring-dot { opacity: 0.4; transition: opacity 0.3s; }
+.session-hero.paused .ring-sub { color: #b9b4c2; }

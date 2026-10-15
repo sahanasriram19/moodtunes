@@ -1,4 +1,10 @@
 const sessionModel = require('../models/sessionModel');
+const pool = require('../services/db');
+
+// how long a session was paused (nothing playing on spotify), so its length is listening time
+pool.query('ALTER TABLE Session ADD COLUMN paused_seconds INT NOT NULL DEFAULT 0', (err) => {
+    if (err && !/duplicate column/i.test(err.message)) console.error('Session.paused_seconds setup failed:', err.message);
+});
 
 module.exports.startSession = (req, res, next) => {
     if (!req.body.mood) return res.status(400).json({ message: 'mood is required' });
@@ -23,10 +29,18 @@ module.exports.endSession = (req, res, next) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         if (results.affectedRows === 0) return res.status(404).json({ message: 'Session not found' });
 
+        // paused time sent by the app (never more than the session's own length)
+        const pausedSec = Math.max(0, Math.round(Number(body.paused_ms) / 1000) || 0);
+        if (pausedSec) {
+            await new Promise((ok) => pool.query(
+                'UPDATE Session SET paused_seconds = LEAST(?, GREATEST(0, TIMESTAMPDIFF(SECOND, start_time, end_time))) WHERE id = ? AND user_id = ?',
+                [pausedSec, data.session_id, data.user_id], () => ok()));
+        }
+
         // catch up on spotify: songs played during the session, and "+ add"-ed songs that got played
         let sync = { added: 0, logged: [] };
         try {
-            const rows = await new Promise((ok, no) => require('../services/db').query(
+            const rows = await new Promise((ok, no) => pool.query(
                 'SELECT mood, start_time FROM Session WHERE id = ? AND user_id = ?', [data.session_id, data.user_id],
                 (e, r) => e ? no(e) : ok(r)));
             if (rows.length) {

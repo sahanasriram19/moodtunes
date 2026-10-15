@@ -218,7 +218,8 @@ function renderSessions() {
             var startStr = formatTimestamp(session.start_time);
             var duration = '';
             if (session.end_time) {
-                var mins = Math.floor((new Date(session.end_time) - new Date(session.start_time)) / 60000);
+                // listening time: the minutes it was paused (nothing playing) are left out
+                var mins = Math.max(0, Math.floor((new Date(session.end_time) - new Date(session.start_time) - (Number(session.paused_seconds) || 0) * 1000) / 60000));
                 duration = ', ' + mins + ' min' + (mins !== 1 ? 's' : '');
             }
 

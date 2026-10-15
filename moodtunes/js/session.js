@@ -57,7 +57,8 @@ function startRing(startTime) {
     sessionHero.classList.add('live');
     MoodFX.setSessionLive(true);     // hides the mood chips on phones so the timer is on top
     (function frame() {
-        var ms     = Math.max(0, Date.now() - startTime.getTime());
+        // listening time: stands still while the session is paused
+        var ms     = activeSession ? MoodFX.sessionListenedMs(activeSession.id, startTime) : Math.max(0, Date.now() - startTime.getTime());
         var sec    = (ms / 1000) % 60;
         var minute = Math.floor(ms / 60000);
         ringProgress.style.strokeDashoffset = RING_C * (1 - sec / 60);
@@ -69,7 +70,7 @@ function startRing(startTime) {
                 setTimeout(function() { sessionHero.classList.remove('lap'); }, 700);
             }
             lastMinute = minute;
-            ringSub.textContent = 'minute ' + (minute + 1);
+            if (!sessionHero.classList.contains('paused')) ringSub.textContent = 'minute ' + (minute + 1);
         }
         ringRaf = requestAnimationFrame(frame);
     })();
@@ -89,13 +90,27 @@ function startTimer(startTime) {
     clearInterval(timerInterval);
     sessionTimerEl.style.opacity = '1';
     startRing(startTime);
+    showPaused(activeSession && MoodFX.isSessionPaused(activeSession.id));
     timerInterval = setInterval(function() {
-        var elapsed = Math.floor((new Date() - startTime) / 1000);
+        var elapsed = Math.floor((activeSession ? MoodFX.sessionListenedMs(activeSession.id, startTime) : new Date() - startTime) / 1000);
         var mins = Math.floor(elapsed / 60);
         var secs = elapsed % 60;
         sessionTimerEl.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
     }, 1000);
 }
+
+// ── paused: nothing playing on spotify ─────────────────
+// the clock stops (see the session clock in mood.js) and the ring says why
+function showPaused(paused) {
+    sessionHero.classList.toggle('paused', !!paused);
+    if (paused) ringSub.textContent = 'paused, nothing playing';
+    else if (lastMinute >= 0) ringSub.textContent = 'minute ' + (lastMinute + 1);
+}
+window.addEventListener('moodtunes:session-clock', function(e) {
+    if (!activeSession) return;
+    showPaused(e.detail.paused);
+    if (e.detail.paused) MoodFX.toast('session paused, nothing’s playing on spotify', activeSession.mood);
+});
 
 // ── session controls ───────────────────────────────────
 sessionStartBtn.addEventListener('click', function() {
@@ -189,11 +204,15 @@ var queueRetry  = null;
 
 function saveSessionLocal() {
     if (!activeSession) return;
-    localStorage.setItem('moodtunes_session', JSON.stringify({
+    // keep what's already saved with it (e.g. the paused time)
+    var prev = {};
+    try { prev = JSON.parse(localStorage.getItem('moodtunes_session') || '{}') || {}; } catch (e) {}
+    if (prev.id !== activeSession.id) prev = {};
+    localStorage.setItem('moodtunes_session', JSON.stringify(Object.assign(prev, {
         id: activeSession.id, mood: activeSession.mood,
         startTime: activeSession.startTime.toISOString(), queueMode: !!activeSession.queueMode,
         account: activeSession.account || null, uris: sessionUris, playlist: activeSession.playlist || null
-    }));
+    })));
 }
 
 function setSpotifyButton() {
@@ -310,7 +329,9 @@ function endSession() {
         if (err || !result || result.status >= 400) { startTimer(activeSession.startTime); return; }
         var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date(), id = activeSession.id;
         var songs = result.data && result.data.songs ? result.data.songs : [];
+        var listenedMs = result.listenedMs;
         activeSession = null;
+        showPaused(false);
         clearTimeout(queueRetry);
         pendingUris = [];
         sessionUris = [];
@@ -321,12 +342,12 @@ function endSession() {
         sessionEndBtn.classList.add('hidden');
         sessionRefreshBtn.classList.add('hidden');
         sessionTimerEl.textContent = '00:00';
-        showSessionSummary(mood, startTime, endTime, songs, id);
+        showSessionSummary(mood, startTime, endTime, songs, id, listenedMs);
     });
 }
 
-function showSessionSummary(mood, startTime, endTime, songs, sessionId) {
-    MoodFX.sessionSummary(mood, startTime, endTime, songs, { sessionId: sessionId });
+function showSessionSummary(mood, startTime, endTime, songs, sessionId, listenedMs) {
+    MoodFX.sessionSummary(mood, startTime, endTime, songs, { sessionId: sessionId, listenedMs: listenedMs });
 }
 
 // ── this session so far ────────────────────────────────
