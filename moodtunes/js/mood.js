@@ -735,6 +735,7 @@ function decorate(node) {
         if (card && !card.classList.contains('mood-card')) {
             card.style.setProperty('--mc', c);
             card.classList.add('mood-card');
+            card.dataset.cardMood = b.textContent.trim().toLowerCase();   // lets a mood fine-tune its card (see motion.css)
         }
     });
 }
@@ -1117,7 +1118,6 @@ function sessionSpotifyButton(btn, saved) {
         : icon('playlists') + '<span>save to spotify</span>';
     btn.title = saved ? 'open “session ' + saved.number + '” in spotify' : 'save this session as a playlist in your spotify library';
 }
- 
 function sessionSummary(mood, startTime, endTime, songs, opts) {
     opts = opts || {};
     // listening time (pauses left out) when we know it, else start to end
@@ -1196,6 +1196,7 @@ function sessionSummary(mood, startTime, endTime, songs, opts) {
     overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
     return overlay;
 }
+ 
 // ── dominant colour of an album cover ──────────────────
 function artColor(url, cb) {
     if (!url) return cb(null);

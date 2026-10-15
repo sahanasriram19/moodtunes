@@ -49,11 +49,14 @@ function searchSongHistory(query) {
         var entryRows = song.entries.map(function(e) {
             var date = new Date(e.last_logged);
             var dateStr = date.toLocaleDateString('en-SG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            // one line with the mood, day and plays, and the note (if any) on its own line under it
             return '<div class="song-history-entry">' +
-                '<span class="mood-badge">' + MoodFX.esc(e.mood) + '</span>' +
-                '<span class="song-history-date">' + dateStr + '</span>' +
-                '<span class="song-history-plays">' + playsLabel(e.play_count) + '</span>' +
-                (e.note ? '<span class="log-note" style="display:block;margin-top:4px;margin-left:0;">"' + MoodFX.esc(e.note) + '"</span>' : '') +
+                '<div class="she-line">' +
+                    '<span class="mood-badge">' + MoodFX.esc(e.mood) + '</span>' +
+                    '<span class="song-history-date">' + dateStr + '</span>' +
+                    '<span class="song-history-plays">' + playsLabel(e.play_count) + '</span>' +
+                '</div>' +
+                (e.note ? '<span class="log-note she-note">“' + MoodFX.esc(e.note) + '”</span>' : '') +
             '</div>';
         }).join('');
 
@@ -161,8 +164,11 @@ function renderTimeline(logs) {
                             '<span class="date-text">' + formatPlayRange(log.first_logged, log.last_logged) + '</span>' +
                         '</div>' +
                     '</div>' +
-                    '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '" data-song-id="' + MoodFX.esc(log.song_id) + '" data-mood="' + MoodFX.esc(log.mood) + '">▶</button>' +
-                    '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>';
+                    // the buttons sit in one column on phones (see motion.css); on wider screens the wrapper is invisible
+                    '<div class="log-actions">' +
+                        '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '" data-song-id="' + MoodFX.esc(log.song_id) + '" data-mood="' + MoodFX.esc(log.mood) + '">▶</button>' +
+                        '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>' +
+                    '</div>';
                 dayBox.appendChild(card);
             });
 

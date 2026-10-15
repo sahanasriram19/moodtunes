@@ -190,9 +190,10 @@ saveBtn.addEventListener('click', function() {
     });
 });
 
-// "how sessions work" starts open the first time you visit
+// "how sessions work" starts open the first time you visit (on bigger screens; on a
+// phone it would fill the screen, so it stays a tappable bar at the top)
 try {
-    if (!localStorage.getItem('moodtunes_session_how_seen')) {
+    if (!localStorage.getItem('moodtunes_session_how_seen') && window.matchMedia('(min-width: 641px)').matches) {
         document.getElementById('session-how').open = true;
         localStorage.setItem('moodtunes_session_how_seen', '1');
     }
