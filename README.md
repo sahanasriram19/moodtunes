@@ -21,7 +21,9 @@ Built as a personal portfolio project to explore full-stack development with rea
 
 ### Sessions
 - Start a listening session for a chosen mood
-- Get real-time song recommendations based on your most-played songs in that mood (powered by Last.fm's similarity engine + Spotify search for album art)
+- Starting a session fills a "<mood> session · moodtunes" playlist in your Spotify and starts playing it (Premium), or opens it in Spotify so it plays straight through (Free)
+- Recommendations come from the **genres** of the artists in that mood's songs (Spotify genres, with Last.fm genre tags when Spotify has none)
+- Optional "mix in my songs" puts your own songs from that mood between the new picks
 - Log songs as you listen during the session
 - End the session to see a summary of everything you listened to
 
@@ -173,6 +175,9 @@ SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 SPOTIFY_REDIRECT_URI=http://127.0.0.1:3000/api/spotify/callback
 
+# optional, but recommended: genre tags for artists Spotify has no genres for
+LASTFM_API_KEY=your_lastfm_api_key
+
 PORT=3000
 ```
 
@@ -222,14 +227,13 @@ After logging into moodtunes, users are redirected to Spotify to authorize the a
 The resulting access and refresh tokens are stored against the user's account and refreshed automatically when they expire.
 
 ### Recommendations
-During a session, moodtunes takes your most-played song in the current mood and asks Last.fm for similar tracks. Each recommended track is then searched on Spotify to retrieve its album art and link.
+During a session, moodtunes takes your most-played songs in the current mood, looks up their artists' genres (Spotify first, Last.fm tags as a backup), scores the genres by how much you play those artists, and finds songs in the top genres (Spotify genre search, topped up with Last.fm's top tracks for each genre). Songs you've already logged in that mood are left out, with at most two songs per artist. Only if no genre can be found at all does it fall back to your artists' other songs.
 
 ---
 
 ## Known limitations
 
-- Spotify's queue and playback APIs require an active Spotify session on a device — moodtunes can add songs to your queue, but cannot force playback to start from the browser.
-- Clicking a song opens Spotify directly, which means Spotify's own "continue with album" behaviour applies — this is a platform limitation, not something moodtunes controls.
+- Starting playback remotely needs Spotify Premium and Spotify open on some device. If it isn't open, moodtunes opens the session playlist and starts it once Spotify shows up; Free accounts press play once.
 - The Spotify Recommendations endpoint was deprecated for new apps in late 2024, so Last.fm is used as the recommendation source instead.
 
 ---

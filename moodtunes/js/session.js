@@ -110,12 +110,106 @@ sessionStartBtn.addEventListener('click', function() {
         sessionRefreshBtn.classList.remove('hidden');
         startTimer(startTime);
         MoodFX.setMood(selectedMood);
-        MoodFX.toast(selectedMood + ' session started. songs you play on spotify are added automatically', selectedMood);
         if (nowPlayingCard) nowPlayingCard.refresh();
-        loadRecommendations(selectedMood);
+        startInSpotify(activeSession);
         loadSoFar();
     });
 });
+
+// ── start in spotify ───────────────────────────────────
+// the server fills a "<mood> session · moodtunes" playlist with genre picks
+// (+ your own songs if "mix in my songs" is on) and starts it in spotify.
+// if spotify isn't open (or you're not on premium) the playlist opens in
+// spotify instead, so it plays straight through rather than song by song.
+var MIX_KEY = 'moodtunes_session_mix';
+var mixMine = true;
+try { mixMine = localStorage.getItem(MIX_KEY) !== '0'; } catch (e) {}
+
+var mixToggle = document.createElement('label');
+mixToggle.className = 'session-mix-toggle';
+mixToggle.innerHTML = '<input type="checkbox" id="session-mix-input"' + (mixMine ? ' checked' : '') + ' /> mix in my songs';
+mixToggle.title = 'on: new genre picks with your own songs from this mood in between. off: only new songs';
+document.querySelector('.session-hero-actions').insertAdjacentElement('afterend', mixToggle);
+document.getElementById('session-mix-input').addEventListener('change', function(e) {
+    mixMine = e.target.checked;
+    try { localStorage.setItem(MIX_KEY, mixMine ? '1' : '0'); } catch (err) {}
+});
+
+var openSpotifyBtn = document.createElement('button');
+openSpotifyBtn.id = 'session-open-spotify-btn';
+openSpotifyBtn.className = 'hidden';
+openSpotifyBtn.textContent = 'open in spotify';
+document.querySelector('.session-hero-actions').appendChild(openSpotifyBtn);
+openSpotifyBtn.addEventListener('click', function() {
+    if (activeSession && activeSession.playlistUrl) {
+        openSpotify(activeSession.playlistUrl);
+        waitForSpotifyThenPlay(activeSession.id);
+    }
+});
+
+function saveSessionLocal() {
+    if (!activeSession) return;
+    localStorage.setItem('moodtunes_session', JSON.stringify({
+        id: activeSession.id, mood: activeSession.mood,
+        startTime: activeSession.startTime.toISOString(), playlistUrl: activeSession.playlistUrl || null
+    }));
+}
+
+function setSpotifyButton() {
+    openSpotifyBtn.classList.toggle('hidden', !(activeSession && activeSession.playlistUrl));
+    mixToggle.classList.toggle('hidden', !!activeSession);
+}
+
+function startInSpotify(session) {
+    discoverContent.innerHTML = MoodFX.skeleton('grid', 12);
+    apiCall('/sessions/' + session.id + '/spotify/start', 'POST', { mix_mine: mixMine }, function(err, res) {
+        if (!activeSession || activeSession.id !== session.id) return;
+        if (err || !res || res.status !== 200) {
+            // spotify not connected / didn't answer: the in-app session still works
+            MoodFX.toast(session.mood + ' session started. songs you play on spotify are added automatically', session.mood);
+            loadRecommendations(session.mood);
+            return;
+        }
+        var d = res.data;
+        activeSession.playlistUrl = d.playlist_url;
+        saveSessionLocal();
+        setSpotifyButton();
+        renderRecs(session.mood, d, null);
+
+        if (d.playing) {
+            MoodFX.toast('playing your ' + session.mood + ' session in spotify' + (d.device ? ' on ' + d.device : ''), session.mood);
+        } else if (d.reason === 'premium_required') {
+            // free accounts can't be started remotely: open the playlist, one tap on play
+            openSpotify(d.playlist_url);
+            MoodFX.toast('your ' + session.mood + ' session is ready in spotify, press play there', session.mood);
+        } else {
+            // spotify isn't open anywhere yet: open it, then start playback once it shows up
+            openSpotify(d.playlist_url);
+            waitForSpotifyThenPlay(session.id);
+        }
+    });
+}
+
+// after opening spotify it takes a few seconds to register as a device
+var resumeTimer = null;
+function waitForSpotifyThenPlay(sessionId) {
+    clearTimeout(resumeTimer);
+    var tries = 0;
+    (function attempt() {
+        if (!activeSession || activeSession.id !== sessionId || tries++ >= 10) return;
+        resumeTimer = setTimeout(function() {
+            apiCall('/sessions/' + sessionId + '/spotify/resume', 'POST', null, function(err, res) {
+                if (res && res.data && res.data.playing) {
+                    if (!res.data.already) MoodFX.toast('playing in spotify' + (res.data.device ? ' on ' + res.data.device : ''), activeSession && activeSession.mood);
+                    if (nowPlayingCard) nowPlayingCard.refresh();
+                    return;
+                }
+                if (res && res.data && res.data.reason === 'premium_required') return;   // they'll press play themselves
+                attempt();
+            });
+        }, 3000);
+    })();
+}
 
 sessionEndBtn.addEventListener('click', endSession);
 sessionRefreshBtn.addEventListener('click', function() {
@@ -131,6 +225,8 @@ function endSession() {
         var mood = activeSession.mood, startTime = activeSession.startTime, endTime = new Date(), id = activeSession.id;
         var songs = result.data && result.data.songs ? result.data.songs : [];
         activeSession = null;
+        clearTimeout(resumeTimer);
+        setSpotifyButton();
         renderSoFar([]);
         localStorage.removeItem('moodtunes_session');
         sessionStartBtn.classList.remove('hidden');
@@ -198,9 +294,22 @@ function loadRecommendations(mood) {
                 return;
             }
 
+            renderRecs(mood, rec.data, logs);
+        });
+    });
+}
+
+// draws the recommendation grid. with logs, songs you've logged (and artists you've
+// logged 3+ times) are left out; without, it shows exactly what's in the spotify session
+function renderRecs(mood, data, logs) {
+    if (!data || !data.tracks || !data.tracks.length) {
+        discoverContent.innerHTML = MoodFX.emptyState({ art: 'search', compact: true, title: 'couldn’t find recommendations', text: 'spotify came back empty this time', action: { label: '↻ refresh', click: '#session-refresh-btn' } });
+        return;
+    }
+    var rec = { data: data };
             var loggedKeys = {};
             var loggedArtistCount = {};
-            logs.forEach(function(l) {
+            (logs || []).forEach(function(l) {
                 loggedKeys[l.title.toLowerCase() + '||' + l.artist.toLowerCase()] = true;
                 l.artist.split(',').forEach(function(a) {
                     var name = a.trim().toLowerCase();
@@ -224,9 +333,10 @@ function loadRecommendations(mood) {
             var why = document.createElement('p');
             why.className = 'rec-why';
             var genres = Array.isArray(rec.data.genres) ? rec.data.genres : [];
-            why.innerHTML = genres.length
+            var inSpotify = !logs && activeSession && activeSession.playlistUrl;
+            why.innerHTML = (inSpotify ? 'now in your spotify session. ' : '') + (genres.length
                 ? 'picked from the genres in your ' + MoodFX.esc(mood) + ' songs: ' + genres.map(function(g) { return '<span class="rec-genre" style="--mc:' + MoodFX.color(mood) + '">' + MoodFX.esc(g) + '</span>'; }).join('')
-                : 'picked from the artists in your ' + MoodFX.esc(mood) + ' songs';
+                : 'picked from the artists in your ' + MoodFX.esc(mood) + ' songs (no genres found for them)');
             discoverContent.appendChild(why);
             var grid = document.createElement('div');
             grid.className = 'rec-grid';   // columns set in motion.css (6 on desktop, 3 on phones)
@@ -249,14 +359,21 @@ function loadRecommendations(mood) {
             });
 
             discoverContent.appendChild(grid);
-        });
-    });
 }
 
 // ── click handlers ─────────────────────────────────────
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('session-play-btn')) {
-        openSpotify(e.target.dataset.url);
+        var pb = e.target;
+        if (activeSession && activeSession.playlistUrl) {
+            // play it inside the session playlist, so spotify keeps going after it
+            apiCall('/sessions/' + activeSession.id + '/spotify/play', 'POST', { uri: pb.dataset.url }, function(err, res) {
+                if (res && res.data && res.data.playing) { if (nowPlayingCard) nowPlayingCard.refresh(); return; }
+                openSpotify(pb.dataset.url);
+            });
+            return;   // the now-playing poller adds it to the session once it's actually playing
+        }
+        openSpotify(pb.dataset.url);
         if (activeSession) {
             MoodFX.markSessionSong(activeSession.id, e.target.dataset.id);
             apiCall('/sessions/songs', 'POST', {
@@ -309,7 +426,8 @@ if (savedSession) {
             if (err || result.status !== 200 || result.data.id !== s.id) {
                 localStorage.removeItem('moodtunes_session'); return;
             }
-            activeSession = { id: s.id, mood: s.mood, startTime: new Date(s.startTime) };
+            activeSession = { id: s.id, mood: s.mood, startTime: new Date(s.startTime), playlistUrl: s.playlistUrl || null };
+            setSpotifyButton();
             selectedMood = s.mood;
             document.querySelectorAll('.chip').forEach(function(c) { if (c.dataset.mood === s.mood) c.classList.add('selected'); });
                 sessionMoodLabel.textContent = s.mood + ' session';
