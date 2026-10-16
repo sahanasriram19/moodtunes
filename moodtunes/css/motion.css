@@ -2086,6 +2086,7 @@ body {
     font-size: 12px !important;
   }
 }
+ 
 /* very small phones: help moves into the profile menu so the header fits */
 @media (max-width: 360px) {
   .logo {
@@ -2101,7 +2102,6 @@ body {
     font-size: 12px;
   }
 }
- 
 /* === MOOD-TINTED SONG CARDS === */
 /* every logged song picks up its mood's colour: an accent edge, a soft wash and
    a glow under the album art (set up by js/mood.js from the card's mood badge) */
@@ -3778,6 +3778,7 @@ body {
 .song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 40%, #e9e4f5) !important;
 }
+ 
 .title-row .log-note {
   font-size: 12.5px;
 }
@@ -3790,7 +3791,6 @@ body {
 :root[data-theme="light"] .song-history-card.mood-card .add-note-btn {
   color: color-mix(in srgb, var(--mc) 65%, #222) !important;
 }
- 
 /* === NOW PLAYING: LAYOUT === */
 /*  [art]  NOW PLAYING                      (sync waves)
            Title                         <3  |<<  >||  >>|
@@ -5137,40 +5137,58 @@ body {
   .stats-sentence-wrap { margin-bottom: 20px; }
 }
 
-/* === HOVER: A SLIGHT LIFT, NOTHING ELSE === */
-/* everything you can point at rises a couple of pixels, smoothly: no glow, no
-   colour change, no zoom. only on devices with a real pointer (so phones don't get
-   stuck hovers) and never for anyone whose device asks for less motion.
-   "html body" outranks the older rules further up that switched hover movement off */
+/* === HOVER: A CLEAR, SMOOTH LIFT ON EVERYTHING === */
+/* everything you can point at rises, smoothly, with no glow, colour change or zoom.
+   boxes (a day's song logs, stats cards, the calendar, now playing, "not in your
+   journal yet", sessions) lift as a whole; the rows inside them stay put so the box
+   moves as one piece. things that stand on their own (playlists, chips, buttons,
+   calendar days, recommendations) lift by themselves.
+   only on devices with a real pointer (so phones don't get stuck hovers) and never
+   for anyone whose device asks for less motion. "html body" outranks the older rules
+   further up that switched hover movement off */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  html body :is(.playlist-card, .rec-tile, .session-song-thumb, .flashback-song, .mc-cell.mc-filled,
-                .session-history-card, .stats-card, .flashback-card, .log-card, .song-history-card,
-                .result-item, .sx-row, .ssf-song, .chip, .play-btn, .like-btn, .queue-btn, .delete-btn,
-                .mood-bar-row, .time-bar-row, .nav-links a, .session-btn, .session-how,
-                #session-start-btn, #session-end-btn, #session-refresh-btn, #session-open-spotify-btn,
-                #session-save-playlist-btn, .session-spotify-btn, .save-note-btn, .skip-note-btn,
-                .add-note-btn, .edit-note-btn, .np-mood, .help-btn, .history-tab, .auth-btn, .auth-tab,
-                .session-rec-card, .playlist-play-btn, .emoji-opt, .mt-toast-action, .mt-empty-btn) {
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, background-color 0.2s ease,
+  html body :is(
+      /* boxes */
+      .day-box, .stats-card, .flashback-card, .session-history-card, .session-how, .np-card, .inbox-section,
+      .song-history-card, .playlist-view-header, .session-panel, .mt-summary .sx-box,
+      /* things on their own */
+      .playlist-card, #playlist-block .log-card, .rec-tile, .session-rec-card, .session-song-thumb, .flashback-song,
+      .mc-cell.mc-filled, .result-item, .ssf-song, .chip, .np-mood,
+      /* buttons */
+      .play-btn, .like-btn, .queue-btn, .delete-btn, .nav-links a, .session-btn, .help-btn, .history-tab,
+      #session-start-btn, #session-end-btn, #session-refresh-btn, #session-open-spotify-btn, #session-save-playlist-btn,
+      .session-spotify-btn, .save-note-btn, .skip-note-btn, .add-note-btn, .edit-note-btn, .playlist-play-btn,
+      .emoji-opt, .mt-toast-action, .mt-empty-btn, .inbox-toggle, .inbox-more, .mc-arrow, .sx-close, #panel-x) {
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, background-color 0.2s ease,
                 border-color 0.2s ease, opacity 0.2s ease !important;
     will-change: transform;
   }
-  html body :is(.playlist-card, .rec-tile, .session-song-thumb, .flashback-song, .mc-cell.mc-filled,
-                .session-history-card, .stats-card, .flashback-card, .log-card, .song-history-card,
-                .result-item, .sx-row, .ssf-song, .chip, .play-btn, .like-btn, .queue-btn, .delete-btn,
-                .mood-bar-row, .time-bar-row, .nav-links a, .session-btn, .session-how,
-                #session-start-btn, #session-end-btn, #session-refresh-btn, #session-open-spotify-btn,
-                #session-save-playlist-btn, .session-spotify-btn, .save-note-btn, .skip-note-btn,
-                .add-note-btn, .edit-note-btn, .np-mood, .help-btn, .history-tab, .auth-btn, .auth-tab,
-                .session-rec-card, .playlist-play-btn, .emoji-opt, .mt-toast-action, .mt-empty-btn):hover {
-    transform: translateY(-2px) !important;
+
+  /* things on their own and buttons: up 4px */
+  html body :is(
+      .playlist-card, #playlist-block .log-card, .rec-tile, .session-rec-card, .session-song-thumb, .flashback-song,
+      .mc-cell.mc-filled, .result-item, .ssf-song, .chip, .np-mood,
+      .play-btn, .like-btn, .queue-btn, .delete-btn, .nav-links a, .session-btn, .help-btn, .history-tab,
+      #session-start-btn, #session-end-btn, #session-refresh-btn, #session-open-spotify-btn, #session-save-playlist-btn,
+      .session-spotify-btn, .save-note-btn, .skip-note-btn, .add-note-btn, .edit-note-btn, .playlist-play-btn,
+      .emoji-opt, .mt-toast-action, .mt-empty-btn, .inbox-toggle, .inbox-more, .mc-arrow, .sx-close, #panel-x):hover {
+    transform: translateY(-4px) !important;
   }
-  /* big panels move less, so the page doesn't feel like it's floating */
-  html body :is(.stats-card, .flashback-card, .session-history-card, .session-how, #panel-lift):hover {
-    transform: translateY(-1px) !important;
+
+  /* boxes: up 3px, as one piece */
+  html body :is(
+      .day-box, .stats-card, .flashback-card, .session-history-card, .session-how, .np-card, .inbox-section,
+      .song-history-card, .playlist-view-header, .session-panel, .mt-summary .sx-box, #panel-x):hover {
+    transform: translateY(-3px) !important;
   }
-  /* older hover effects from earlier versions: no zoom or glow, just the lift above */
-  /* keep their normal shadow on hover (the older hover made it bigger) */
+
+  /* rows inside a box ride along with it instead of moving on their own */
+  html body :is(#logs-list, #timeline, #panel-x) .log-card:hover,
+  html body :is(.mood-bar-row, .time-bar-row, .top-song-row, .inbox-item, .sx-row, .mc-song, #panel-x):hover {
+    transform: none !important;
+  }
+
+  /* older hover effects from earlier versions: keep their normal shadow (no glow), no zoom */
   html body .mc-filled:not(.mc-today):hover { box-shadow: 0 6px 16px -10px var(--mc) !important; }
   html body .mc-filled.mc-today:hover { box-shadow: inset 0 0 0 2px #ffffffcc, 0 6px 16px -10px var(--mc) !important; }
   html body .mt-empty-btn:hover { box-shadow: 0 8px 24px -10px var(--mood) !important; }
