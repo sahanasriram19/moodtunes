@@ -23,9 +23,7 @@ function navTarget() {
     return document.querySelector('.nav-links');
 }
 function helpTarget() {
-    var h = document.getElementById('help-btn');
-    if (h && h.offsetParent !== null && getComputedStyle(h).display !== 'none') return h;
-    return document.getElementById('profile-btn');
+    return document.getElementById('help-btn');
 }
 function visible(el) {
     if (!el) return false;
@@ -33,43 +31,63 @@ function visible(el) {
     return r.width > 4 && r.height > 4 && getComputedStyle(el).visibility !== 'hidden';
 }
 
+// the link to another page: the tab at the bottom on phones, the top menu otherwise
+function pageLink(href) {
+    return function() {
+        var tab = document.querySelector('#tabbar a[href="' + href + '"]');
+        if (visible(tab)) return tab;
+        return document.querySelector('.nav-links a[href="' + href + '"]');
+    };
+}
+function has(sel) { return function() { return !visible(document.querySelector(sel)); }; }
+
 var STEPS = {
     index: [
-        { title: 'welcome to moodtunes', text: 'a music journal for how songs make you feel. here’s a 20 second look around.' },
+        { title: 'welcome to moodtunes', text: 'a music journal for how songs make you feel. here’s a quick look at how everything works.' },
         { target: '.mood-chips', title: 'start with a mood', text: 'pick how you’re feeling right now. every mood gets its own colour, and its own playlist.' },
+        { target: '#manage-moods-btn', title: 'make the moods yours', text: 'add your own moods with a name and icon, or remove any you don’t use.', skipIf: has('#manage-moods-btn') },
         { target: '#song-search', title: 'find your song', text: 'search for what you’re listening to. tap a result to play it in spotify and log it under your mood, with a note if you like.' },
-        { target: '#now-playing', title: 'now playing', text: 'whatever’s on in spotify shows up here. tap a mood under it to log it in one tap.',
+        { target: '#now-playing', title: 'now playing', text: 'whatever’s on in spotify shows up here, with play, pause and skip. tap a mood under it to log the song in one tap.',
           skipIf: function() { var n = document.getElementById('now-playing'); return !n || n.classList.contains('np-hidden'); } },
-        { target: '#logs-list', title: 'your journal', text: 'songs you log today and yesterday land here. add or edit a note on any of them.' },
-        { target: navTarget, title: 'the rest of moodtunes', text: function() {
-            return 'playlists, sessions, history and stats are ' + (phone() ? 'down here' : 'up here') + '. each one has its own quick intro the first time you open it.'; } },
-        { target: helpTarget, title: 'need more detail?', text: 'the full guide is always here, with everything moodtunes can do.' }
+        { target: '#logs-list', title: 'your journal', text: 'songs you log today and yesterday land here. add or edit a note, play a song again, or delete a log.' },
+        { target: '#logs-list', title: 'play counts', text: 'each time you open a song in spotify from moodtunes, it counts as a play. repeats on loop count too.' },
+        { target: pageLink('playlists.html'), title: 'playlists', text: 'every mood becomes a playlist of the songs you logged with it. reorder them, take songs out, and save any playlist to your spotify library.' },
+        { target: pageLink('session.html'), title: 'sessions', text: 'pick a mood and start a listening session. moodtunes recommends new songs from the genres you already love in that mood, and keeps track of what you play.' },
+        { target: pageLink('history.html'), title: 'history', text: 'everything you’ve ever logged, day by day. search any song to see every time you played it, and look back at past sessions.' },
+        { target: pageLink('stats.html'), title: 'stats', text: 'your listening in numbers: top moods, when you listen, your most played songs, and a calendar of your month in moods.' },
+        { target: '#profile-btn', title: 'your profile', text: 'switch between themes and log out here.', skipIf: has('#profile-btn') },
+        { target: helpTarget, title: 'need more detail?', text: 'the full guide is always behind this button. each page also gives you a quick tour the first time you open it.' }
     ],
     playlists: [
         { target: function() { return document.getElementById('playlist-grid') || document.getElementById('playlists-list'); },
           title: 'your mood playlists', text: 'every mood you log songs under becomes a playlist. the cover shows its top 4 songs.' },
-        { target: '.playlist-card', title: 'open one', text: 'drag songs to reorder, add notes, or tap ✕ to take a song out (it stays in your history).',
-          skipIf: function() { return !document.querySelector('.playlist-card'); } },
-        { target: '.playlist-card', title: 'take it to spotify', text: 'inside a playlist, “save to spotify” adds it to your library and keeps it up to date as you log.',
-          skipIf: function() { return !document.querySelector('.playlist-card'); } }
+        { target: '.playlist-card', title: 'open a playlist', text: 'tap a cover to see every song in it, with your notes and play counts.', skipIf: has('.playlist-card') },
+        { target: '.playlist-card', title: 'put them in order', text: 'inside, drag songs up and down (hold the ⠿ handle on a phone). the top 4 become the cover.', skipIf: has('.playlist-card') },
+        { target: '.playlist-card', title: 'take a song out', text: '✕ removes a song from the playlist but keeps it in your history. log it with this mood again and it comes back.', skipIf: has('.playlist-card') },
+        { target: '.playlist-card', title: 'take it to spotify', text: '“save to spotify” adds the playlist to your library with the same cover, and keeps it updated as you log. ▶ plays the whole thing.', skipIf: has('.playlist-card') }
     ],
     session: [
         { target: '.mood-chips', title: 'pick a mood', text: 'choose the mood you want this listening session to be.' },
-        { target: '.session-timer-circle', title: 'start a session', text: 'moodtunes finds new songs from the genres of your songs in that mood, and the timer runs while you listen.' },
-        { target: '#session-how', title: 'premium or free', text: 'how sessions play in spotify depends on your account. open this to see how yours works.' }
+        { target: '.session-timer-circle', title: 'start a session', text: 'the timer runs while you listen, and anything you play in spotify during it is added to the session.' },
+        { target: '#discover-content', title: 'new songs for you', text: 'once it starts, recommendations appear here, picked from the genres of your songs in that mood. ↻ refresh gets a new batch.' },
+        { target: '#discover-content', title: 'play and keep', text: '▶ plays a song in spotify, and + add puts it in your journal once you’ve actually listened to it.' },
+        { target: '#session-how', title: 'premium or free', text: 'on premium every song goes into your spotify queue. on free, save the session as a playlist and play it on shuffle. open this for the steps.' },
+        { target: '.session-hero-actions', title: 'end it any time', text: 'ending a session shows a summary of everything you listened to, and you can save it to spotify.' }
     ],
     history: [
+        { target: '#stats-grid', title: 'your totals', text: 'how many songs you’ve logged, your total plays and your top mood.', skipIf: has('#stats-grid') },
         { target: '.song-search-section', title: 'find any song', text: 'search a song to see every day you played it, how many times, and your notes.' },
         { target: '.history-tabs', title: 'timeline and sessions', text: 'switch between everything you logged day by day, and your past listening sessions.' },
-        { target: '#timeline', title: 'your timeline', text: 'edit notes or delete entries here. removing a song from a playlist never touches this.',
-          skipIf: function() { return !visible(document.getElementById('timeline')); } }
+        { target: '#timeline', title: 'your timeline', text: 'edit notes or delete entries here. removing a song from a playlist never touches this.', skipIf: has('#timeline') },
+        { target: '#tab-sessions', title: 'past sessions', text: 'each session shows the songs you played in it. save one to spotify as a playlist, or delete it.' }
     ],
     stats: [
         { target: '.stats-sentence', title: 'your listening at a glance', text: 'plays, songs, days and your top mood, all in one line.' },
-        { target: '.stats-grid', title: 'moods and timing', text: 'which moods you play most, and when in your day you listen (in your own timezone).',
-          skipIf: function() { return !document.querySelector('.stats-grid'); } },
-        { target: '#mood-calendar', title: 'your month in moods', text: 'each day shows the mood you played most. tap a day to see what you were listening to.',
-          skipIf: function() { return !document.getElementById('mood-calendar'); } }
+        { target: '.flashback-card', title: 'a month ago', text: 'what you were listening to about a month ago, and how you were feeling.', skipIf: has('.flashback-card') },
+        { target: '.stats-grid', title: 'moods and timing', text: 'which moods you play most, and when in your day you listen (in your own timezone).', skipIf: has('.stats-grid') },
+        { target: '#mood-graph-container', title: 'the last two weeks', text: 'how each mood has risen and fallen day by day.', skipIf: has('#mood-graph-container') },
+        { target: '.top-song-row', title: 'most played', text: 'your top 5 songs of all time.', skipIf: has('.top-song-row') },
+        { target: '#mood-calendar', title: 'your month in moods', text: 'each day shows the mood you played most. tap a day to see what you were listening to.', skipIf: has('#mood-calendar') }
     ]
 };
 

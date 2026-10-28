@@ -130,5 +130,16 @@ function showHelpModal() {
 
 document.getElementById('help-btn').addEventListener('click', showHelpModal);
 
+// the ? button: white ring and ? in every theme. it also stays on very small
+// phones now, since help isn't in the profile menu any more
+(function() {
+    var css = document.createElement('style');
+    css.textContent =
+        '#help-btn{border-color:#fff !important;color:#fff !important;}' +
+        '#help-btn:hover{background:rgba(255,255,255,0.12) !important;}' +
+        '@media (max-width:360px){#help-btn{display:flex !important;align-items:center;justify-content:center;}}';
+    document.head.appendChild(css);
+})();
+
 // first-time visitors get the quick guided intro instead (see intro.js); this
 // full guide stays one tap away on the ? button
