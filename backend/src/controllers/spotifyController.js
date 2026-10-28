@@ -115,7 +115,9 @@ module.exports.redirectToSpotify = (req, res, next) => {
             client_id:     CLIENT_ID,
             scope:         scope,
             redirect_uri:  REDIRECT_URI,
-            state:         decoded.userId.toString(),
+            // a signed, 10-minute code instead of the bare user id, so nobody can
+            // send their own spotify login to someone else's moodtunes account
+            state:         jwt.sign({ uid: decoded.userId, p: 'spotify' }, process.env.JWT_SECRET_KEY, { expiresIn: '10m' }),
             show_dialog:   'true'
         });
 
@@ -124,9 +126,16 @@ module.exports.redirectToSpotify = (req, res, next) => {
 };
 
 module.exports.handleCallback = (req, res, next) => {
-    const code   = req.query.code;
-    const userId = req.query.state;
+    const code = req.query.code;
     if (!code) return res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=error');
+    let userId;
+    try {
+        const st = require('jsonwebtoken').verify(String(req.query.state || ''), process.env.JWT_SECRET_KEY);
+        if (st.p !== 'spotify' || !st.uid) throw new Error('bad state');
+        userId = st.uid;
+    } catch (e) {
+        return res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=error');
+    }
 
     const creds = Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64');
     axios.post('https://accounts.spotify.com/api/token',
