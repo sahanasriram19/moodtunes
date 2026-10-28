@@ -2,6 +2,7 @@ const axios   = require('axios');
 const spotify = require('./spotifyController');
 const lists   = require('./spotifyPlaylistController');
 const logs    = require('../models/logModel');
+const playlists = require('./playlistOrderController');
 
 const { call, uriOf, query } = lists;
 const API = 'https://api.spotify.com/v1';
@@ -218,6 +219,7 @@ module.exports.logFromSpotify = async (req, res) => {
     }, (err, result) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         if (result.affectedRows === 1) lists.songAdded(userId, songId, mood, t ? t.spotifyUrl : b.spotify_url);
+        playlists.restoreIfRemoved(userId, songId, mood, t ? t.spotifyUrl : b.spotify_url);
         res.status(201).json({ ok: true, plays });
     });
 };
@@ -271,6 +273,7 @@ module.exports.syncSessionPlays = async (userId, sessionId, mood, sinceMs, pendi
             if (!err) {
                 out.logged.push(t.id);
                 if (result && result.affectedRows === 1) lists.songAdded(userId, t.id, m, t.spotifyUrl);
+                playlists.restoreIfRemoved(userId, t.id, m, t.spotifyUrl);
             }
             resolve();
         }));

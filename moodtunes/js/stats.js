@@ -111,25 +111,53 @@ function render(data) {
 }
 
 
+// ── local dates ────────────────────────────────────────
+// the server stores times in UTC ("2026-10-28 15:20:00"). everything on this page
+// uses the device's own timezone instead, so a song played at 11pm counts on the
+// day you played it, not the UTC day
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function localKey(date) { return date.getFullYear() + '-' + pad2(date.getMonth() + 1) + '-' + pad2(date.getDate()); }
+function parseUTC(s) {
+    if (!s) return null;
+    s = String(s);
+    var t = new Date(s.replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z'));
+    return isNaN(t) ? null : t;
+}
+// the local day a log belongs to: the day it was logged on (log_date, already in
+// your timezone), otherwise the local date of its last play
+function localDayOf(log) {
+    if (log.log_date) return String(log.log_date).slice(0, 10);
+    var t = parseUTC(log.last_logged);
+    return t ? localKey(t) : null;
+}
+
 function buildLineGraph(logs) {
     logs = logs || [];
 
-    // group plays by date and mood
+    // group plays by local date and mood
     var byDate = {};
     var moodSet = {};
     logs.forEach(function(log) {
-        var d = log.last_logged ? log.last_logged.split('T')[0] : null;
+        var d = localDayOf(log);
         if (!d) return;
         if (!byDate[d]) byDate[d] = {};
-        byDate[d][log.mood] = (byDate[d][log.mood] || 0) + log.play_count;
-        moodSet[log.mood] = true;
+        byDate[d][log.mood] = (byDate[d][log.mood] || 0) + (Number(log.play_count) || 0);
     });
 
-    var dates = Object.keys(byDate).sort();
-    // only show last 14 days
-    if (dates.length > 14) dates = dates.slice(dates.length - 14);
+    // the last 14 days on this device's calendar, ending today (quiet days show as 0)
+    var dates = [];
+    var now = new Date();
+    for (var back = 13; back >= 0; back--) {
+        dates.push(localKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - back)));
+    }
+    var activeDays = 0;
+    dates.forEach(function(d) {
+        if (!byDate[d]) return;
+        activeDays++;
+        Object.keys(byDate[d]).forEach(function(m) { moodSet[m] = true; });
+    });
     var moods = Object.keys(moodSet);
-    if (dates.length < 2) {
+    if (activeDays < 2) {
         var c0 = document.getElementById('mood-graph-container');
         if (c0) c0.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:#888;font-size:13px;">log songs on a couple of different days to see your mood graph</p>';
         return;
@@ -180,7 +208,9 @@ function buildLineGraph(logs) {
     var labelIdxs = [0, Math.floor(dates.length / 2), dates.length - 1];
     labelIdxs.forEach(function(i) {
         var d = dates[i];
-        var label = d ? d.slice(5) : ''; // MM-DD
+        var p = d ? d.split('-') : null;
+        var label = p ? new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]))
+            .toLocaleDateString(undefined, { day: 'numeric', month: 'short' }).toLowerCase() : '';
         svg += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9" fill="#555" font-family="Segoe UI,sans-serif">' + label + '</text>';
     });
 

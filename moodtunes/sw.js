@@ -19,7 +19,7 @@ var APP_SHELL = [
   'css/style.css', 'css/mobile.css', 'css/motion.css', 'css/session.css', 'css/history.css',
   'css/playlists.css', 'css/stats.css', 'css/auth.css',
   'js/config.js', 'js/api.js', 'js/mood.js', 'js/app.js', 'js/session.js', 'js/history.js',
-  'js/playlists.js', 'js/stats.js', 'js/help.js', 'js/profile.js', 'js/auth.js',
+  'js/playlists.js', 'js/stats.js', 'js/help.js', 'js/intro.js', 'js/profile.js', 'js/auth.js',
   'images/moodtunes_logo.png', 'images/favicon.png',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png'
 ];

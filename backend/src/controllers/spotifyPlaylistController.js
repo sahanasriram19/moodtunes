@@ -253,6 +253,30 @@ module.exports.songAdded = (userId, songId, mood, spotifyUrl) => {
     })().catch((e) => console.error('could not add to saved spotify playlist:', e.status || e.message));
 };
 
+// a song removed from a playlist in moodtunes leaves the saved spotify playlist too
+module.exports.songRemoved = (userId, songId, mood) => {
+    (async () => {
+        const id = await savedId(userId, mood);
+        if (!id) return;
+        const rows = await query('SELECT spotify_url FROM Log WHERE user_id = ? AND song_id = ? AND mood = ? AND spotify_url IS NOT NULL LIMIT 1', [userId, songId, mood]);
+        const uri = uriOf(rows.length ? rows[0].spotify_url : null) || uriOf(songId);
+        if (uri) await items(userId, 'delete', id, { items: [{ uri }] }, { tracks: [{ uri }] });
+    })().catch((e) => console.error('could not remove from saved spotify playlist:', e.status || e.message));
+};
+
+// a removed song that's logged again goes back to the top of the saved playlist.
+// (a song's very first log is already handled by songAdded above)
+module.exports.songRestored = (userId, songId, mood, spotifyUrl) => {
+    (async () => {
+        const id = await savedId(userId, mood);
+        if (!id) return;
+        const rows = await query('SELECT COUNT(*) AS n FROM Log WHERE user_id = ? AND song_id = ? AND mood = ?', [userId, songId, mood]);
+        if (Number(rows[0].n) <= 1) return;
+        const uri = uriOf(spotifyUrl) || uriOf(songId);
+        if (uri) await items(userId, 'post', id, { uris: [uri], position: 0 });
+    })().catch((e) => console.error('could not re-add to saved spotify playlist:', e.status || e.message));
+};
+
 // call before deleting a log: if it was the song's last log for that mood, it leaves the saved playlist
 module.exports.beforeLogDeleted = (userId, logId) => {
     return query('SELECT song_id, mood, spotify_url FROM Log WHERE id = ? AND user_id = ?', [logId, userId])

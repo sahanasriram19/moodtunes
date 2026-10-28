@@ -156,7 +156,7 @@ style.textContent = [
     '.stat-box { border-radius: 12px !important; }',
     '.timeline-date { color: var(--text-primary) !important; }',
     '.playlist-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',
-    '.playlist-card-title { color: var(--text-primary) !important; }',
+    '.playlist-card-title { color: #fff !important; }',   // the name sits on the cover, so it's white in every theme
     '.playlist-card-count { color: var(--text-muted) !important; }',
     '.playlist-view-header { background: var(--bg-card) !important; }',
     '.log-card.draggable-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',

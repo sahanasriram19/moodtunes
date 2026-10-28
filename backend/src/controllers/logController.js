@@ -2,6 +2,7 @@ const model   = require('../models/logModel');
 const spotify = require('./spotifyController');
 const axios   = require('axios');
 const savedPlaylists = require('./spotifyPlaylistController');
+const playlists = require('./playlistOrderController');
 
 // the browser sends its timezone with every request (X-Timezone-Offset header);
 // older app versions sent tz_offset in the body or query instead
@@ -73,6 +74,8 @@ module.exports.logSong = (req, res, next) => {
     }, (err, result) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         if (req.body.played !== false) startLaunch(res.locals.userId, req, req.body.song_id, req.body.mood);
+        // logging a song you'd removed from this mood's playlist puts it back in
+        playlists.restoreIfRemoved(res.locals.userId, req.body.song_id, req.body.mood, req.body.spotify_url);
         // affectedRows: 1 = new row for today, 2 = today's row updated
         if (result.affectedRows === 1) {
             // first time with this mood? add it to the saved spotify playlist too
@@ -266,14 +269,19 @@ module.exports.deleteLog = (req, res, next) => {
     });
 };
 // ── stats endpoint ────────────────────────────────────────────────────────────
+// uses the timezone of the device asking (X-Timezone-Offset), so the time of day
+// and days active match the user's own clock rather than UTC
 module.exports.getStats = (req, res, next) => {
     const userId = res.locals.userId;
+    let tz = parseInt(tzFrom(req), 10);
+    if (isNaN(tz) || Math.abs(tz) > 14 * 60) tz = -model.DEFAULT_OFFSET_SECONDS / 60;
+    const q = { user_id: userId, offset_sec: -tz * 60 };
     Promise.all([
-        new Promise((resolve) => model.getStats({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
-        new Promise((resolve) => model.getMoodBreakdown({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
-        new Promise((resolve) => model.getTopSongs({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
-        new Promise((resolve) => model.getTimeOfDay({ user_id: userId }, (err, r) => resolve(err ? [] : r))),
-        new Promise((resolve) => model.getFlashback({ user_id: userId }, (err, r) => resolve(err ? [] : r)))
+        new Promise((resolve) => model.getStats(q, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getMoodBreakdown(q, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getTopSongs(q, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getTimeOfDay(q, (err, r) => resolve(err ? [] : r))),
+        new Promise((resolve) => model.getFlashback(q, (err, r) => resolve(err ? [] : r)))
     ]).then(([stats, moods, topSongs, timeOfDay, flashback]) => {
         res.status(200).json({ stats: stats[0] || {}, moods, topSongs, timeOfDay: timeOfDay[0] || {}, flashback });
     }).catch(() => res.status(500).json({ message: 'Internal server error' }));

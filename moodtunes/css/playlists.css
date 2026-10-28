@@ -232,3 +232,80 @@
   -webkit-backdrop-filter: blur(6px);
   pointer-events: none;
 }
+/* === PLAYLIST NAMES: ALWAYS WHITE, ALWAYS READABLE === */
+/* the name sits on the cover, so it's white in every theme. playlists.js measures
+   how light the bottom of the cover is and sets --pl-a1 / --pl-a2 (how dark the
+   shade behind the name gets) and --pl-dim (light covers are dimmed a little) */
+#playlists-list .playlist-card .playlist-card-title,
+#playlists-list .playlist-card .playlist-card-title * {
+  color: #fff !important;
+}
+
+#playlists-list .playlist-card .playlist-card-title {
+  z-index: 2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 2px 16px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, var(--pl-a1, 0.35)) 45%,
+      rgba(0, 0, 0, var(--pl-a2, 0.75)) 100%) !important;
+  transition: background 0.3s;
+}
+
+#playlists-list .playlist-card .playlist-cover > * {
+  filter: brightness(var(--pl-dim, 1));
+  transition: filter 0.3s;
+}
+
+#playlists-list .playlist-card .pl-in-spotify {
+  z-index: 3;
+}
+
+/* inside an open playlist the name sits on the card, not the cover, so it
+   follows the theme (white on the dark themes, dark on clean light) */
+#playlists-list .playlist-view-title {
+  color: var(--text-primary, #fff) !important;
+}
+
+/* === EMPTY PLAYLIST === */
+.pl-empty-note {
+  margin: 4px 0 20px;
+  padding: 18px;
+  border: 1px dashed var(--border-mid, #333);
+  border-radius: 12px;
+  color: var(--text-secondary, #888);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.pl-empty-note[hidden] {
+  display: none;
+}
+
+/* === REORDERING: THE WHOLE CARD MOVES === */
+#playlist-block .drag-handle {
+  cursor: grab;
+  touch-action: none;            /* holding the handle drags the card instead of scrolling */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#playlist-block .drag-handle:focus-visible {
+  outline: 2px solid var(--accent, #b99cff);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+#playlist-block .draggable-card.pl-lifted {
+  will-change: transform;
+  position: relative;
+  z-index: 20;
+  cursor: grabbing;
+  box-shadow: 0 22px 44px -16px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--border-mid, #333) !important;
+}
+
+body.pl-reordering,
+body.pl-reordering * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}

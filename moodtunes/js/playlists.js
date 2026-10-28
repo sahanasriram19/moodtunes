@@ -42,7 +42,7 @@ apiCall('/spotify/playlists?v=2', 'GET', null, function(err, res) {
 var COVER_KEY = 'moodtunes_cover_' + (localStorage.getItem('moodtunes_username') || '') + '_';
 function coverArts(mood, songIds) {
     var byId = {};
-    (latestLogs || []).forEach(function(l) { if (l.mood === mood) byId[l.song_id] = l; });
+    playlistLogs().forEach(function(l) { if (l.mood === mood) byId[l.song_id] = l; });
     var list = songIds
         ? songIds.map(function(id) { return byId[id]; }).filter(Boolean)
         : orderedSongs(mood, Object.keys(byId).map(function(k) { return byId[k]; }));
@@ -71,7 +71,7 @@ function uploadCover(mood, songIds, force) {
 }
 // every saved playlist whose top 4 changed since its cover was last uploaded
 function syncCovers() {
-    if (latestLogs === null || !ordersKnown) return;
+    if (latestLogs === null || !ordersKnown || !removedKnown) return;
     Object.keys(savedSpotify).forEach(function(mood) { uploadCover(mood); });
 }
 
@@ -126,9 +126,9 @@ function resaveIfSaved(mood, songIds) {
 var playlistOrders = {};                    // { mood: [songId, songId, ...] }
 var LEGACY_ORDER_PREFIX = 'moodtunes_order_';
 
-function saveOrder(mood, songIds) {
+function saveOrder(mood, songIds, noResave) {
     playlistOrders[mood] = songIds;
-    resaveIfSaved(mood, songIds);
+    if (!noResave) resaveIfSaved(mood, songIds);
     apiCacheSet('/playlists/order', playlistOrders);
     apiCall('/playlists/order/' + encodeURIComponent(mood), 'PUT', { song_ids: songIds }, function(err, res) {
         if (err || !res || res.status >= 400) MoodFX.toast('couldn’t sync this order, it will still show on this device');
@@ -191,11 +191,42 @@ function orderedSongs(mood, songs) {
 
 var playlistsList = document.getElementById('playlists-list');
 
+// ── songs removed from a playlist ──────────────────────
+// ✕ takes a song out of this playlist only: its logs (journal history, stats)
+// are kept. logging the song again with the same mood puts it back. a playlist
+// whose songs are all removed stays, showing its mood icon on all four squares.
+var removedSongs = {};                      // { mood: { songId: true } }
+var removedKnown = false;
+
+function isRemoved(mood, songId) {
+    return !!(removedSongs[mood] && removedSongs[mood][songId]);
+}
+function setRemoved(mood, songId, on) {
+    if (on) (removedSongs[mood] || (removedSongs[mood] = {}))[songId] = true;
+    else if (removedSongs[mood]) delete removedSongs[mood][songId];
+    // keep the saved copy in step, so the next page load is right straight away
+    var out = {};
+    Object.keys(removedSongs).forEach(function(m) {
+        var ids = Object.keys(removedSongs[m]);
+        if (ids.length) out[m] = ids;
+    });
+    apiCacheSet('/playlists/removed', out);
+}
+// your logs minus the songs you've taken out of their playlist
+function playlistLogs() {
+    return (latestLogs || []).filter(function(l) { return !isRemoved(l.mood, l.song_id); });
+}
+// the songs currently in a mood's playlist, in playlist order
+function playlistSongs(mood) {
+    return orderedSongs(mood, playlistLogs().filter(function(l) { return l.mood === mood; }));
+}
+
+// every mood you've logged keeps its playlist, even when all its songs are removed
 function groupByMood(logs) {
     var grouped = {};
     logs.forEach(function(log) {
         if (!grouped[log.mood]) grouped[log.mood] = [];
-        grouped[log.mood].push(log);
+        if (!isRemoved(log.mood, log.song_id)) grouped[log.mood].push(log);
     });
     return grouped;
 }
@@ -205,12 +236,67 @@ function buildCoverHTML(songs, mood, size) {
     var html = '<div class="' + (size === 'large' ? 'playlist-header-cover' : 'playlist-cover') + '">';
     for (var i = 0; i < 4; i++) {
         if (songs[i] && songs[i].album_art) {
-            html += '<img src="' + songs[i].album_art + '" alt="album art" />';
+            html += '<img src="' + MoodFX.esc(songs[i].album_art) + '" alt="album art" />';
         } else {
             html += '<div class="playlist-cover-empty">' + moodIconHTML + '</div>';
         }
     }
     return html + '</div>';
+}
+
+// ── keeping the name readable on light covers ──────────
+// the playlist name is always white. how bright the bottom of the cover is
+// (where the name sits) decides how dark the shade behind the name gets, and
+// very light covers are dimmed a little too
+var lumCache = {};
+function imageLum(url, cb) {
+    if (Object.prototype.hasOwnProperty.call(lumCache, url)) return cb(lumCache[url]);
+    var im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = function() {
+        var v = null;
+        try {
+            var c = document.createElement('canvas');
+            c.width = c.height = 12;
+            var x = c.getContext('2d');
+            x.drawImage(im, 0, 0, 12, 12);
+            var d = x.getImageData(0, 0, 12, 12).data, sum = 0;
+            for (var i = 0; i < d.length; i += 4) sum += (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+            v = sum / (d.length / 4);
+        } catch (e) { v = null; }            // the image wouldn't let itself be read
+        lumCache[url] = v;
+        cb(v);
+    };
+    im.onerror = function() { lumCache[url] = null; cb(null); };
+    im.src = url;
+}
+function colorLum(css) {
+    var m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(css || '');
+    if (!m || (m[4] !== undefined && Number(m[4]) < 0.2)) return null;
+    return (0.2126 * m[1] + 0.7152 * m[2] + 0.0722 * m[3]) / 255;
+}
+function shadeCard(card) {
+    var cover = card.querySelector('.playlist-cover');
+    if (!cover) return;
+    var tiles = [cover.children[2], cover.children[3]].filter(Boolean);   // the bottom row, behind the name
+    var vals = [], left = tiles.length;
+    function apply() {
+        var known = vals.filter(function(v) { return v !== null; });
+        var lum = known.length ? known.reduce(function(a, b) { return a + b; }, 0) / known.length : 0.6;
+        var shade = Math.max(0, Math.min(1, (lum - 0.3) / 0.4));          // 0 = dark cover, 1 = very light
+        card.style.setProperty('--pl-a1', (0.25 + 0.4 * shade).toFixed(2));
+        card.style.setProperty('--pl-a2', (0.62 + 0.3 * shade).toFixed(2));
+        card.style.setProperty('--pl-dim', (1 - 0.22 * shade).toFixed(2));
+    }
+    if (!left) return apply();
+    tiles.forEach(function(t) {
+        if (t.tagName === 'IMG') {
+            imageLum(t.currentSrc || t.src, function(v) { vals.push(v); if (--left === 0) apply(); });
+        } else {
+            vals.push(colorLum(getComputedStyle(t).backgroundColor));
+            if (--left === 0) apply();
+        }
+    });
 }
 
 // ── grid view ──────────────────────────────────────────
@@ -224,30 +310,54 @@ function renderGrid(grouped) {
     var grid = document.getElementById('playlist-grid');
 
     Object.keys(grouped).forEach(function(mood) {
-        var songs = grouped[mood];
-        var sorted = orderedSongs(mood, songs);
+        var sorted = orderedSongs(mood, grouped[mood]);
         var card = document.createElement('div');
         card.classList.add('playlist-card');
         card.dataset.mood = mood;
         card.innerHTML =
             buildCoverHTML(sorted, mood, 'small') +
             '<div class="playlist-card-title">' + MoodFX.esc(mood) + '</div>';
-        card.addEventListener('click', (function(m, s) {
-            return function() { openPlaylist(m, s); };
-        })(mood, sorted));
+        card.addEventListener('click', function() { openPlaylist(mood); });
         grid.appendChild(card);
+        shadeCard(card);
     });
     markSavedCards();
 }
 
+// redraw a playlist's covers (grid card + open header) and its song count
+function refreshPlaylistBits(mood) {
+    var songs = playlistSongs(mood);
+    var gridCard = document.querySelector('.playlist-card[data-mood="' + CSS.escape(mood) + '"]');
+    if (gridCard) {
+        var oldCover = gridCard.querySelector('.playlist-cover');
+        if (oldCover) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = buildCoverHTML(songs, mood, 'small');
+            gridCard.replaceChild(tmp.firstChild, oldCover);
+            shadeCard(gridCard);
+        }
+    }
+    var view = document.getElementById('playlist-view');
+    if (view && view.classList.contains('active') && view.dataset.mood === mood) {
+        var wrap = document.getElementById('playlist-cover-wrap');
+        if (wrap) wrap.innerHTML = buildCoverHTML(songs, mood, 'large');
+        var count = document.getElementById('pl-count');
+        if (count) count.textContent = songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' from your journal';
+        var empty = document.getElementById('pl-empty-note');
+        if (empty) empty.hidden = songs.length > 0;
+    }
+    uploadCover(mood, songs.map(function(s) { return s.song_id; }));
+}
+
 // ── open a playlist ────────────────────────────────────
-function openPlaylist(mood, songs) {
+function openPlaylist(mood) {
     document.getElementById('grid-view').classList.add('hidden');
     var view = document.getElementById('playlist-view');
     view.classList.add('active');
+    view.dataset.mood = mood;
 
     // same order as the grid card, so both covers always match
-    var listSongs = orderedSongs(mood, songs);
+    var listSongs = playlistSongs(mood);
 
     view.innerHTML =
         '<button class="back-btn" id="back-btn">← back to playlists</button>' +
@@ -255,28 +365,26 @@ function openPlaylist(mood, songs) {
             '<div id="playlist-cover-wrap">' + buildCoverHTML(listSongs, mood, 'large') + '</div>' +
             '<div class="playlist-view-info">' +
                 '<div class="playlist-view-title">' + MoodFX.esc(mood) + '</div>' +
-                '<div class="playlist-view-count">' + songs.length + ' song' + (songs.length !== 1 ? 's' : '') + ' from your journal</div>' +
-                '<div class="playlist-view-hint">new songs go to the top, and you can drag to reorder. the cover shows the top 4.</div>' +
+                '<div class="playlist-view-count" id="pl-count">' + listSongs.length + ' song' + (listSongs.length !== 1 ? 's' : '') + ' from your journal</div>' +
+                '<div class="playlist-view-hint">new songs go to the top, and you can drag to reorder. the cover shows the top 4. ✕ takes a song out of this playlist but keeps it in your history.</div>' +
                 '<button type="button" class="pl-save-btn" id="pl-save-btn"></button>' +
             '</div>' +
             '<button class="playlist-play-btn" id="sync-btn" title="play in spotify" style="border:none;cursor:pointer;">▶</button>' +
         '</div>' +
+        '<p class="pl-empty-note" id="pl-empty-note"' + (listSongs.length ? ' hidden' : '') + '>no songs in this playlist right now. log a song with this mood and it’ll show up here.</p>' +
         '<div class="playlist-block" id="playlist-block"></div>';
 
     var block = document.getElementById('playlist-block');
-    var songMap = {};
 
     listSongs.forEach(function(song) {
-        songMap[song.song_id] = song;
         var card = document.createElement('div');
         card.classList.add('log-card', 'draggable-card');
         card.id = 'log-' + song.song_id + '-' + mood;
         card.dataset.songId = song.song_id;
         card.dataset.albumArt = song.album_art;
-        card.draggable = true;
         card.innerHTML =
-            '<div class="drag-handle" title="drag to reorder">⠿</div>' +
-            '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="album art" />' +
+            '<div class="drag-handle" title="drag to reorder" tabindex="0" role="button" aria-label="move ' + MoodFX.esc(song.title) + ', use the up and down arrow keys">⠿</div>' +
+            '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="album art" draggable="false" />' +
             '<div class="song-info">' +
                 songTitleHTML(song.title) +
                 '<div class="song-artist">' + MoodFX.esc(song.artist) + '</div>' +
@@ -293,127 +401,20 @@ function openPlaylist(mood, songs) {
                 '</div>' +
             '</div>' +
             '<button class="play-btn song-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '" data-song-id="' + MoodFX.esc(song.song_id) + '" data-mood="' + MoodFX.esc(mood) + '">▶</button>' +
-            '<button class="delete-btn playlist-remove-btn" data-songid="' + song.song_id + '" data-mood="' + MoodFX.esc(mood) + '" title="remove from view">✕</button>';
+            '<button class="delete-btn playlist-remove-btn" data-songid="' + MoodFX.esc(song.song_id) + '" data-mood="' + MoodFX.esc(mood) + '" title="remove from this playlist (stays in your history)" aria-label="remove from this playlist">✕</button>';
         block.appendChild(card);
     });
 
-    // ── drag and drop ──────────────────────────────────
-    var dragging = null;
-
-    function finishReorder() {
-        if (dragging) dragging.classList.remove('dragging');
-        dragging = null;
-        document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
-        var cards = block.querySelectorAll('.draggable-card');
-        var orderedIds = [];
-        var top4 = [];
-        cards.forEach(function(c, i) {
-            orderedIds.push(c.dataset.songId);
-            if (i < 4) top4.push({ album_art: c.dataset.albumArt || '' });
-        });
-        saveOrder(mood, orderedIds);
-        document.getElementById('playlist-cover-wrap').innerHTML = buildCoverHTML(top4, mood, 'large');
-        var gridCard = document.querySelector('.playlist-card[data-mood="' + CSS.escape(mood) + '"]');
-        if (gridCard) {
-            var oldCover = gridCard.querySelector('.playlist-cover');
-            if (oldCover) {
-                var tmp = document.createElement('div');
-                tmp.innerHTML = buildCoverHTML(top4, mood, 'small');
-                gridCard.replaceChild(tmp.firstChild, oldCover);
-            }
-        }
-    }
-
-    // ── mouse / desktop drag ───────────────────────────
-    block.addEventListener('dragstart', function(e) {
-        dragging = e.target.closest('.draggable-card');
-        if (!dragging) return;
-        dragging.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-    });
-
-    block.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        if (!dragging) return;
-        var target = e.target.closest('.draggable-card');
-        if (!target || target === dragging) return;
-        document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
-        target.classList.add('drag-over');
-        var rect = target.getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) {
-            block.insertBefore(dragging, target);
-        } else {
-            block.insertBefore(dragging, target.nextSibling);
-        }
-    });
-
-    block.addEventListener('dragend', finishReorder);
-
-    // ── touch / mobile drag ────────────────────────────
-    var touchClone = null;
-    var touchOffsetX = 0;
-    var touchOffsetY = 0;
-
-    block.addEventListener('touchstart', function(e) {
-        var handle = e.target.closest('.drag-handle');
-        if (!handle) return;
-        dragging = handle.closest('.draggable-card');
-        if (!dragging) return;
-        e.preventDefault();
-        dragging.classList.add('dragging');
-
-        var touch = e.touches[0];
-        var rect = dragging.getBoundingClientRect();
-        touchOffsetX = touch.clientX - rect.left;
-        touchOffsetY = touch.clientY - rect.top;
-
-        touchClone = dragging.cloneNode(true);
-        touchClone.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:0.85;width:' + rect.width + 'px;box-shadow:0 8px 24px rgba(0,0,0,0.5);border-radius:10px;';
-        touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
-        touchClone.style.top  = (touch.clientY - touchOffsetY) + 'px';
-        document.body.appendChild(touchClone);
-    }, { passive: false });
-
-    block.addEventListener('touchmove', function(e) {
-        if (!dragging || !touchClone) return;
-        e.preventDefault();
-        var touch = e.touches[0];
-        touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
-        touchClone.style.top  = (touch.clientY - touchOffsetY) + 'px';
-
-        // find card under finger
-        touchClone.style.display = 'none';
-        var el = document.elementFromPoint(touch.clientX, touch.clientY);
-        touchClone.style.display = '';
-        var target = el ? el.closest('.draggable-card') : null;
-        if (!target || target === dragging) return;
-
-        document.querySelectorAll('.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
-        target.classList.add('drag-over');
-        var rect = target.getBoundingClientRect();
-        if (touch.clientY < rect.top + rect.height / 2) {
-            block.insertBefore(dragging, target);
-        } else {
-            block.insertBefore(dragging, target.nextSibling);
-        }
-    }, { passive: false });
-
-    block.addEventListener('touchend', function(e) {
-        if (!dragging) return;
-        if (touchClone) { touchClone.remove(); touchClone = null; }
-        finishReorder();
-    });
+    enableReorder(block, mood);
 
     document.getElementById('back-btn').addEventListener('click', function() {
         view.classList.remove('active');
+        view.dataset.mood = '';
         document.getElementById('grid-view').classList.remove('hidden');
     });
 
     // save / update in spotify
     var saveBtn = document.getElementById('pl-save-btn');
-    function currentIds() {
-        return Array.prototype.map.call(block.querySelectorAll('.draggable-card'), function(c) { return c.dataset.songId; });
-    }
     function refreshSaveBtn() {
         var saved = !!savedSpotify[mood];
         saveBtn.classList.toggle('saved', saved);
@@ -426,7 +427,7 @@ function openPlaylist(mood, songs) {
         if (saveBtn.disabled) return;
         saveBtn.disabled = true;
         saveBtn.textContent = 'saving…';
-        saveToSpotify(mood, currentIds(), false, function() { saveBtn.disabled = false; refreshSaveBtn(); });
+        saveToSpotify(mood, visibleIds(block), false, function() { saveBtn.disabled = false; refreshSaveBtn(); });
     });
 
     // ▶ plays the whole playlist in spotify (saving it there first if needed)
@@ -434,11 +435,178 @@ function openPlaylist(mood, songs) {
         if (savedSpotify[mood]) return openSpotify(savedSpotify[mood]);
         var btn = this;
         btn.disabled = true;
-        saveToSpotify(mood, currentIds(), false, function(url) {
+        saveToSpotify(mood, visibleIds(block), false, function(url) {
             btn.disabled = false;
             refreshSaveBtn();
             if (url) openSpotify(url);
         });
+    });
+}
+
+// the song cards still showing in an open playlist, top to bottom
+function visibleCards(block) {
+    return Array.prototype.filter.call(block.children, function(c) {
+        return c.classList.contains('draggable-card') && !c.classList.contains('pl-gone');
+    });
+}
+function visibleIds(block) {
+    return visibleCards(block).map(function(c) { return c.dataset.songId; });
+}
+
+// ── smooth moving ──────────────────────────────────────
+// FLIP: note where each card is on screen, change the order, then let each card
+// glide from its old spot to its new one instead of jumping
+var EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+function setImp(el, prop, val) {
+    if (val === '') el.style.removeProperty(prop);
+    else el.style.setProperty(prop, val, 'important');     // beats the hover rules that pin transform
+}
+function flip(els, change, ms) {
+    var first = els.map(function(el) { return el.getBoundingClientRect().top; });
+    change();
+    if (MoodFX.reduceMotion) return;
+    els.forEach(function(el) { setImp(el, 'transition', 'none'); setImp(el, 'transform', ''); });
+    var last = els.map(function(el) { return el.getBoundingClientRect().top; });
+    els.forEach(function(el, i) {
+        var d = first[i] - last[i];
+        if (d) setImp(el, 'transform', 'translate3d(0,' + d + 'px,0)');
+    });
+    void document.body.offsetHeight;
+    els.forEach(function(el) {
+        setImp(el, 'transition', 'transform ' + (ms || 240) + 'ms ' + EASE);
+        setImp(el, 'transform', 'translate3d(0,0,0)');
+        clearTimeout(el._flipT);
+        el._flipT = setTimeout(function() {
+            if (el.classList.contains('pl-lifted')) return;
+            setImp(el, 'transition', ''); setImp(el, 'transform', '');
+        }, (ms || 240) + 40);
+    });
+}
+
+// ── reordering: the whole card follows your finger / mouse ─
+// mouse: grab a card anywhere (not on its buttons). touch: hold the ⠿ handle,
+// so the page still scrolls normally. the other cards slide out of the way, and
+// the card glides into its slot when you let go. keyboard: arrows on the handle.
+function enableReorder(block, mood) {
+    var drag = null;
+    var scrollRaf = 0;
+
+    function finishReorder() {
+        saveOrder(mood, visibleIds(block));
+        refreshPlaylistBits(mood);
+    }
+
+    block.addEventListener('pointerdown', function(e) {
+        if (drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+        var card = e.target.closest('.draggable-card');
+        if (!card || card.classList.contains('pl-gone')) return;
+        var onHandle = !!e.target.closest('.drag-handle');
+        if (e.pointerType !== 'mouse' && !onHandle) return;
+        // (a mouse can grab the card anywhere except its buttons, a note being edited, or a note you tap to read)
+        if (!onHandle && e.target.closest('button, a, input, textarea, select, .log-note:not([hidden])')) return;
+        drag = {
+            card: card, id: e.pointerId, startY: e.clientY, y: e.clientY,
+            startScroll: window.scrollY, startTop: card.offsetTop, active: false
+        };
+        if (onHandle) { e.preventDefault(); start(); }
+    });
+
+    function start() {
+        drag.active = true;
+        drag.startTop = drag.card.offsetTop;
+        drag.card.classList.add('pl-lifted');
+        document.body.classList.add('pl-reordering');
+        setImp(drag.card, 'transition', 'box-shadow 0.2s');
+        try { window.getSelection().removeAllRanges(); } catch (e) {}
+        tickScroll();
+    }
+
+    function place() {
+        var card = drag.card;
+        var moved = drag.y - drag.startY + (window.scrollY - drag.startScroll);
+        var top = drag.startTop + moved;                       // where the card should be drawn
+        var middle = top + card.offsetHeight / 2;
+        var others = visibleCards(block).filter(function(c) { return c !== card; });
+        var before = null;
+        for (var i = 0; i < others.length; i++) {
+            if (middle < others[i].offsetTop + others[i].offsetHeight / 2) { before = others[i]; break; }
+        }
+        var list = visibleCards(block);
+        var next = list[list.indexOf(card) + 1] || null;
+        if (before !== next) {
+            flip(others, function() {
+                if (before) block.insertBefore(card, before);
+                else block.appendChild(card);
+            });
+        }
+        setImp(card, 'transform', 'translate3d(0,' + (top - card.offsetTop) + 'px,0) scale(1.02)');
+    }
+
+    // near the top or bottom of the screen: scroll so you can drag further
+    function tickScroll() {
+        cancelAnimationFrame(scrollRaf);
+        scrollRaf = requestAnimationFrame(function step() {
+            if (!drag || !drag.active) return;
+            var edge = 80, bottomEdge = window.innerHeight - (window.innerWidth <= 768 ? 150 : 80);
+            var speed = 0;
+            if (drag.y < edge) speed = -Math.ceil((edge - drag.y) / 6);
+            else if (drag.y > bottomEdge) speed = Math.ceil((drag.y - bottomEdge) / 6);
+            if (speed) { window.scrollBy(0, Math.max(-18, Math.min(18, speed))); place(); }
+            scrollRaf = requestAnimationFrame(step);
+        });
+    }
+
+    window.addEventListener('pointermove', function(e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        drag.y = e.clientY;
+        if (!drag.active) {
+            if (Math.abs(e.clientY - drag.startY) < 6) return;
+            start();
+        }
+        e.preventDefault();
+        place();
+    }, { passive: false });
+
+    function end(e) {
+        if (!drag || (e && e.pointerId !== drag.id)) return;
+        var d = drag;
+        drag = null;
+        cancelAnimationFrame(scrollRaf);
+        if (!d.active) return;
+        var card = d.card;
+        document.body.classList.remove('pl-reordering');
+        // glide into its slot
+        setImp(card, 'transition', 'transform 220ms ' + EASE + ', box-shadow 0.2s');
+        setImp(card, 'transform', 'translate3d(0,0,0)');
+        setTimeout(function() {
+            card.classList.remove('pl-lifted');
+            setImp(card, 'transition', ''); setImp(card, 'transform', '');
+        }, 240);
+        // a drag isn't a click on whatever was under the pointer
+        var swallow = function(ev) { ev.stopPropagation(); ev.preventDefault(); };
+        window.addEventListener('click', swallow, true);
+        setTimeout(function() { window.removeEventListener('click', swallow, true); }, 0);
+        finishReorder();
+    }
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+
+    // keyboard: arrow keys on the ⠿ handle move the song up or down
+    block.addEventListener('keydown', function(e) {
+        if (!e.target.classList.contains('drag-handle')) return;
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        e.preventDefault();
+        var card = e.target.closest('.draggable-card');
+        var list = visibleCards(block);
+        var i = list.indexOf(card);
+        var j = e.key === 'ArrowUp' ? i - 1 : i + 1;
+        if (i < 0 || j < 0 || j >= list.length) return;
+        flip(list, function() {
+            if (e.key === 'ArrowUp') block.insertBefore(card, list[j]);
+            else block.insertBefore(card, list[j].nextSibling);
+        });
+        e.target.focus();
+        finishReorder();
     });
 }
 
@@ -499,18 +667,83 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// ── ✕ remove a song from the playlist ──────────────────
+// the card slides away and the songs below move up; "undo" brings it back.
+// after 5 seconds it's saved. the song's logs and history aren't touched.
+function hideCard(card, block) {
+    var below = visibleCards(block).filter(function(c) {
+        return c !== card && (card.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    card.classList.add('pl-gone');
+    var done = function() { flip(below, function() { card.style.display = 'none'; }, 260); };
+    if (MoodFX.reduceMotion || !card.animate) return done();
+    var a = card.animate([
+        { opacity: 1, transform: 'translateX(0)' },
+        { opacity: 0, transform: 'translateX(24px)' }
+    ], { duration: 180, easing: 'ease-in', fill: 'forwards' });
+    a.onfinish = function() { done(); a.cancel(); };
+}
+function showCard(card, block) {
+    if (!card.isConnected) return;
+    var below = visibleCards(block).filter(function(c) {
+        return card.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING;
+    });
+    card.classList.remove('pl-gone');
+    flip(below, function() { card.style.display = ''; }, 260);
+    if (!MoodFX.reduceMotion && card.animate) {
+        card.animate([{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'translateX(0)' }],
+            { duration: 220, easing: EASE });
+    }
+}
+
 document.addEventListener('click', function(e) {
-    if (!e.target.classList.contains('playlist-remove-btn')) return;
-    var card = document.getElementById('log-' + e.target.dataset.songid + '-' + e.target.dataset.mood);
-    if (card) card.remove();
+    var btn = e.target.closest && e.target.closest('.playlist-remove-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    var songId = btn.dataset.songid, mood = btn.dataset.mood;
+    var card = btn.closest('.draggable-card');
+    var block = document.getElementById('playlist-block');
+    if (!card || !block || card.classList.contains('pl-gone')) return;
+    var title = (card.querySelector('.song-title') || {}).textContent || 'song';
+
+    MoodFX.undoable({
+        message: 'removed from ' + mood, mood: mood,
+        hide: function() {
+            setRemoved(mood, songId, true);
+            hideCard(card, block);
+            refreshPlaylistBits(mood);
+        },
+        restore: function() {
+            setRemoved(mood, songId, false);
+            showCard(card, block);
+            refreshPlaylistBits(mood);
+        },
+        commit: function() {
+            apiCall('/playlists/removed', 'POST', { mood: mood, song_id: songId }, function(err, res) {
+                if (err || !res || res.status >= 400) {
+                    MoodFX.toast('couldn’t remove “' + title.trim() + '”, try again', mood);
+                    setRemoved(mood, songId, false);
+                    showCard(card, block);
+                    refreshPlaylistBits(mood);
+                    return;
+                }
+                // drop it from the saved order too, so if you log it again it comes back at the top.
+                // (the server already took it out of the spotify copy)
+                if (playlistOrders[mood]) {
+                    saveOrder(mood, playlistOrders[mood].filter(function(id) { return id !== songId; }), true);
+                }
+                if (card.isConnected) card.remove();
+            });
+        }
+    });
 });
 
 var _lb = document.getElementById('logout-btn'); if (_lb) _lb.addEventListener('click', logout);
 
 // ── boot ───────────────────────────────────────────────
-// the grid needs both your songs and your saved orders; it draws as soon as both
-// are known (instantly from saved data when available) and quietly redraws when
-// fresher data arrives — unless you've already opened a playlist
+// the grid needs your songs, your saved orders and the songs you've removed; it
+// draws as soon as all three are known (instantly from saved data when available)
+// and quietly redraws when fresher data arrives — unless you've opened a playlist
 var latestLogs = null;
 var ordersKnown = false;
 var logsError = false;
@@ -561,6 +794,21 @@ apiCallCached('/playlists/order', function(err, result, fromCache) {
     // an older backend without this route: fall back to orders saved on this device
     var wasKnown = ordersKnown;
     ordersKnown = true;
+    if (!wasKnown || !playlistIsOpen()) renderPlaylists();
+});
+
+apiCallCached('/playlists/removed', function(err, result, fromCache) {
+    if (!err && result && result.status === 200 && result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
+        var next = {};
+        Object.keys(result.data).forEach(function(m) {
+            next[m] = {};
+            (result.data[m] || []).forEach(function(id) { next[m][id] = true; });
+        });
+        removedSongs = next;
+    }
+    // an older backend without this route: nothing has been removed
+    var wasKnown = removedKnown;
+    removedKnown = true;
     if (!wasKnown || !playlistIsOpen()) renderPlaylists();
 });
 

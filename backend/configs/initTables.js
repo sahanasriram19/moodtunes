@@ -79,6 +79,17 @@ CREATE TABLE IF NOT EXISTS SpotifyPlaylist (
     FOREIGN KEY (user_id) REFERENCES User(id),
     UNIQUE KEY unique_user_mood (user_id, mood)
 );
+
+-- songs taken out of a mood playlist (their logs and history are kept)
+CREATE TABLE IF NOT EXISTS PlaylistRemoved (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    mood       VARCHAR(50) NOT NULL,
+    song_id    VARCHAR(255) NOT NULL,
+    removed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    UNIQUE KEY unique_user_removed_song (user_id, mood, song_id)
+);
 `;
 
 pool.query(SQL, (err) => {

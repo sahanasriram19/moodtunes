@@ -106,12 +106,21 @@ function showHelpModal() {
                 '<div style="font-size:13px;color:#aaa;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, deep purple, clean light), and log out. your chosen theme is saved and applied across all pages automatically.</div>' +
             '</div>' +
 
-            '<button id="close-help-2" style="width:100%;margin-top:20px;padding:12px;background:#7f77dd;border:none;border-radius:8px;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">got it!</button>' +
+            (window.MoodTour
+                ? '<button id="help-tour-btn" style="width:100%;margin-top:20px;padding:11px;background:none;border:1px solid #7f77dd;border-radius:8px;color:#c3bdf5;font-size:14px;cursor:pointer;font-weight:600;">show me around this page</button>'
+                : '') +
+            '<button id="close-help-2" style="width:100%;margin-top:10px;padding:12px;background:#7f77dd;border:none;border-radius:8px;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">got it!</button>' +
         '</div>';
 
     document.body.appendChild(modal);
     modal.addEventListener('click', function(e) { if (e.target === modal) closeHelpModal(modal); });
     document.getElementById('close-help').addEventListener('click', function() { closeHelpModal(modal); });
+    // replay the quick intro for this page (see intro.js)
+    var tourBtn = document.getElementById('help-tour-btn');
+    if (tourBtn) tourBtn.addEventListener('click', function() {
+        closeHelpModal(modal);
+        setTimeout(function() { window.MoodTour.start(); }, 240);
+    });
     document.getElementById('close-help-2').addEventListener('click', function() {
         var _user = localStorage.getItem('moodtunes_username');
         localStorage.setItem('moodtunes_seen_help_' + (_user || 'guest'), '1');
@@ -121,10 +130,5 @@ function showHelpModal() {
 
 document.getElementById('help-btn').addEventListener('click', showHelpModal);
 
-// auto-show on first ever visit (journal page only)
-if (window.location.pathname.includes('index') || window.location.pathname.endsWith('/')) {
-    var _user = localStorage.getItem('moodtunes_username');
-    if (!localStorage.getItem('moodtunes_seen_help_' + _user)) {
-        showHelpModal();
-    }
-}
+// first-time visitors get the quick guided intro instead (see intro.js); this
+// full guide stays one tap away on the ? button

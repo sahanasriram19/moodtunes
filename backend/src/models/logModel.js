@@ -114,7 +114,7 @@ module.exports.selectAllByUserPerDay = (data, callback) => {
 
 // ── today and yesterday only — for journal recently played ───────────────────
 module.exports.selectRecentTwoDays = (data, callback) => {
-    dailyLogsReady.then(() => pool.query(
+    dailyLogsReady.then(() => { pool.query(
         'SELECT * FROM Log WHERE user_id = ? AND log_date >= ? ORDER BY last_logged DESC, id DESC',
         [data.user_id, data.since_date],
         (err, rows) => {
@@ -126,7 +126,7 @@ module.exports.selectRecentTwoDays = (data, callback) => {
             }
             callback(err, rows);
         }
-    ));
+    ); });
 };
 
 // ── record a play ────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ module.exports.selectRecentTwoDays = (data, callback) => {
 module.exports.recordPlay = (data, callback) => {
     const firstSec = (data.first_ms || Date.now()) / 1000;
     const lastSec  = (data.last_ms  || Date.now()) / 1000;
-    dailyLogsReady.then(() => pool.query(
+    dailyLogsReady.then(() => { pool.query(
         'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, log_date, first_logged, last_logged)' +
         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?))' +
         ' ON DUPLICATE KEY UPDATE' +
@@ -151,17 +151,17 @@ module.exports.recordPlay = (data, callback) => {
         [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood,
          data.plays, data.note || '', data.log_date, firstSec, lastSec],
         callback
-    ));
+    ); });
 };
 
 // when spotify reports that a listen finished, stretch that day's listening time to its end
 module.exports.extendLastPlayed = (data, callback) => {
-    dailyLogsReady.then(() => pool.query(
+    dailyLogsReady.then(() => { pool.query(
         'UPDATE Log SET last_logged = GREATEST(COALESCE(last_logged, FROM_UNIXTIME(?)), FROM_UNIXTIME(?))' +
         ' WHERE user_id = ? AND song_id = ? AND mood = ? AND log_date = ?',
         [data.end_ms / 1000, data.end_ms / 1000, data.user_id, data.song_id, data.mood, data.log_date],
         callback
-    ));
+    ); });
 };
 
 // the most recent log of a song + mood — used to replay a song that's already in the journal
@@ -242,16 +242,23 @@ module.exports.deleteLog = (data, callback) => {
     );
 };
 // ── stats queries ────────────────────────────────────────────────────────────
+// times are stored in UTC. the stats page sends its timezone, so "morning",
+// "late night" and "days active" are worked out in the user's own local time.
+// LOCAL(col) turns a stored time into the user's wall-clock time, from the raw
+// unix time, so the database's own timezone setting doesn't matter.
+// data.offset_sec = seconds AHEAD of UTC (Singapore = 28800)
+const LOCAL = (col) => "DATE_ADD('1970-01-01 00:00:00', INTERVAL (UNIX_TIMESTAMP(" + col + ") + ?) SECOND)";
+
 module.exports.getStats = (data, callback) => {
     pool.query(`
         SELECT
             COUNT(*) as total_logs,
             SUM(play_count) as total_plays,
             COUNT(DISTINCT song_id) as unique_songs,
-            COUNT(DISTINCT DATE(last_logged)) as days_active,
+            COUNT(DISTINCT DATE(${LOCAL('last_logged')})) as days_active,
             COUNT(DISTINCT mood) as moods_used
         FROM Log WHERE user_id = ?
-    `, [data.user_id], callback);
+    `, [data.offset_sec, data.user_id], callback);
 };
 
 module.exports.getMoodBreakdown = (data, callback) => {
@@ -274,12 +281,15 @@ module.exports.getTopSongs = (data, callback) => {
 module.exports.getTimeOfDay = (data, callback) => {
     pool.query(`
         SELECT
-            SUM(CASE WHEN HOUR(last_logged) BETWEEN 5 AND 11 THEN play_count ELSE 0 END) as morning,
-            SUM(CASE WHEN HOUR(last_logged) BETWEEN 12 AND 17 THEN play_count ELSE 0 END) as afternoon,
-            SUM(CASE WHEN HOUR(last_logged) BETWEEN 18 AND 21 THEN play_count ELSE 0 END) as evening,
-            SUM(CASE WHEN HOUR(last_logged) >= 22 OR HOUR(last_logged) < 5 THEN play_count ELSE 0 END) as late_night
-        FROM Log WHERE user_id = ?
-    `, [data.user_id], callback);
+            SUM(CASE WHEN h BETWEEN 5 AND 11 THEN play_count ELSE 0 END) as morning,
+            SUM(CASE WHEN h BETWEEN 12 AND 17 THEN play_count ELSE 0 END) as afternoon,
+            SUM(CASE WHEN h BETWEEN 18 AND 21 THEN play_count ELSE 0 END) as evening,
+            SUM(CASE WHEN h >= 22 OR h < 5 THEN play_count ELSE 0 END) as late_night
+        FROM (
+            SELECT play_count, HOUR(${LOCAL('last_logged')}) AS h
+            FROM Log WHERE user_id = ?
+        ) t
+    `, [data.offset_sec, data.user_id], callback);
 };
 
 module.exports.getFlashback = (data, callback) => {
