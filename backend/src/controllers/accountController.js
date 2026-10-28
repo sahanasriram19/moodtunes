@@ -116,13 +116,10 @@ module.exports.resetPassword = async (req, res) => {
 
 // DELETE /api/auth/account   body: { password }
 // deletes the account and everything saved with it, in one go: if any step
-// fails nothing is deleted. playlists already saved to spotify stay in the
-// person's spotify library (they're theirs).
-const OWNED_TABLES = [
-    'PasswordReset', 'SessionPlaylist', 'PlayLaunch', 'PlaylistOrder', 'PlaylistRemoved',
-    'SpotifyPlaylist', 'HiddenMood', 'CustomMood', 'Log'
-];
-
+// fails nothing is deleted. it finds the tables to clear by looking at the
+// database itself (every table with a user_id or session_id column), so tables
+// left over from older versions of the app are covered too. playlists already
+// saved to spotify stay in the person's spotify library (they're theirs).
 module.exports.deleteAccount = (req, res) => {
     const userId = res.locals.userId;
     const password = String((req.body && req.body.password) || '');
@@ -137,15 +134,23 @@ module.exports.deleteAccount = (req, res) => {
         pool.getConnection((err2, conn) => {
             if (err2) return res.status(500).json({ message: 'Internal server error' });
             const q = (sql, p) => new Promise((resolve, reject) => conn.query(sql, p, (e, r) => e ? reject(e) : resolve(r)));
-            const tableExists = async (name) => {
-                const [r] = await q('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER(?)', [name]);
-                return r.n > 0;
+            const columnsNamed = async (col) => {
+                const rows = await q(
+                    'SELECT TABLE_NAME AS t FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME = ?', [col]);
+                return rows.map((r) => r.t).filter((t) => !/^(user|session)$/i.test(t));
             };
             (async () => {
                 await q('START TRANSACTION');
-                await q('DELETE sl FROM SessionLog sl JOIN Session s ON s.id = sl.session_id WHERE s.user_id = ?', [userId]);
-                for (const t of OWNED_TABLES) {
-                    if (await tableExists(t)) await q('DELETE FROM `' + t + '` WHERE user_id = ?', [userId]);
+                const sessions = (await q('SELECT id FROM Session WHERE user_id = ?', [userId])).map((r) => r.id);
+                // things that hang off the person's sessions (songs played in them, queues, ...)
+                if (sessions.length) {
+                    for (const t of await columnsNamed('session_id')) {
+                        await q('DELETE FROM `' + t + '` WHERE session_id IN (?)', [sessions]);
+                    }
+                }
+                // everything else that belongs to the person (logs, playlists, moods, ...)
+                for (const t of await columnsNamed('user_id')) {
+                    await q('DELETE FROM `' + t + '` WHERE user_id = ?', [userId]);
                 }
                 await q('DELETE FROM Session WHERE user_id = ?', [userId]);
                 await q('DELETE FROM User WHERE id = ?', [userId]);
