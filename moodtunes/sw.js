@@ -14,7 +14,7 @@ var CACHE = 'moodtunes-' + VERSION;
 var FONT_CACHE = 'moodtunes-fonts';
 
 var APP_SHELL = [
-  'index.html', 'playlists.html', 'session.html', 'history.html', 'stats.html', 'login.html', 'offline.html',
+  'index.html', 'playlists.html', 'session.html', 'history.html', 'stats.html', 'login.html', 'reset.html', 'offline.html',
   'manifest.json',
   'css/style.css', 'css/mobile.css', 'css/motion.css', 'css/session.css', 'css/history.css',
   'css/playlists.css', 'css/stats.css', 'css/auth.css',

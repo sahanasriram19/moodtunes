@@ -30,6 +30,8 @@
         <li style="--c:#f2c84b">happy</li><li style="--c:#378add">sad</li><li style="--c:#b07a50">hype</li><li style="--c:#d4537e">heartbreak</li><li style="--c:#7f77dd">nostalgic</li><li style="--c:#1D9E75">focused</li><li style="--c:#888780">chill</li>
       </ul>
 
+      <p class="auth-notice" id="auth-notice" hidden></p>
+
       <div class="auth-tabs">
         <button class="auth-tab active" id="login-tab">log in</button>
         <button class="auth-tab" id="register-tab">sign up</button>
@@ -46,6 +48,18 @@
         </div>
         <button class="auth-btn" id="login-btn">log in</button>
         <p class="auth-error" id="login-error"></p>
+        <button type="button" class="auth-link" id="forgot-link">forgot your password?</button>
+      </div>
+
+      <div id="forgot-form" style="display:none;">
+        <p class="auth-help">enter the email you signed up with and we’ll send you a link to set a new password.</p>
+        <div class="auth-field">
+          <label for="forgot-email">email</label>
+          <input type="email" id="forgot-email" placeholder="your email" autocomplete="email" />
+        </div>
+        <button class="auth-btn" id="forgot-btn">send reset link</button>
+        <p class="auth-error" id="forgot-error"></p>
+        <button type="button" class="auth-link" id="forgot-back">← back to log in</button>
       </div>
 
       <div id="register-form" style="display:none;">

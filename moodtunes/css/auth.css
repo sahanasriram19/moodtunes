@@ -152,9 +152,7 @@ input {
    sits on the app's own background, says plainly what moodtunes is, and shows the
    seven moods you start with in their colours */
 .auth-container {
-  background:
-    radial-gradient(70% 55% at 15% 0%, rgba(140, 100, 220, 0.30), transparent 70%),
-    #120a20;
+  background: #120a20;
 }
 .auth-box {
   max-width: 380px;
@@ -230,3 +228,42 @@ input {
   .auth-tab:hover { transform: translateY(-4px); }
   .auth-btn:hover { opacity: 1; }
 }
+
+/* === FORGOT PASSWORD / NOTICES === */
+.auth-link {
+  display: block;
+  margin: 6px auto 0;
+  padding: 6px 4px;
+  background: none;
+  border: 0;
+  color: #b9a8e6;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-link:hover { color: #f6f1ff; }
+.auth-link:focus-visible { outline: 2px solid #b99cff; outline-offset: 2px; border-radius: 4px; }
+
+.auth-help {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #c9bde6;
+  margin: 0 0 16px;
+}
+
+.auth-notice {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #d9f7e6;
+  background: rgba(29, 185, 84, 0.12);
+  border: 1px solid rgba(29, 185, 84, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 20px;
+}
+
+.auth-notice[hidden] { display: none; }
+.auth-error.ok { color: #8fe8b4; }
+.auth-btn:disabled { opacity: 0.6; cursor: default; }

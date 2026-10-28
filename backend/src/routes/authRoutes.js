@@ -4,6 +4,7 @@ const user     = require('../controllers/userController');
 const bcrypt   = require('../middlewares/bcryptMiddleware');
 const jwt      = require('../middlewares/jwtMiddleware');
 const limit    = require('../middlewares/rateLimit');
+const account  = require('../controllers/accountController');
 
 // wrong passwords: 10 tries per 15 minutes for each account from each network
 // (a correct login doesn't use one up)
@@ -40,5 +41,37 @@ router.post('/login',
     jwt.generateToken,
     jwt.sendToken
 );
+
+// forgot password: 5 emails per hour from each network
+const forgotLimit = limit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: 'too many reset emails asked for'
+});
+
+// setting a new password from a reset link: 10 tries per 15 minutes
+const resetLimit = limit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    onlyFailures: true,
+    message: 'too many tries'
+});
+
+// deleting an account: wrong passwords are limited like logins
+const deleteLimit = limit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    onlyFailures: true,
+    message: 'too many tries'
+});
+
+// POST /api/auth/forgot   { email }
+router.post('/forgot', forgotLimit, account.forgotPassword);
+
+// POST /api/auth/reset    { token, password }
+router.post('/reset', resetLimit, account.resetPassword);
+
+// DELETE /api/auth/account   { password }  (logged in)
+router.delete('/account', deleteLimit, jwt.verifyToken, account.deleteAccount);
 
 module.exports = router;

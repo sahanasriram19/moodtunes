@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- installable app (PWA) -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="moodtunes" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+  <title>Reset password</title>
+  <!-- fonts: connect early and load in parallel with the other stylesheets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://moodtunes-2avk.onrender.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&amp;family=Outfit:wght@300..700&amp;display=swap" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-box">
+      <img src="images/moodtunes_logo.png" class="auth-logo-img" alt="moodtunes logo">
+      <p class="auth-tagline">choose a new password for your account.</p>
+
+      <div id="reset-form">
+        <div class="auth-field">
+          <label for="new-password">new password</label>
+          <input type="password" id="new-password" placeholder="at least 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="auth-field">
+          <label for="new-password-2">type it again</label>
+          <input type="password" id="new-password-2" placeholder="the same password" autocomplete="new-password" />
+        </div>
+        <button class="auth-btn" id="reset-btn">set new password</button>
+        <p class="auth-error" id="reset-error"></p>
+      </div>
+      <a class="auth-link" href="login.html" style="text-align:center;">← back to log in</a>
+    </div>
+  </div>
+  <script src="js/config.js"></script>
+  <script>
+    // reset.html — opened from the link in the "reset your password" email
+    (function() {
+      var BACKEND_URL = 'https://moodtunes-2avk.onrender.com/api';
+      var token = new URLSearchParams(location.search).get('token') || '';
+      var btn = document.getElementById('reset-btn');
+      var msg = document.getElementById('reset-error');
+      if (!/^[a-f0-9]{64}$/.test(token)) {
+        msg.textContent = 'this reset link isn’t complete. open it again from the email, or ask for a new one on the log in page.';
+        btn.disabled = true;
+      }
+      function submit() {
+        var p1 = document.getElementById('new-password').value;
+        var p2 = document.getElementById('new-password-2').value;
+        msg.textContent = '';
+        if (p1.trim().length < 6) { msg.textContent = 'use at least 6 characters'; return; }
+        if (p1 !== p2) { msg.textContent = 'the two passwords don’t match'; return; }
+        btn.disabled = true;
+        btn.textContent = 'saving…';
+        fetch(BACKEND_URL + '/auth/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, password: p1 })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+        .then(function(result) {
+          if (result.status === 200) {
+            localStorage.removeItem('moodtunes_token');
+            location.replace('login.html?reset=1');
+            return;
+          }
+          msg.textContent = (result.data && result.data.message) || 'something went wrong, try again';
+          btn.disabled = false;
+          btn.textContent = 'set new password';
+        })
+        .catch(function() {
+          msg.textContent = 'could not connect to server';
+          btn.disabled = false;
+          btn.textContent = 'set new password';
+        });
+      }
+      btn.addEventListener('click', submit);
+      document.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !btn.disabled) submit(); });
+    })();
+  </script>
+</body>
+</html>

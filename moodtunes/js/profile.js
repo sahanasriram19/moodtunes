@@ -125,7 +125,7 @@ style.textContent = [
     '.chip:hover { border-color: var(--mc, var(--accent)) !important; color: var(--text-primary) !important; }',
     '.chip.selected { background: var(--mc, var(--accent)) !important; border-color: var(--mc, var(--accent)) !important; color: var(--mc-ink, #fff) !important; }',
     '#song-search { background: color-mix(in srgb, var(--mood) 24%, var(--bg-input)) !important; border-color: color-mix(in srgb, var(--mood) 55%, transparent) !important; color: var(--text-primary) !important; }',
-    '#song-search:focus { border-color: var(--mood) !important; box-shadow: 0 0 0 4px color-mix(in srgb, var(--mood) 22%, transparent), 0 10px 30px -12px var(--mood) !important; }',
+    '#song-search:focus { border-color: var(--mood) !important; box-shadow: none !important; }',
     '.stats-card, .stats-card-title, .flashback-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.section-label { color: var(--text-muted) !important; }',
     '.song-title { color: var(--text-primary) !important; }',
@@ -138,7 +138,7 @@ style.textContent = [
     
     '.session-hero-label { color: var(--text-muted) !important; }',
     '.session-hero-timer { color: var(--text-primary) !important; }',
-    '#session-start-btn { background: var(--mood) !important; color: var(--mood-ink, #fff) !important; box-shadow: 0 8px 24px -8px var(--mood); transition: background .9s, transform .2s !important; }',
+    '#session-start-btn { background: var(--mood) !important; color: var(--mood-ink, #fff) !important; transition: background .9s, transform .2s !important; }',
     '#session-start-btn:hover { transform: translateY(-1px); }',
     '#session-refresh-btn { border-color: var(--border-mid) !important; color: var(--text-secondary) !important; }',
     '.note-textarea { background: var(--bg-input) !important; border-color: var(--border-mid) !important; color: var(--text-primary) !important; }',
@@ -306,7 +306,87 @@ function buildDropdown() {
     logoutRow.addEventListener('click', function() { logout(); });
     d.appendChild(logoutRow);
 
+    var deleteRow = document.createElement('button');
+    deleteRow.style.cssText = [
+        'display:block', 'width:100%', 'padding:6px 10px 2px',
+        'background:none', 'border:none', 'cursor:pointer', 'text-align:left',
+        'color:var(--text-muted,#888)', 'font-size:12px',
+        'text-decoration:underline', 'text-underline-offset:2px',
+    ].join(';');
+    deleteRow.textContent = 'delete account';
+    deleteRow.addEventListener('click', function(e) { e.stopPropagation(); closeDropdown(); showDeleteAccount(); });
+    d.appendChild(deleteRow);
+
     return d;
+}
+
+// ── delete account ─────────────────────────────────────
+// asks for your password, then deletes the account and everything saved with
+// it (logs, notes, sessions, playlists, moods) from the database for good
+function showDeleteAccount() {
+    if (document.getElementById('delete-account-modal')) return;
+    var esc = window.MoodFX ? MoodFX.esc : function(x) { return x; };
+    var modal = document.createElement('div');
+    modal.id = 'delete-account-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'da-title');
+    modal.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.7);';
+    modal.innerHTML =
+        '<div style="width:100%;max-width:400px;background:var(--bg-card,#141414);border:1px solid var(--border-mid,#333);border-radius:14px;padding:24px;color:var(--text-primary,#f0f0f0);font-size:14px;line-height:1.5;">' +
+            '<div id="da-title" style="font-size:18px;font-weight:600;margin-bottom:8px;">delete your account?</div>' +
+            '<p style="margin:0 0 10px;color:var(--text-secondary,#aaa);">this permanently deletes <b>' + esc(username) + '</b> and everything saved in it: every logged song and note, your sessions, playlists, play counts and custom moods. it can’t be undone.</p>' +
+            '<p style="margin:0 0 16px;color:var(--text-secondary,#aaa);">playlists you saved to spotify stay in your spotify library.</p>' +
+            '<label for="da-password" style="display:block;font-size:13px;color:var(--text-secondary,#aaa);margin-bottom:6px;">enter your password to confirm</label>' +
+            '<input type="password" id="da-password" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:11px 12px;border-radius:8px;border:1px solid var(--border-mid,#333);background:var(--bg-input,#1a1a1a);color:var(--text-primary,#f0f0f0);font:inherit;outline:none;" />' +
+            '<p id="da-error" style="min-height:20px;margin:8px 0 0;font-size:13px;color:#e05c5c;"></p>' +
+            '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">' +
+                '<button type="button" id="da-cancel" style="padding:10px 16px;border-radius:999px;border:1px solid var(--border-mid,#333);background:none;color:var(--text-secondary,#aaa);font:inherit;cursor:pointer;">cancel</button>' +
+                '<button type="button" id="da-confirm" style="padding:10px 16px;border-radius:999px;border:0;background:#c94545;color:#fff;font:inherit;font-weight:600;cursor:pointer;">delete my account</button>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(modal);
+    var input = modal.querySelector('#da-password');
+    var err = modal.querySelector('#da-error');
+    var btn = modal.querySelector('#da-confirm');
+    input.focus();
+
+    function close() { modal.remove(); document.removeEventListener('keydown', onKey, true); }
+    function onKey(e) {
+        if (e.key === 'Escape') { e.stopPropagation(); close(); }
+        else if (e.key === 'Enter' && document.activeElement === input) confirm();
+    }
+    document.addEventListener('keydown', onKey, true);
+    modal.addEventListener('click', function(e) { if (e.target === modal) close(); });
+    modal.querySelector('#da-cancel').addEventListener('click', close);
+    btn.addEventListener('click', confirm);
+
+    function confirm() {
+        if (btn.disabled) return;
+        var password = input.value;
+        err.textContent = '';
+        if (!password) { err.textContent = 'enter your password'; return; }
+        btn.disabled = true;
+        btn.textContent = 'deleting…';
+        apiCall('/auth/account', 'DELETE', { password: password }, function(e, res) {
+            if (!e && res && res.status === 200) {
+                // forget everything this device kept for the account too
+                try {
+                    var user = localStorage.getItem('moodtunes_username') || '';
+                    clearApiCache();
+                    Object.keys(localStorage).forEach(function(k) {
+                        if (k.indexOf('moodtunes_') === 0 && (k.indexOf(user) !== -1 || /^moodtunes_(token|username|session|order_)/.test(k))) localStorage.removeItem(k);
+                    });
+                    sessionStorage.clear();
+                } catch (x) {}
+                location.replace('login.html?deleted=1');
+                return;
+            }
+            err.textContent = (res && res.data && res.data.message) || 'couldn’t delete your account, try again';
+            btn.disabled = false;
+            btn.textContent = 'delete my account';
+        });
+    }
 }
 
 var dropdown = null;

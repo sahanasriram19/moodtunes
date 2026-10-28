@@ -90,6 +90,16 @@ CREATE TABLE IF NOT EXISTS PlaylistRemoved (
     FOREIGN KEY (user_id) REFERENCES User(id),
     UNIQUE KEY unique_user_removed_song (user_id, mood, song_id)
 );
+
+-- one-time password reset links (only a hash of each link's code is kept)
+CREATE TABLE IF NOT EXISTS PasswordReset (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    expires_ms BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    UNIQUE KEY unique_reset_token (token_hash)
+);
 `;
 
 pool.query(SQL, (err) => {
