@@ -4061,14 +4061,11 @@ body {
   gap: 6px;
 }
 
+/* the mood's icon (added by mood.js) instead of a dot */
 #logs-list .mood-badge::before,
 #timeline .mood-badge::before,
 .song-history-card .mood-badge::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--mc, #aaa);
+  content: none;
 }
 
 #logs-list .log-meta,
@@ -4094,20 +4091,11 @@ body {
   border-bottom-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* -- mood chips: a coloured dot, the icon only on the one you picked -- */
-.chip:not(.selected) .chip-emoji .mt-icon,
-.np-mood:not(.done) .mt-icon {
-  display: none;
-}
-
-.chip:not(.selected) .chip-emoji::before,
-.np-mood:not(.done)::before {
-  content: "";
+/* -- mood chips: every mood shows its own icon (the built-in one, or the icon
+   picked for a custom mood) in the mood's colour, instead of a plain dot -- */
+.chip .chip-emoji .mt-icon,
+.np-mood .mt-icon {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--mc);
 }
 
 /* -- "not in your journal yet": rows too -- */
@@ -5617,5 +5605,132 @@ html body .mc-filled.mc-today:hover {
 
   100% {
     transform: scale(1);
+  }
+}
+
+
+/* === MOOD ICONS ON SONG LOGS === */
+/* each song's mood shows its icon (built-in or the custom one you picked) */
+.mood-badge .badge-icon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -2px;
+  color: var(--mc, currentColor);
+  margin-right: 5px;
+}
+
+#logs-list .mood-badge .badge-icon,
+#timeline .mood-badge .badge-icon,
+.song-history-card .mood-badge .badge-icon {
+  margin-right: 0;
+}
+
+.mood-badge .badge-icon .mt-icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* "not in your journal yet": all your moods are visible (custom ones too), the
+   row wraps instead of hiding the newest moods off the edge */
+.inbox-moods {
+  flex-wrap: wrap;
+  overflow: visible;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+/* === WARM EDITORIAL: SONG LOGS IN WARM BROWN === */
+/* the day boxes (journal + history), "not in your journal yet" and the song
+   search cards were near-black; a deep espresso brown with a soft amber edge
+   goes with the cream text and the orange accent */
+:root[data-theme="warm"] {
+  --warm-box: linear-gradient(160deg, rgba(56, 36, 22, 0.95) 0%, rgba(36, 23, 14, 0.96) 100%);
+  --warm-edge: rgba(212, 140, 70, 0.24);
+}
+
+:root[data-theme="warm"] .day-box,
+:root[data-theme="warm"] .inbox-section,
+:root[data-theme="warm"] .song-history-card {
+  background: var(--warm-box) !important;
+  border: 1px solid var(--warm-edge) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 220, 180, 0.05), 0 14px 30px -22px rgba(0, 0, 0, 0.9);
+}
+
+:root[data-theme="warm"] #logs-list .log-card,
+:root[data-theme="warm"] #timeline .log-card,
+:root[data-theme="warm"] .inbox-item {
+  border-bottom-color: rgba(212, 140, 70, 0.14) !important;
+}
+
+/* === PURPLE, WITH COLOURS THAT GO WITH IT === */
+/* default theme: purple stays the base, and the accents that used to be more
+   purple are now rose, peach, mint and sky (defined at "VIOLET GLASS" above) */
+:root:is(:not([data-theme]), [data-theme="default"]) .section-label {
+  color: var(--c-peach) !important;
+  opacity: 0.95;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card {
+  --card-c: var(--c-sky);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-cal {
+  --card-c: var(--c-mint);
+}
+
+/* deep purple theme gets the same partner colours */
+:root[data-theme="purple"] {
+  --c-lavender: #c3b1ff;
+  --c-rose: #ff9fcf;
+  --c-peach: #ffb98f;
+  --c-mint: #82e3c6;
+  --c-sky: #93c8ff;
+}
+
+:root[data-theme="purple"] .section-label {
+  color: var(--c-mint) !important;
+}
+
+:root[data-theme="purple"] .flashback-label {
+  color: var(--c-rose) !important;
+}
+
+:root[data-theme="purple"] .time-bar-fill {
+  background: linear-gradient(90deg, var(--c-mint), var(--c-sky)) !important;
+}
+
+/* the black boxes left on the purple themes: "add a mood" and "open in spotify" */
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #add-mood-section {
+  background: linear-gradient(160deg, rgba(58, 36, 102, 0.95) 0%, rgba(32, 19, 58, 0.96) 100%) !important;
+  border-color: rgba(200, 176, 255, 0.2) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #new-mood-input {
+  background: rgba(24, 12, 44, 0.9) !important;
+  border-color: rgba(200, 176, 255, 0.22) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #spotify-open-popup > div {
+  background: linear-gradient(160deg, #3d2670 0%, #24163f 100%) !important;
+  border-color: rgba(200, 176, 255, 0.24) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #spotify-open-popup #open-browser-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(200, 176, 255, 0.24) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #spotify-open-popup #cancel-open-btn {
+  color: #b5a8d6 !important;
+}
+
+/* phones: the active page in the menu gets the theme's accent, not more purple */
+@media (max-width: 768px) {
+  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) .nav-links a.active {
+    background: color-mix(in srgb, var(--accent) 24%, transparent) !important;
+  }
+
+  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) .nav-links a:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
   }
 }

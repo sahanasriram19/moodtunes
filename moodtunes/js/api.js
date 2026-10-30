@@ -194,20 +194,27 @@ function recordPlay(songId, mood, callback) {
 
 // ── loops ──────────────────────────────────────────────
 // a song you open from moodtunes keeps counting while spotify repeats it (repeat /
-// loop), until a different song plays. the backend reads spotify's listening
-// history to count those repeats; the app asks it to check when you open
-// moodtunes, when you come back to it, and every 2 minutes while you're on it.
+// loop), until a different song plays. every repeat is counted the moment the song
+// starts over: the now-playing check (every few seconds while music plays) spots
+// the restart and the backend adds the play straight away (it comes back as
+// `loop` on /spotify/now-playing, handled by loopPlayed below). spotify's listening
+// history is still read when you open moodtunes, come back to it, and every 45
+// seconds, to pick up repeats that happened while moodtunes was closed.
 // pages listen for 'moodtunes:plays-updated' to refresh their counts
 var loopCheckRunning = false;
+function loopPlayed(data) {
+    if (!data || !(data.added || data.updated)) return;
+    if (data.added && window.MoodFX) MoodFX.toast('+' + data.added + ' play' + (data.added !== 1 ? 's' : '') + ' of “' + data.title + '” from your loop', data.mood);
+    window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: data }));
+}
+window.mtLoopPlayed = loopPlayed;   // used by the now-playing checks in mood.js
+
 function syncLoopPlays() {
     if (!getToken() || loopCheckRunning || document.hidden || document.prerendering) return;
     loopCheckRunning = true;
     apiCall('/logs/sync-loops', 'POST', {}, function(err, res) {
         loopCheckRunning = false;
-        var data = !err && res && res.status === 200 && res.data ? res.data : null;
-        if (!data || !(data.added || data.updated)) return;
-        if (data.added && window.MoodFX) MoodFX.toast('+' + data.added + ' play' + (data.added !== 1 ? 's' : '') + ' of “' + data.title + '” from your loop', data.mood);
-        window.dispatchEvent(new CustomEvent('moodtunes:plays-updated', { detail: data }));
+        loopPlayed(!err && res && res.status === 200 && res.data ? res.data : null);
     });
 }
 
@@ -215,7 +222,7 @@ if (!/login\.html$/.test(location.pathname)) {
     var startLoopChecks = function() {
         syncLoopPlays();
         document.addEventListener('visibilitychange', function() { if (!document.hidden) syncLoopPlays(); });
-        setInterval(syncLoopPlays, 120000);
+        setInterval(syncLoopPlays, 45000);
     };
     // a page prepared in the background waits until it's really opened
     if (document.prerendering) document.addEventListener('prerenderingchange', startLoopChecks, { once: true });

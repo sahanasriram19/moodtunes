@@ -653,17 +653,17 @@ manageMoodsBtn.textContent = 'manage moods';
 manageMoodsBtn.style.cssText = 'background:none;border:none;border-bottom:1px solid #333;color:#9a9a9a;font-size:12px;padding:2px 0;cursor:pointer;margin-top:14px;display:block;letter-spacing:0.04em;transition:color 0.15s,border-color 0.15s;';
 manageMoodsBtn.addEventListener('mouseover', function() { this.style.color = '#aaa'; });
 manageMoodsBtn.addEventListener('mouseout', function() {
-    this.style.color = managingMoods ? '#7f77dd' : '#9a9a9a';
-    this.style.borderColor = managingMoods ? '#7f77dd' : '#333';
+    this.style.color = managingMoods ? 'var(--accent, #ff9fcf)' : '#9a9a9a';
+    this.style.borderColor = managingMoods ? 'var(--accent, #ff9fcf)' : '#333';
 });
 manageMoodsBtn.addEventListener('click', function() {
     managingMoods = !managingMoods;
     manageMoodsBtn.textContent = managingMoods ? 'done' : 'manage moods';
-    manageMoodsBtn.style.border = managingMoods ? '1px solid #7f77dd' : 'none';
-    manageMoodsBtn.style.borderBottom = managingMoods ? '1px solid #7f77dd' : '1px solid #333';
+    manageMoodsBtn.style.border = managingMoods ? '1px solid var(--accent, #ff9fcf)' : 'none';
+    manageMoodsBtn.style.borderBottom = managingMoods ? '1px solid var(--accent, #ff9fcf)' : '1px solid #333';
     manageMoodsBtn.style.padding = managingMoods ? '4px 14px' : '2px 0';
     manageMoodsBtn.style.borderRadius = managingMoods ? '20px' : '0';
-    manageMoodsBtn.style.color = managingMoods ? '#7f77dd' : '#9a9a9a';
+    manageMoodsBtn.style.color = managingMoods ? 'var(--accent, #ff9fcf)' : '#9a9a9a';
     
     document.querySelectorAll('.chip-delete-btn').forEach(function(btn) {
         btn.style.display = managingMoods ? 'block' : 'none';
@@ -697,7 +697,7 @@ var chosenEmoji = '🎵';
 addMoodSection.querySelectorAll('.emoji-opt').forEach(function(btn) {
     btn.addEventListener('click', function() {
         addMoodSection.querySelectorAll('.emoji-opt').forEach(function(b) { b.style.borderColor = 'transparent'; });
-        btn.style.borderColor = '#7f77dd';
+        btn.style.borderColor = 'var(--accent, #ff9fcf)';
         chosenEmoji = btn.dataset.emoji;
         document.getElementById('chosen-emoji').innerHTML = MoodFX.icon(btn.dataset.icon);
     });

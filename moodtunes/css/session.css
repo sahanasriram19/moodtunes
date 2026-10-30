@@ -135,10 +135,14 @@
 #session-open-spotify-btn:disabled { opacity: 0.6; cursor: default; }
 
 /* ── how sessions work ──────────────────────────────── */
+/* a violet card, like the rest of the app. inside it, each plan has its own
+   colour that sits well with purple: spotify green for premium, peach for free.
+   rose marks the important words */
 .session-how {
   margin: 0 0 22px;
-  background: #141414;
-  border: 1px solid #2a2a2a;
+  background: linear-gradient(160deg, rgba(64, 40, 112, 0.94) 0%, rgba(36, 21, 66, 0.95) 100%);
+  border: 1px solid rgba(200, 176, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 34px -22px rgba(6, 0, 20, 0.9);
   border-radius: 14px;
   padding: 0 18px;
 }
@@ -147,15 +151,16 @@
   list-style: none;
   padding: 14px 0;
   font-size: 13px;
-  color: #bbb;
+  font-weight: 500;
+  color: #f6f1ff;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .session-how summary::-webkit-details-marker { display: none; }
-.session-how summary::after { content: '+'; color: #666; font-size: 16px; transition: transform 0.2s; }
+.session-how summary::after { content: '+'; color: #ff9fcf; font-size: 18px; transition: transform 0.2s; }
 .session-how[open] summary::after { transform: rotate(45deg); }
-.session-how-intro { font-size: 13px; color: #888; line-height: 1.55; margin: 0 0 14px; }
+.session-how-intro { font-size: 13px; color: #d4c8ee; line-height: 1.55; margin: 0 0 14px; }
 .session-how-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -163,30 +168,67 @@
   padding-bottom: 18px;
 }
 .session-how-card {
-  border: 1px solid #262626;
+  --plan: #1DB954;
+  border: 1px solid color-mix(in srgb, var(--plan) 30%, rgba(200, 176, 255, 0.14));
+  border-top: 2px solid color-mix(in srgb, var(--plan) 75%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
-  background: #101010;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--plan) 12%, transparent), transparent 70%),
+    rgba(22, 12, 42, 0.55);
   transition: border-color 0.2s, opacity 0.2s;
 }
+.session-how-card[data-plan="free"] { --plan: #ffb98f; }
 .session-how-plan {
   font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #1DB954;
+  color: var(--plan);
   margin-bottom: 8px;
 }
-.session-how-card[data-plan="free"] .session-how-plan { color: #9a9a9a; }
-.session-how-card ol { margin: 0; padding-left: 18px; font-size: 13px; color: #ccc; line-height: 1.6; }
+.session-how-card ol { margin: 0; padding-left: 18px; font-size: 13px; color: #e6def7; line-height: 1.6; }
+.session-how-card ol li::marker { color: var(--plan); font-weight: 600; }
 .session-how-card li + li { margin-top: 4px; }
-.session-how-card b { color: #fff; font-weight: 600; }
-.session-how-note { font-size: 12px; color: #777; line-height: 1.5; margin: 10px 0 0; }
+.session-how-card b { color: #ffc2e0; font-weight: 600; }
+.session-how-note { font-size: 12px; color: #b5a8d6; line-height: 1.5; margin: 10px 0 0; }
 
 /* once we know your account, your plan's card stands out */
 body[data-spotify-account="premium"] .session-how-card[data-plan="premium"],
-body[data-spotify-account="free"] .session-how-card[data-plan="free"] { border-color: #1DB954; }
+body[data-spotify-account="free"] .session-how-card[data-plan="free"] {
+  border-color: var(--plan);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--plan) 35%, transparent), 0 10px 28px -16px var(--plan);
+}
 body[data-spotify-account="premium"] .session-how-card[data-plan="free"],
 body[data-spotify-account="free"] .session-how-card[data-plan="premium"] { opacity: 0.55; }
+
+/* warm editorial: the same box in deep browns, so it doesn't fight the orange */
+:root[data-theme="warm"] .session-how {
+  background: linear-gradient(160deg, #2e1f14 0%, #1d140d 100%);
+  border-color: rgba(196, 118, 45, 0.28);
+}
+:root[data-theme="warm"] .session-how summary::after { color: #c4762d; }
+:root[data-theme="warm"] .session-how-intro { color: #c9bba6; }
+:root[data-theme="warm"] .session-how-card { background: rgba(14, 9, 5, 0.5); }
+:root[data-theme="warm"] .session-how-card ol { color: #e8dccb; }
+:root[data-theme="warm"] .session-how-card b { color: #f0b67a; }
+:root[data-theme="warm"] .session-how-note { color: #a8998a; }
+
+/* clean light: a pale lavender card with dark text */
+:root[data-theme="light"] .session-how {
+  background: linear-gradient(160deg, #f4effd 0%, #ece4fb 100%);
+  border-color: #ddd0f5;
+  box-shadow: none;
+}
+:root[data-theme="light"] .session-how summary { color: #2a1a48; }
+:root[data-theme="light"] .session-how summary::after { color: #c2407f; }
+:root[data-theme="light"] .session-how-intro { color: #5a4d73; }
+:root[data-theme="light"] .session-how-card { background: #fff; }
+:root[data-theme="light"] .session-how-card[data-plan="free"] { --plan: #d9733a; }
+:root[data-theme="light"] .session-how-card[data-plan="premium"] { --plan: #14954a; }
+:root[data-theme="light"] .session-how-card ol { color: #2f2540; }
+:root[data-theme="light"] .session-how-card b { color: #b8336f; }
+:root[data-theme="light"] .session-how-note { color: #6f6585; }
 
 @media (max-width: 640px) {
   .session-how-grid { grid-template-columns: 1fr; }

@@ -100,11 +100,16 @@ EMOJI_ICON['\ud83d\ude24'] = 'flame'; EMOJI_ICON['\ud83e\udd29'] = 'star'; EMOJI
 // the icon name for a mood: built-in moods have their own; custom moods use the
 // icon matching the emoji they were saved with (or a music note)
 function moodIcon(mood, savedEmoji) {
-    var m = (mood || '').toLowerCase();
+    var m = (mood || '').toLowerCase().trim();
     if (MOOD_ICON[m]) return MOOD_ICON[m];
+    if (!savedEmoji) savedEmoji = CUSTOM_EMOJI[m];        // the emoji saved with that custom mood (see setMoodColors)
     if (savedEmoji) return EMOJI_ICON[String(savedEmoji).replace(/\uFE0F/g, '')] || 'note';
     return 'note';
 }
+// custom moods' emojis, kept like their colours so a mood's icon can be shown
+// anywhere (song logs, history, playlists), not just next to its chip
+var CUSTOM_EMOJI = {};
+try { CUSTOM_EMOJI = JSON.parse(localStorage.getItem('moodtunes_mood_emojis') || '{}') || {}; } catch (e) {}
  
 var root = document.documentElement;
 var DEFAULT_PARTNER = '#4a2a8a';   // deep purple - the background fades from purple into this when no mood is picked
@@ -123,12 +128,20 @@ function hashHue(str) {
 var CUSTOM_COLORS = {};
 try { CUSTOM_COLORS = JSON.parse(localStorage.getItem('moodtunes_mood_colors') || '{}') || {}; } catch (e) {}
 function setMoodColors(list) {
-    var changed = false;
+    var changed = false, iconsChanged = false;
     (list || []).forEach(function(m) {
-        if (!m || !m.name || !m.color) return;
+        if (!m || !m.name) return;
         var k = String(m.name).toLowerCase().trim();
+        if (m.emoji && CUSTOM_EMOJI[k] !== m.emoji) { CUSTOM_EMOJI[k] = m.emoji; iconsChanged = true; }
+        if (!m.color) return;
         if (CUSTOM_COLORS[k] !== m.color) { CUSTOM_COLORS[k] = m.color; changed = true; }
     });
+    if (iconsChanged) {
+        try { localStorage.setItem('moodtunes_mood_emojis', JSON.stringify(CUSTOM_EMOJI)); } catch (e) {}
+        document.querySelectorAll('.mood-badge .badge-icon').forEach(function(sp) {
+            sp.innerHTML = icon(moodIcon(sp.parentNode.textContent));
+        });
+    }
     if (changed) {
         try { localStorage.setItem('moodtunes_mood_colors', JSON.stringify(CUSTOM_COLORS)); } catch (e) {}
         // re-tint what's already on the page
@@ -182,8 +195,11 @@ function ink(c) {
     return out;
 }
  
+// the page's colour when no mood is picked: the theme's --ambient (purple on the
+// purple themes, so the background stays purple while --accent is a partner colour)
 function accent() {
-    var a = getComputedStyle(root).getPropertyValue('--accent').trim();
+    var cs = getComputedStyle(root);
+    var a = cs.getPropertyValue('--ambient').trim() || cs.getPropertyValue('--accent').trim();
     return a || '#9b6fc2';
 }
  
@@ -681,6 +697,7 @@ function watchPlayback() {
         apiCall('/spotify/now-playing', 'GET', null, function(err, res) {
             var halfTrip = Math.min((performance.now() - t0) / 2, 1500);
             if (err || !res) { timer = setTimeout(check, 20000); return; }
+            if (res.data && res.data.loop && window.mtLoopPlayed) window.mtLoopPlayed(res.data.loop);   // a loop just went round (see api.js)
             playing = !!(res.data && res.data.playing && res.data.is_playing);
             if (res.status === 401 || res.status === 404) { stopped = true; setLiveState('idle'); return; }
             var d = res.data || {};
@@ -760,6 +777,16 @@ function decorate(node) {
         var c = color(b.textContent);
         b.style.setProperty('--mc', c);
         b.classList.add('mood-tinted');
+        // the mood's icon in front of its name (instead of a plain dot)
+        if (!b.querySelector('.badge-icon')) {
+            var mName = b.textContent.trim();
+            var chip = document.querySelector('.mood-chips .chip[data-mood="' + CSS.escape(mName) + '"]');
+            var sp = document.createElement('span');
+            sp.className = 'badge-icon';
+            sp.setAttribute('aria-hidden', 'true');
+            sp.innerHTML = icon(moodIcon(mName, chip && chip.dataset.emoji));
+            b.insertBefore(sp, b.firstChild);
+        }
         // tint the song card the badge belongs to (journal, history, playlists)
         var card = b.closest('.log-card, .song-history-card');
         if (card && !card.classList.contains('mood-card')) {
@@ -991,10 +1018,46 @@ function syncHidden() {
 function visibleMoods() {
     var list = DEFAULT_MOODS.filter(function(m) { return !isHidden(m); });
     document.querySelectorAll('.mood-chips .chip.custom-chip[data-mood]').forEach(function(c) {
+        var wrap = c.closest('.chip-wrap');
+        if (wrap && wrap.style.display === 'none') return;        // being deleted (undo still possible)
         if (list.indexOf(c.dataset.mood) === -1) list.push(c.dataset.mood);
     });
     return list;
 }
+
+// 'moodtunes:moods-changed' fires whenever the moods on the page change: custom
+// moods loading in, a new one added, one deleted, a built-in one hidden or brought
+// back. lists built from visibleMoods() (the now-playing card's "log as" row, "not in
+// your journal yet") listen for it so new moods show up there straight away
+(function() {
+    var last = null, timer = null;
+    function signature() {
+        return visibleMoods().map(function(m) {
+            var chip = document.querySelector('.mood-chips .chip[data-mood="' + CSS.escape(m) + '"]');
+            return m + ':' + (chip && chip.dataset.emoji || '');
+        }).join('|');
+    }
+    function check() {
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+            var now = signature();
+            if (now === last) return;
+            var first = last === null;
+            last = now;
+            if (!first) window.dispatchEvent(new CustomEvent('moodtunes:moods-changed'));
+        }, 80);
+    }
+    function watch() {
+        var obs = new MutationObserver(check);
+        document.querySelectorAll('.mood-chips').forEach(function(el) {
+            obs.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-emoji', 'data-mood'] });
+        });
+        obs.observe(hiddenStyle, { childList: true, characterData: true, subtree: true });
+        check();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch);
+    else watch();
+})();
  
 // "hidden moods - tap to bring back", shown inside the add-mood panel in manage mode
 function renderRestore() {
@@ -1585,6 +1648,9 @@ function nowPlaying(container, opts) {
         }).join('');
     }
  
+    // a mood was added, deleted, hidden or brought back: redraw the row
+    window.addEventListener('moodtunes:moods-changed', function() { if (state.track) drawMoods(); });
+
     moodsBox.addEventListener('click', function(e) {
         var b = e.target.closest('.np-mood');
         var t = state.track;
@@ -1818,6 +1884,7 @@ function nowPlaying(container, opts) {
                 return schedule();
             }
             failures = 0;
+            if (res.data && res.data.loop && window.mtLoopPlayed) window.mtLoopPlayed(res.data.loop);   // a loop just went round (see api.js)
             if (res.status === 401) { showIdle('connect spotify to see what you\u2019re playing'); stopped = true; return; }
             if (res.status >= 400) { showIdle('couldn\u2019t reach spotify, retrying'); return schedule(); }
             apply(res.data);

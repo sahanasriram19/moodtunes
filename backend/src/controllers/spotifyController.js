@@ -415,13 +415,29 @@ module.exports.getNowPlaying = (req, res, next) => {
         if (!data || !data.item || data.currently_playing_type !== 'track') {
             return res.status(200).json({ playing: false });
         }
-        res.status(200).json({
+        const body = {
             playing:     true,
             is_playing:  !!data.is_playing,
             progress_ms: data.progress_ms || 0,
             duration_ms: data.item.duration_ms || 0,
             track:       trackToObj(data.item)
-        });
+        };
+        // a song you opened from moodtunes that just looped is counted right away (see
+        // liveLoopTick). required here, not at the top, because logController requires this file
+        let answered = false, timer = null;
+        const send = (loop) => {
+            if (answered) return;
+            answered = true;
+            clearTimeout(timer);
+            if (loop) body.loop = loop;
+            res.status(200).json(body);
+        };
+        try {
+            require('./logController').liveLoopTick(res.locals.userId, data.item, data.progress_ms, send);
+            if (!answered) timer = setTimeout(() => send(null), 4000);    // never hold up the card for long
+        } catch (e) {
+            send(null);
+        }
     });
 };
 

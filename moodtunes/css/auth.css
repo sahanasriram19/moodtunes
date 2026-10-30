@@ -194,7 +194,7 @@ input {
 }
 .auth-tabs { border-bottom-color: rgba(196, 170, 255, 0.16) !important; }
 .auth-tab { color: #9384b8; }
-.auth-tab.active { color: #f6f1ff; border-bottom-color: #b99cff; }
+.auth-tab.active { color: #f6f1ff; border-bottom-color: #ff9fcf; }   /* rose on the violet */
 .auth-field label {
   text-transform: none;
   letter-spacing: normal;
@@ -207,10 +207,10 @@ input {
   color: #f6f1ff;
 }
 .auth-field input::placeholder { color: #7d6fa3; }
-.auth-field input:focus { border-color: #b99cff; }
-.auth-btn { background: #9b6fc2; border-radius: 10px; }
+.auth-field input:focus { border-color: #ff9fcf; }
+.auth-btn { background: linear-gradient(135deg, #ff9fcf, #ffb98f); color: #2a1038; font-weight: 700; border-radius: 10px; }
 .auth-btn:focus-visible,
-.auth-tab:focus-visible { outline: 2px solid #b99cff; outline-offset: 2px; }
+.auth-tab:focus-visible { outline: 2px solid #82e3c6; outline-offset: 2px; }
 .auth-error { text-align: left; }
 @media (max-width: 420px) {
   .auth-box { padding: 28px 22px 22px; }
@@ -236,7 +236,7 @@ input {
   padding: 6px 4px;
   background: none;
   border: 0;
-  color: #b9a8e6;
+  color: #ffb3d6;
   font-size: 13px;
   cursor: pointer;
   text-decoration: underline;
@@ -244,7 +244,7 @@ input {
 }
 
 .auth-link:hover { color: #f6f1ff; }
-.auth-link:focus-visible { outline: 2px solid #b99cff; outline-offset: 2px; border-radius: 4px; }
+.auth-link:focus-visible { outline: 2px solid #82e3c6; outline-offset: 2px; border-radius: 4px; }
 
 .auth-help {
   font-size: 13.5px;

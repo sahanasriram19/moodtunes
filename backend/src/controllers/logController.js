@@ -186,16 +186,27 @@ module.exports.syncLoops = (req, res, next) => {
             const w = walkLoop(launch, items, now);
             const changed = w.until !== Number(launch.counted_until_ms) || w.started !== !!launch.started || !w.open;
             if (!changed) return res.status(200).json({ added: 0 });
+            // repeats already counted live (the moment the song restarted, see liveLoopTick)
+            // are the oldest ones here: they only stretch the listening time, they aren't added again
+            const pending  = Number(launch.live_pending) || 0;
+            const absorbed = Math.min(pending, w.repeats.length);
+            const already  = w.repeats.slice(0, absorbed);
+            w.repeats      = w.repeats.slice(absorbed);
             model.advanceLaunch({
                 id: launch.id, old_until_ms: Number(launch.counted_until_ms), old_started: !!launch.started,
-                until_ms: w.until, started: w.started, is_open: w.open
+                old_live_pending: pending,
+                until_ms: w.until, started: w.started, is_open: w.open, live_pending: pending - absorbed
             }, (err3, r) => {
                 // another check already handled these
                 if (err3 || r.affectedRows !== 1) return res.status(200).json({ added: 0 });
-                if (!w.repeats.length && !w.firstListenEnd) return res.status(200).json({ added: 0 });
+                if (!w.repeats.length && !w.firstListenEnd && !already.length) return res.status(200).json({ added: 0 });
                 const key = { user_id: userId, song_id: launch.song_id, mood: launch.mood };
                 const dayOf = (ms) => new Date(ms - Number(launch.tz_offset) * 60000).toISOString().slice(0, 10);
                 const tasks = [];
+                // repeats counted live: their listens have now finished, so the day's time runs to their end
+                already.forEach((p) => {
+                    tasks.push((done) => model.extendLastPlayed(Object.assign({}, key, { log_date: dayOf(p.end), end_ms: p.end }), () => done()));
+                });
                 // the listen started from the app finished: that day's time now runs to its end
                 if (w.firstListenEnd) {
                     tasks.push((done) => model.extendLastPlayed(Object.assign({}, key, {
@@ -226,6 +237,65 @@ module.exports.syncLoops = (req, res, next) => {
                         res.status(200).json({ added: w.repeats.length, updated: true, song_id: launch.song_id, mood: launch.mood, title: title });
                     }
                 }));
+            });
+        });
+    });
+};
+
+// ── live repeats ──────────────────────────────────────────────────────────
+// spotify only adds a listen to its history once it has finished, so counting
+// repeats from the history alone means a loop shows up a song late (or later, if
+// moodtunes isn't open). the now-playing check (every few seconds while a song
+// plays) calls this instead: when the song you opened from moodtunes jumps back to
+// the start, that's a repeat, and it's counted straight away. syncLoops still reads
+// the history afterwards to catch repeats that happened while moodtunes was closed;
+// the live ones are remembered (live_pending) so they aren't counted twice.
+const liveSeen = new Map();             // userId -> what the last check saw
+const LIVE_MIN_LISTEN_MS = 30000;       // like spotify, a listen counts after 30 seconds
+const LIVE_RESTART_DROP_MS = 10000;     // the song went back at least this far: it started over
+
+// item = spotify's current track, callback(null | { added, song_id, mood, title })
+module.exports.liveLoopTick = (userId, item, progressMs, callback) => {
+    model.getOpenLaunch({ user_id: userId }, (err, rows) => {
+        if (err || !rows || !rows.length) { liveSeen.delete(userId); return callback(null); }
+        const launch = rows[0];
+        const now = Date.now();
+        const progress = Number(progressMs) || 0;
+        let seen = liveSeen.get(userId);
+        if (!seen || seen.launchId !== launch.id) {
+            seen = { launchId: launch.id, progress: null, listenStart: null, ended: false };
+            liveSeen.set(userId, seen);
+        }
+        if (seen.ended) return callback(null);
+        const same = !!item && (item.id === launch.song_id || (item.linked_from && item.linked_from.id === launch.song_id));
+        if (!same) {
+            // a different song after yours: the loop is over (the history check closes it)
+            if (seen.progress !== null) seen.ended = true;
+            return callback(null);
+        }
+        const prev = seen.progress, prevStart = seen.listenStart;
+        seen.progress = progress;
+        if (prev === null) { seen.listenStart = now - progress; return callback(null); }
+        if (!(progress + LIVE_RESTART_DROP_MS < prev)) return callback(null);
+        // it started over: the listen starting now is a repeat. not if the one that just
+        // ended was barely played, or was already playing before you opened the song
+        // from moodtunes (then this restart is that first play, which the app counted)
+        seen.listenStart = now - progress;
+        const launched = Number(launch.launched_ms);
+        if (prev < LIVE_MIN_LISTEN_MS || prevStart === null || prevStart < launched - 15000) return callback(null);
+        model.addLivePlay({ id: launch.id }, (err2, r) => {
+            if (err2 || !r || r.affectedRows !== 1) return callback(null);
+            const key = { user_id: userId, song_id: launch.song_id, mood: launch.mood };
+            model.selectLatestForSong(key, (err3, songRows) => {
+                if (err3 || !songRows.length) return callback(null);
+                const at = now - progress;
+                const day = new Date(at - Number(launch.tz_offset) * 60000).toISOString().slice(0, 10);
+                model.recordPlay(Object.assign({}, key, songRows[0], {
+                    note: '', plays: 1, log_date: day, first_ms: at, last_ms: at
+                }), (err4) => {
+                    if (err4) return callback(null);
+                    callback({ added: 1, updated: true, live: true, song_id: launch.song_id, mood: launch.mood, title: songRows[0].title });
+                });
             });
         });
     });

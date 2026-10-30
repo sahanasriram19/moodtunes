@@ -16,8 +16,9 @@ var THEMES = {
         '--text-primary':   '#f6f1ff',
         '--text-secondary': '#c9bde6',
         '--text-muted':     '#9384b8',
-        '--accent':         '#b99cff',
-        '--accent-bg':      '#4a2570',
+        '--ambient':        '#b99cff',                    // the page glow with no mood picked stays purple
+        '--accent':         '#ff9fcf',                    // rose: stands out on the violet instead of blending in
+        '--accent-bg':      'rgba(255, 159, 207, 0.16)',
         '--chip-bg':        'transparent',
         '--chip-border':    '#333',
         '--search-bg':      '#7a4aaa',
@@ -60,8 +61,9 @@ var THEMES = {
         '--text-primary':   '#fff',
         '--text-secondary': 'rgba(255,255,255,0.55)',
         '--text-muted':     'rgba(255,255,255,0.3)',
-        '--accent':         '#a09af5',
-        '--accent-bg':      'rgba(127,119,221,0.15)',
+        '--ambient':        '#a09af5',
+        '--accent':         '#82e3c6',                    // mint, to go with the deep purple
+        '--accent-bg':      'rgba(130,227,198,0.14)',
         '--chip-bg':        'rgba(127,119,221,0.08)',
         '--chip-border':    'rgba(127,119,221,0.25)',
         '--search-bg':      'rgba(255,255,255,0.04)',
@@ -69,7 +71,7 @@ var THEMES = {
         '--nav-bg':         'rgba(127,119,221,0.06)',
         '--nav-border':     'rgba(127,119,221,0.15)',
         '--circle-bg':      'rgba(127,119,221,0.2)',
-        '--circle-border':  '#a09af5',
+        '--circle-border':  '#82e3c6',
     },
     light: {
         label: 'clean light',
@@ -100,6 +102,7 @@ function applyTheme(key) {
     var t = THEMES[key] || THEMES.default;
     var root = document.documentElement;
     root.setAttribute('data-theme', THEMES[key] ? key : 'default');   // lets the css style each theme
+    root.style.removeProperty('--ambient');     // only some themes set it
     Object.keys(t).forEach(function(prop) {
         if (prop === 'label') return;
         root.style.setProperty(prop, t[prop]);
@@ -180,6 +183,9 @@ style.textContent = [
     '.session-history-card { background: var(--bg-card) !important; border-color: var(--border) !important; }',
     '.session-history-mood { color: var(--text-primary) !important; }',
     '.session-history-meta { color: var(--text-muted) !important; }',
+    // the profile button: white ring and icon in every theme, matching the ? help button
+    '#profile-btn { border-color: #fff !important; color: #fff !important; }',
+    '#profile-btn:hover { background: rgba(255, 255, 255, 0.12) !important; }',
 ].join('\n');
 document.head.appendChild(style);
 
@@ -199,8 +205,8 @@ profileBtn.id = 'profile-btn';
 profileBtn.title = 'profile';
 profileBtn.style.cssText = [
     'background:none',
-    'border:1px solid var(--border-mid, #333)',
-    'color:var(--text-secondary, #888)',
+    'border:1.5px solid #fff',               // white ring, like the ? button
+    'color:#fff',
     'width:32px', 'height:32px',
     'border-radius:50%',
     'cursor:pointer',
@@ -261,7 +267,13 @@ function buildDropdown() {
 
         // colour swatch
         var swatch = document.createElement('span');
-        var swatchColors = { default: '#9b6fc2', warm: '#c4762d', purple: '#a09af5', light: '#9b6fc2' };
+        // each theme's swatch: its main colour with the accent that goes with it
+        var swatchColors = {
+            default: 'linear-gradient(135deg, #9b6fc2 50%, #ff9fcf 50%)',
+            warm:    '#c4762d',
+            purple:  'linear-gradient(135deg, #5a4fc8 50%, #82e3c6 50%)',
+            light:   '#9b6fc2'
+        };
         swatch.style.cssText = 'width:12px;height:12px;border-radius:50%;background:' + swatchColors[key] + ';flex-shrink:0;';
 
         var lbl = document.createElement('span');

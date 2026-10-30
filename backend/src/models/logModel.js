@@ -190,7 +190,14 @@ pool.query(
         FOREIGN KEY (user_id) REFERENCES User(id),
         KEY launch_user_open (user_id, is_open)
     )`,
-    (err) => { if (err) console.error('PlayLaunch table setup failed:', err.message); }
+    (err) => {
+        if (err) return console.error('PlayLaunch table setup failed:', err.message);
+        // live repeat counting (see liveLoopTick in logController): repeats counted the
+        // moment the song restarts, waiting to be matched up with spotify's history
+        pool.query('ALTER TABLE PlayLaunch ADD COLUMN live_pending INT NOT NULL DEFAULT 0', (e) => {
+            if (e && !/duplicate column/i.test(e.message)) console.error('PlayLaunch.live_pending setup failed:', e.message);
+        });
+    }
 );
 
 // a new launch ends any earlier one (you've moved on to another song)
@@ -209,11 +216,20 @@ module.exports.getOpenLaunch = (data, callback) => {
 
 // moves a launch forward. only succeeds if nobody else moved it first
 // (e.g. two open tabs syncing at once), so a repeat can't be counted twice
+// live_pending is checked too, so a repeat counted live at the same moment isn't lost
 module.exports.advanceLaunch = (data, callback) => {
     pool.query(
-        'UPDATE PlayLaunch SET counted_until_ms = ?, started = ?, is_open = ? WHERE id = ? AND counted_until_ms = ? AND started = ?',
-        [data.until_ms, data.started ? 1 : 0, data.is_open ? 1 : 0, data.id, data.old_until_ms, data.old_started ? 1 : 0],
+        'UPDATE PlayLaunch SET counted_until_ms = ?, started = ?, is_open = ?, live_pending = ?' +
+        ' WHERE id = ? AND counted_until_ms = ? AND started = ? AND live_pending = ?',
+        [data.until_ms, data.started ? 1 : 0, data.is_open ? 1 : 0, data.live_pending || 0,
+         data.id, data.old_until_ms, data.old_started ? 1 : 0, data.old_live_pending || 0],
         callback);
+};
+
+// a repeat was counted live (the song just restarted): remember it, so the same
+// listen isn't counted again when it shows up in spotify's history later
+module.exports.addLivePlay = (data, callback) => {
+    pool.query('UPDATE PlayLaunch SET live_pending = live_pending + 1 WHERE id = ? AND is_open = 1', [data.id], callback);
 };
 
 // ── update note ──────────────────────────────────────────────────────────────
