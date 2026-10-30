@@ -6107,3 +6107,234 @@ html body .mc-filled.mc-today:hover {
 .session-how.is-closing summary::after {
   transform: none;
 }
+
+/* === PHONES: SMALLER BUTTONS === */
+/* buttons were sized for a desktop mouse; on a phone they crowded out the text
+   (the now-playing controls almost hid the song title). everything still has a
+   comfortable tap area */
+@media (max-width: 768px) {
+  /* header: start session, install, ? and profile */
+  #help-btn,
+  #profile-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+
+  #profile-btn > svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .session-btn,
+  .install-btn {
+    padding: 6px 12px !important;
+    min-height: 32px !important;
+    height: 32px;
+    gap: 5px;
+  }
+
+  .nav-right {
+    gap: 8px !important;
+  }
+
+  /* now playing: small controls, so the title gets the room */
+  .np-btn,
+  .np-compact .np-btn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .np-btn .mt-icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .np-toggle,
+  .np-compact .np-toggle {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .np-toggle .mt-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .np-controls {
+    gap: 4px !important;
+  }
+
+  .np-controls .like-btn,
+  .np-like-slot .like-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+  }
+
+  .np-controls .like-btn .mt-icon,
+  .np-like-slot .like-btn .mt-icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .np-art-wrap,
+  .np-art {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .np-switch {
+    transform: scale(0.85);
+    transform-origin: left center;
+  }
+
+  /* other buttons around the app */
+  .history-tab {
+    min-height: 38px !important;
+    font-size: 13px !important;
+  }
+
+  .back-btn {
+    font-size: 13px !important;
+  }
+
+  #session-start-btn,
+  #session-end-btn,
+  #session-refresh-btn,
+  #session-open-spotify-btn,
+  #session-save-playlist-btn,
+  .session-spotify-btn {
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+    min-height: 36px !important;
+  }
+
+  .session-timer-circle {
+    width: 200px !important;
+    height: 200px !important;
+  }
+
+  .pl-save-btn {
+    font-size: 12px !important;
+    padding: 6px 14px !important;
+  }
+
+  .mt-empty-btn {
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+  }
+
+  /* the open playlist: ▶ sits on the same line as "save to spotify", and is smaller,
+     so the box ends right under them */
+  .playlist-view-header {
+    position: relative;
+  }
+
+  .playlist-view-header #sync-btn,
+  .playlist-view-header .playlist-play-btn {
+    position: absolute;
+    right: 24px;
+    bottom: 22px;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .playlist-view-info {
+    padding-right: 50px;
+  }
+
+  .playlist-view-hint {
+    font-size: 12px !important;
+  }
+}
+
+/* === PHONES: SONG BOXES, BUTTONS IN LINE === */
+/* ▶ sits on the artist line with the heart and play next (not higher up), and
+   "edit note" / "+ add note" sits right beside the note, straight under the
+   artist. then mood, plays and time, with ✕ at the end of that line */
+@media (max-width: 640px) {
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    grid-template-areas:
+      "art title  title title title"
+      "art artist heart queue play"
+      "art note   note  note  note"
+      "art meta   meta  meta  del" !important;
+  }
+
+  #playlist-block .log-card:has(.drag-handle) {
+    grid-template-areas:
+      "drag art title  title title title"
+      "drag art artist heart queue play"
+      "drag art note   note  note  note"
+      "drag art meta   meta  meta  del" !important;
+  }
+
+  /* the note and its button share one line */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-info > .note-line {
+    grid-area: note;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 10px;
+    min-width: 0;
+    margin: 3px 0 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .note-line > .log-note {
+    grid-area: auto;
+    flex: 0 1 auto;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .note-line > .log-note-area {
+    grid-area: auto;
+    flex: 0 0 auto;
+    margin: 0 !important;
+  }
+
+  /* writing a note: the box takes the whole line */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .note-line > .log-note-area:has(textarea) {
+    flex: 1 1 100%;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
+    padding: 2px 0 !important;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .delete-btn {
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta {
+    margin-top: 4px !important;
+    gap: 2px 8px !important;
+  }
+
+  #playlist-block .log-card .log-meta .mood-badge {
+    padding: 1px 7px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    column-gap: 9px !important;
+  }
+
+  /* ▶: same line and size as the heart and play next */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .play-btn {
+    grid-area: play;
+    grid-row: auto !important;
+    align-self: center;
+    justify-self: center;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    margin: -6px 0 !important;
+    font-size: 11px !important;
+  }
+}
