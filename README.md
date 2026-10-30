@@ -109,7 +109,14 @@ moodtunes-main/
     ├── css/
     │   ├── style.css               # base styles
     │   ├── mobile.css              # phone layout
-    │   ├── motion.css              # themes, animations and most of the current look
+    │   ├── motion/                 # themes, animations and most of the current look, in 7 parts
+    │   │   ├── 01-foundation.css   #   mood colours, now playing, skeletons, toasts, session ring
+    │   │   ├── 02-app-shell.css    #   empty states, focus, tab bar, icons, backgrounds
+    │   │   ├── 03-themes.css       #   default violet glass, album art, clean light
+    │   │   ├── 04-pages.css        #   journal, sessions, playlists, notes, summary
+    │   │   ├── 05-phone-layouts.css#   phone layouts for history, stats and song logs
+    │   │   ├── 06-polish.css       #   hover, warm editorial, scroll hints, phone sizes, fonts
+    │   │   └── 07-features.css     #   filters, recap, check-in, accessibility, ocean, insights
     │   ├── auth.css                # login + reset
     │   └── history.css, playlists.css, session.css, stats.css
     └── js/

@@ -1,0 +1,1010 @@
+/* motion/06-polish.css (part 6 of 7)
+   polish on top: hover lifts, no glows, mood icons on songs, warm editorial colours, partner colours, scroll hints, the header layer, search bars per theme, smaller phone sizes and buttons, one font, the "how sessions work" animation.
+
+   sections: hover: a clear, smooth lift on everything, no glows, mood icons on song logs, warm editorial: song logs in a light, warm orange, purple, with colours that go with it, scroll hints (no scrollbars), header stays on top, search bars follow the theme and mood on every page, phones: a little smaller, 4 moods to a row, "how sessions work" opens and closes smoothly, phones: smaller buttons, phones: song boxes, buttons in line, one font everywhere, phones: "manage moods" the same size as the rest
+*/
+
+/* === HOVER: A CLEAR, SMOOTH LIFT ON EVERYTHING === */
+/* everything you can point at rises, smoothly, with no glow, colour change or zoom.
+   boxes (a day's song logs, stats cards, the calendar, now playing, "not in your
+   journal yet", sessions) lift as a whole; the rows inside them stay put so the box
+   moves as one piece. things that stand on their own (playlists, chips, buttons,
+   calendar days, recommendations) lift by themselves.
+   only on devices with a real pointer (so phones don't get stuck hovers) and never
+   for anyone whose device asks for less motion. "html body" outranks the older rules
+   further up that switched hover movement off */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html body :is(
+
+    /* boxes */
+    .day-box, .stats-card, .flashback-card, .session-history-card, .session-how, .np-card, .inbox-section,
+    .song-history-card, .playlist-view-header, .session-panel, .mt-summary .sx-box,
+    /* things on their own */
+    .playlist-card, #playlist-block .log-card, .rec-tile, .session-rec-card, .session-song-thumb, .flashback-song,
+    .mc-cell.mc-filled, .result-item, .ssf-song, .chip, .np-mood,
+    /* buttons */
+    .play-btn, .like-btn, .queue-btn, .delete-btn, .nav-links a, .session-btn, .help-btn, .history-tab,
+    #session-start-btn, #session-end-btn, #session-refresh-btn, #session-open-spotify-btn, #session-save-playlist-btn,
+    .session-spotify-btn, .save-note-btn, .skip-note-btn, .add-note-btn, .edit-note-btn, .playlist-play-btn,
+    .emoji-opt, .mt-toast-action, .mt-empty-btn, .inbox-toggle, .inbox-more, .mc-arrow, .sx-close, #panel-x) {
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, background-color 0.2s ease,
+      border-color 0.2s ease, opacity 0.2s ease !important;
+    will-change: transform;
+  }
+
+  /* things on their own and buttons: up 4px */
+  html body :is(.playlist-card, #playlist-block .log-card, .rec-tile, .session-rec-card, .session-song-thumb, .flashback-song,
+    .mc-cell.mc-filled, .result-item, .ssf-song, .chip, .np-mood,
+    .play-btn, .like-btn, .queue-btn, .delete-btn, .nav-links a, .session-btn, .help-btn, .history-tab,
+    #session-start-btn, #session-end-btn, #session-refresh-btn, #session-open-spotify-btn, #session-save-playlist-btn,
+    .session-spotify-btn, .save-note-btn, .skip-note-btn, .add-note-btn, .edit-note-btn, .playlist-play-btn,
+    .emoji-opt, .mt-toast-action, .mt-empty-btn, .inbox-toggle, .inbox-more, .mc-arrow, .sx-close, #panel-x):hover {
+    transform: translateY(-4px) !important;
+  }
+
+  /* boxes: up 3px, as one piece */
+  html body :is(.day-box, .stats-card, .flashback-card, .session-history-card, .session-how, .np-card, .inbox-section,
+    .song-history-card, .playlist-view-header, .session-panel, .mt-summary .sx-box, #panel-x):hover {
+    transform: translateY(-3px) !important;
+  }
+
+  /* rows inside a box ride along with it instead of moving on their own */
+  html body :is(#logs-list, #timeline, #panel-x) .log-card:hover,
+  html body :is(.mood-bar-row, .time-bar-row, .top-song-row, .inbox-item, .sx-row, .mc-song, #panel-x):hover {
+    transform: none !important;
+  }
+
+  /* older hover effects from earlier versions: keep their normal shadow (no glow), no zoom */
+  html body .mc-filled:not(.mc-today):hover {
+    box-shadow: 0 6px 16px -10px var(--mc) !important;
+  }
+
+  html body .mc-filled.mc-today:hover {
+    box-shadow: inset 0 0 0 2px #ffffffcc, 0 6px 16px -10px var(--mc) !important;
+  }
+
+  html body .mt-empty-btn:hover {
+    box-shadow: 0 8px 24px -10px var(--mood) !important;
+  }
+
+  html body .sum-cover:hover img {
+    transform: none !important;
+  }
+}
+/* === NO GLOWS === */
+/* no coloured halos anywhere: no glowing shadows behind toasts, buttons, cards or
+   album art, no glowing dots, no drifting orbs or lights in the background.
+   plain dark shadows that lift menus and pop-ups off the page are kept. */
+
+/* background: the mood tint stays, the glowing orbs and drifting lights go */
+#mood-ambient .blob,
+#mood-ambient .mt-particles,
+.mt-waves .wave-glow,
+.sum-glow,
+.mt-empty .ea-glow {
+  display: none !important;
+}
+
+/* toasts (e.g. the "undo" pop-up) */
+.mt-toast {
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.mt-toast-dot,
+.np-fill,
+.ring-dot {
+  box-shadow: none !important;
+}
+
+/* coloured halos on buttons, chips, cards and covers */
+.chip.selected {
+  box-shadow: 0 0 0 1px var(--mc, var(--mood)) !important;
+}
+
+.mt-empty-btn,
+.mt-empty-btn:hover,
+.np-toggle,
+.np-art-wrap,
+.np-mood.usual,
+.ssf-song img,
+.ssf-empty,
+.log-card.mood-card:hover,
+.song-history-card.mood-card:hover,
+.log-card.mood-card .song-art,
+.song-history-card.mood-card .song-history-header img,
+.note-input-container,
+#session-start-btn,
+.mc-filled,
+.mc-filled:hover,
+html body .mc-filled:not(.mc-today):hover {
+  box-shadow: none !important;
+}
+
+.mc-filled.mc-today,
+html body .mc-filled.mc-today:hover {
+  box-shadow: inset 0 0 0 2px #ffffffcc !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card:hover {
+  box-shadow: var(--glass-shine) !important;
+}
+
+/* the session timer: no breathing glow around the ring */
+.session-timer-circle,
+.session-hero.live .session-timer-circle {
+  box-shadow: none !important;
+  animation-name: none !important;
+}
+
+.ring-progress,
+.sum-emoji .mt-icon {
+  filter: none !important;
+}
+
+/* the search box: a plain coloured border when focused, no halo */
+#song-search:focus {
+  box-shadow: none !important;
+}
+
+/* history tabs: just the underline on the active tab */
+.history-tab.active {
+  background: transparent !important;
+}
+
+/* a song you just logged: the border flashes, no glow */
+@keyframes logged {
+  0% {
+    border-color: var(--mood);
+    transform: scale(1.015);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* === MOOD ICONS ON SONG LOGS === */
+/* each song's mood shows its icon (built-in or the custom one you picked) */
+.mood-badge .badge-icon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -2px;
+  color: var(--mc, currentColor);
+  margin-right: 5px;
+}
+
+#logs-list .mood-badge .badge-icon,
+#timeline .mood-badge .badge-icon,
+.song-history-card .mood-badge .badge-icon {
+  margin-right: 0;
+}
+
+.mood-badge .badge-icon .mt-icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* "not in your journal yet": all your moods are visible (custom ones too), the
+   row wraps instead of hiding the newest moods off the edge */
+.inbox-moods {
+  flex-wrap: wrap;
+  overflow: visible;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+/* === WARM EDITORIAL: SONG LOGS IN A LIGHT, WARM ORANGE === */
+/* the day boxes (journal + history), "not in your journal yet", the song search
+   cards, the sessions list and the "a month ago" card were near-black. now
+   they're a soft burnt orange that goes with the cream text and the orange accent */
+:root[data-theme="warm"] {
+  --warm-box: linear-gradient(160deg, rgba(168, 102, 52, 0.9) 0%, rgba(128, 74, 36, 0.92) 100%);
+  --warm-edge: rgba(255, 196, 140, 0.32);
+}
+
+:root[data-theme="warm"] .day-box,
+:root[data-theme="warm"] .inbox-section,
+:root[data-theme="warm"] .song-history-card,
+:root[data-theme="warm"] .session-history-card,
+:root[data-theme="warm"] .flashback-card {
+  background: var(--warm-box) !important;
+  border: 1px solid var(--warm-edge) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 230, 200, 0.12), 0 14px 30px -20px rgba(40, 18, 4, 0.8) !important;
+}
+
+/* text inside them a touch lighter, so it reads well on the orange */
+:root[data-theme="warm"] :is(.day-box, .inbox-section, .song-history-card, .session-history-card, .flashback-card)
+  :is(.song-artist, .plays-text, .date-text, .log-meta, .inbox-meta, .inbox-when, .inbox-count,
+      .flashback-subtitle, .flashback-sub, .flashback-song-artist, .song-history-artist, .song-history-date,
+      .session-history-meta, .delete-btn) {
+  color: #f3dcc2 !important;
+}
+
+:root[data-theme="warm"] :is(.day-box, .inbox-section, .song-history-card, .flashback-card) :is(.add-note-btn, .edit-note-btn, .log-note) {
+  color: #ffe2b8 !important;
+}
+
+:root[data-theme="warm"] .flashback-card :is(.flashback-label, .flashback-title, .flashback-icon) {
+  color: #fff1de !important;
+}
+
+:root[data-theme="warm"] #logs-list .log-card,
+:root[data-theme="warm"] #timeline .log-card,
+:root[data-theme="warm"] .inbox-item {
+  border-bottom-color: rgba(255, 210, 160, 0.2) !important;
+}
+
+/* === PURPLE, WITH COLOURS THAT GO WITH IT === */
+/* default theme: purple stays the base, and the accents that used to be more
+   purple are now rose, peach, mint and sky (defined at "VIOLET GLASS" above) */
+/* section headings stay white on purple (the partner colours are for accents) */
+:root:is(:not([data-theme]), [data-theme="default"]) .section-label {
+  color: var(--text-primary, #f6f1ff) !important;
+  opacity: 1;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card {
+  --card-c: var(--c-sky);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-cal {
+  --card-c: var(--c-mint);
+}
+
+/* ocean theme: its own partner colours (aqua, coral, sand, sky) */
+:root[data-theme="ocean"] {
+  --c-lavender: #9fd8e8;
+  --c-rose: #ff9e80;
+  --c-peach: #ffd27a;
+  --c-mint: #5fe0d0;
+  --c-sky: #8fc8ff;
+}
+
+:root[data-theme="ocean"] .section-label {
+  color: var(--text-primary, #fff) !important;
+}
+
+:root[data-theme="ocean"] .flashback-label {
+  color: var(--c-rose) !important;
+}
+
+:root[data-theme="ocean"] .time-bar-fill {
+  background: linear-gradient(90deg, var(--c-mint), var(--c-sky)) !important;
+}
+
+/* the black boxes left on the default theme: "add a mood" and "open in spotify" */
+:root:is(:not([data-theme]), [data-theme="default"]) #add-mood-section {
+  background: linear-gradient(160deg, rgba(58, 36, 102, 0.95) 0%, rgba(32, 19, 58, 0.96) 100%) !important;
+  border-color: rgba(200, 176, 255, 0.2) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) #new-mood-input {
+  background: rgba(24, 12, 44, 0.9) !important;
+  border-color: rgba(200, 176, 255, 0.22) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) #spotify-open-popup > div {
+  background: linear-gradient(160deg, #3d2670 0%, #24163f 100%) !important;
+  border-color: rgba(200, 176, 255, 0.24) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) #spotify-open-popup #open-browser-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(200, 176, 255, 0.24) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) #spotify-open-popup #cancel-open-btn {
+  color: #b5a8d6 !important;
+}
+
+/* phones: the active page in the menu gets the theme's accent, not more purple */
+@media (max-width: 768px) {
+  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="ocean"]) .nav-links a.active {
+    background: color-mix(in srgb, var(--accent) 24%, transparent) !important;
+  }
+
+  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="ocean"]) .nav-links a:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+  }
+}
+
+/* === SCROLL HINTS (NO SCROLLBARS) === */
+/* scrollbars are hidden everywhere (style.css). anything that scrolls fades out
+   at the edge where there's more to see; mood.js (scrollHints) works out which
+   edges and sets --mt-fs (start edge) and --mt-fe (end edge). the fades ease in
+   and out as you scroll, and disappear once you reach that end */
+@property --mt-fs {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --mt-fe {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+[data-mt-scroll] {
+  transition: --mt-fs 0.25s ease, --mt-fe 0.25s ease;
+}
+
+/* nothing to scroll right now: no fade (this also drops the old fixed edge fades) */
+[data-mt-scroll="none"] {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+[data-mt-scroll="y"] {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+}
+
+[data-mt-scroll="x"] {
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+}
+
+/* the page: a soft fade along the bottom of the screen while there's more below
+   (sits just above the tab bar on phones) */
+.mt-page-fade {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  z-index: 800;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--bg-page, #120a20) 82%, transparent));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.mt-page-fade.on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mt-scroll] {
+    transition: none;
+  }
+}
+
+/* === HEADER STAYS ON TOP === */
+/* the profile menu opens down from the header. the header had no layer of its
+   own, so the boxes, chips and now-playing card further down the page (which get
+   their own layers from their hover/blur effects) were drawn over the menu.
+   (above the page, the scroll fade and the phone tab bar; below popups and toasts) */
+.navbar {
+  position: relative;
+  z-index: 950;
+}
+
+#profile-dropdown {
+  z-index: 960 !important;
+}
+
+/* === SEARCH BARS FOLLOW THE THEME AND MOOD ON EVERY PAGE === */
+/* the history page's "find a song" was always purple; now it's tinted the same way
+   as the journal's search (the theme's input colour, mixed with the current mood) */
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="ocean"]) body #song-history-search {
+  background: color-mix(in srgb, var(--mood) 24%, var(--bg-input)) !important;
+  border: 1px solid color-mix(in srgb, var(--mood) 55%, transparent) !important;
+  color: var(--text-primary) !important;
+  transition: border-color 0.3s, background 0.9s;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="ocean"]) body #song-history-search:focus {
+  border-color: var(--mood) !important;
+  box-shadow: none !important;
+}
+
+#song-history-search::placeholder {
+  color: color-mix(in srgb, var(--text-primary, #fff) 45%, transparent);
+}
+
+/* the menu is solid in every theme, so the page never shows through its text
+   (a blur can't work here: the header it sits in already blurs) */
+:root { --menu-bg: #2a1a48; }
+:root[data-theme="warm"] { --menu-bg: #1c140d; }
+:root[data-theme="ocean"] { --menu-bg: #0c2430; }
+:root[data-theme="light"] { --menu-bg: #ffffff; }
+
+#profile-dropdown {
+  background: var(--menu-bg) !important;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* === PHONES: A LITTLE SMALLER, 4 MOODS TO A ROW === */
+/* text everywhere is a notch smaller on phones, and the mood chips are compact
+   enough that about 4 fit on a row. song logs keep their size. (text boxes stay
+   at 16px, or iPhones zoom in when you tap them; only their placeholder shrinks) */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+
+  .section-label,
+  .mood-section > .section-label,
+  .inbox-head .section-label {
+    font-size: 18px !important;
+  }
+
+  /* mood chips (journal + session) */
+  .mood-chips {
+    gap: 6px !important;
+  }
+
+  .mood-chips .chip-wrap {
+    gap: 3px !important;
+  }
+
+  .mood-chips .chip,
+  .inline-mood-picker .chip {
+    min-height: 32px;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    gap: 4px;
+  }
+
+  .mood-chips .chip .chip-emoji .mt-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  #manage-moods-btn {
+    font-size: 11px !important;
+  }
+
+  /* "not in your journal yet": smaller buttons, and the mood row uses the full
+     width of the box (under the cover too), so 3-4 fit on a row */
+  .inbox-moods {
+    gap: 5px !important;
+    margin-left: -58px;
+    width: calc(100% + 58px);
+  }
+
+  .inbox-moods .np-mood,
+  .np-moods .np-mood {
+    font-size: 11px;
+    padding: 3px 8px 3px 6px;
+    gap: 4px;
+  }
+
+  .inbox-moods .np-mood .mt-icon,
+  .np-moods .np-mood .mt-icon {
+    width: 11px;
+    height: 11px;
+  }
+
+  .inbox-title {
+    font-size: 13.5px;
+  }
+
+  .inbox-meta,
+  .inbox-when {
+    font-size: 11.5px;
+  }
+
+  /* search boxes: smaller placeholder, a bit less padding */
+  #song-search,
+  #song-history-search {
+    padding: 11px 14px !important;
+  }
+
+  #song-search::placeholder,
+  #song-history-search::placeholder,
+  .note-textarea::placeholder {
+    font-size: 14px;
+  }
+
+  /* now playing card: the song title the same size as the song logs */
+  .np-title,
+  .np-card .np-title {
+    font-size: 13.5px !important;
+  }
+
+  .np-artist,
+  .np-label,
+  .np-logas,
+  .np-upnext-label,
+  .np-sync-text,
+  .np-time {
+    font-size: 11.5px !important;
+  }
+
+  /* session page */
+  .session-how summary {
+    font-size: 12.5px;
+  }
+
+  .session-how-intro,
+  .session-how-card ol {
+    font-size: 12.5px;
+  }
+
+  .session-how-note {
+    font-size: 11.5px;
+  }
+
+  /* history + stats headline sentence, and other boxed text */
+
+  .flashback-title,
+  .flashback-sub,
+  .stats-card-title {
+    font-size: 13px !important;
+  }
+
+  .playlist-card-title {
+    font-size: 21px !important;
+  }
+
+  .help-scroll {
+    padding: 22px !important;
+  }
+
+  /* song logs (journal, history, playlists): the same sizes as "not in your
+     journal yet" - title 13.5, artist and details 11.5 */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-title,
+  .log-card .song-title {
+    font-size: 13.5px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-artist {
+    font-size: 11.5px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note,
+  .title-row .log-note,
+  .note-line .log-note {
+    font-size: 12px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta > *,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
+    font-size: 11px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-art {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    grid-template-columns: 42px minmax(0, 1fr) auto auto auto;
+    column-gap: 11px !important;
+    padding: 10px 0 !important;
+  }
+
+  #playlist-block .log-card:has(.drag-handle) {
+    grid-template-columns: 18px 42px minmax(0, 1fr) auto auto auto;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .play-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* day headings ("Today", "Yesterday") and other big titles */
+  #logs-list .timeline-date,
+  #timeline .timeline-date,
+  .timeline-date {
+    font-size: 20px !important;
+  }
+
+  .stats-sentence {
+    font-size: 18px !important;
+  }
+
+  .song-history-title,
+  .session-history-mood,
+  .result-title {
+    font-size: 13.5px !important;
+  }
+
+  .song-history-artist,
+  .song-history-date,
+  .song-history-total,
+  .session-history-meta,
+  .result-artist {
+    font-size: 11.5px !important;
+  }
+
+  .playlist-view-title {
+    font-size: 24px !important;
+  }
+
+  .stat-num,
+  .stat-box-num {
+    font-size: 24px !important;
+  }
+
+  .flashback-song-title,
+  .top-song-title {
+    font-size: 13.5px !important;
+  }
+
+  .flashback-song-artist,
+  .top-song-artist {
+    font-size: 11.5px !important;
+  }
+
+  .session-hero-timer {
+    font-size: 46px !important;
+  }
+
+  .session-btn,
+  .install-btn,
+  #session-start-btn,
+  #session-end-btn {
+    font-size: 12px !important;
+  }
+
+  .tab {
+    font-size: 11px;
+  }
+}
+
+/* === "HOW SESSIONS WORK" OPENS AND CLOSES SMOOTHLY === */
+/* the height animation is done in session.js; this keeps the box tidy while it moves */
+.session-how {
+  overflow: hidden;
+}
+
+.session-how summary::after {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.session-how .session-how-intro,
+.session-how .session-how-grid {
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.session-how.is-closing .session-how-intro,
+.session-how.is-closing .session-how-grid,
+.session-how.is-opening .session-how-intro,
+.session-how.is-opening .session-how-grid {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.session-how.is-closing summary::after {
+  transform: none;
+}
+
+/* === PHONES: SMALLER BUTTONS === */
+/* buttons were sized for a desktop mouse; on a phone they crowded out the text
+   (the now-playing controls almost hid the song title). everything still has a
+   comfortable tap area */
+@media (max-width: 768px) {
+  /* header: start session, install, ? and profile */
+  #help-btn,
+  #profile-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+
+  #profile-btn > svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .session-btn,
+  .install-btn {
+    padding: 6px 12px !important;
+    min-height: 32px !important;
+    height: 32px;
+    gap: 5px;
+  }
+
+  .nav-right {
+    gap: 8px !important;
+  }
+
+  /* now playing: small controls, so the title gets the room */
+  .np-btn,
+  .np-compact .np-btn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .np-btn .mt-icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .np-toggle,
+  .np-compact .np-toggle {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .np-toggle .mt-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .np-controls {
+    gap: 4px !important;
+  }
+
+  .np-controls .like-btn,
+  .np-like-slot .like-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+  }
+
+  .np-controls .like-btn .mt-icon,
+  .np-like-slot .like-btn .mt-icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .np-art-wrap,
+  .np-art {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .np-switch {
+    transform: scale(0.85);
+    transform-origin: left center;
+  }
+
+  /* other buttons around the app */
+  .history-tab {
+    min-height: 38px !important;
+    font-size: 13px !important;
+  }
+
+  .back-btn {
+    font-size: 13px !important;
+  }
+
+  #session-start-btn,
+  #session-end-btn,
+  #session-refresh-btn,
+  #session-open-spotify-btn,
+  #session-save-playlist-btn,
+  .session-spotify-btn {
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+    min-height: 36px !important;
+  }
+
+  .session-timer-circle {
+    width: 200px !important;
+    height: 200px !important;
+  }
+
+  .pl-save-btn {
+    font-size: 12px !important;
+    padding: 6px 14px !important;
+  }
+
+  .mt-empty-btn {
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+  }
+
+  /* the open playlist: ▶ sits on the same line as "save to spotify", and is smaller,
+     so the box ends right under them */
+  .playlist-view-header {
+    position: relative;
+  }
+
+  .playlist-view-header #sync-btn,
+  .playlist-view-header .playlist-play-btn {
+    position: absolute;
+    right: 24px;
+    bottom: 22px;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .playlist-view-info {
+    padding-right: 50px;
+  }
+
+  .playlist-view-hint {
+    font-size: 12px !important;
+  }
+}
+
+/* === PHONES: SONG BOXES, BUTTONS IN LINE === */
+/* ▶ sits on the artist line with the heart and play next (not higher up), and
+   "edit note" / "+ add note" sits right beside the note, straight under the
+   artist. then mood, plays and time, with ✕ at the end of that line */
+@media (max-width: 640px) {
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    grid-template-areas:
+      "art title  title title title"
+      "art artist heart queue play"
+      "art note   note  note  note"
+      "art meta   meta  meta  del" !important;
+  }
+
+  #playlist-block .log-card:has(.drag-handle) {
+    grid-template-areas:
+      "drag art title  title title title"
+      "drag art artist heart queue play"
+      "drag art note   note  note  note"
+      "drag art meta   meta  meta  del" !important;
+  }
+
+  /* the note and its button share one line */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-info > .note-line {
+    grid-area: note;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 10px;
+    min-width: 0;
+    margin: 3px 0 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .note-line > .log-note {
+    grid-area: auto;
+    flex: 0 1 auto;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .note-line > .log-note-area {
+    grid-area: auto;
+    flex: 0 0 auto;
+    margin: 0 !important;
+  }
+
+  /* writing a note: the box takes the whole line */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .note-line > .log-note-area:has(textarea) {
+    flex: 1 1 100%;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
+    padding: 2px 0 !important;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .delete-btn {
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta {
+    margin-top: 4px !important;
+    gap: 2px 8px !important;
+  }
+
+  #playlist-block .log-card .log-meta .mood-badge {
+    padding: 1px 7px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    column-gap: 9px !important;
+  }
+
+  /* ▶: same line and size as the heart and play next */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .play-btn {
+    grid-area: play;
+    grid-row: auto !important;
+    align-self: center;
+    justify-self: center;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    margin: -6px 0 !important;
+    font-size: 11px !important;
+  }
+}
+
+/* === ONE FONT EVERYWHERE === */
+/* headings, song titles, notes, numbers and buttons all use the same font (DM Sans)
+   instead of a mix of DM Sans, Outfit and Fraunces, so the whole app reads as one */
+:root {
+  --font-display: var(--font-body);
+  --font-serif: var(--font-body);
+}
+
+body,
+button,
+input,
+textarea,
+select,
+.sx-title,
+.stats-sentence,
+.ios-hint-title,
+.tab-label {
+  font-family: var(--font-body) !important;
+}
+
+[class],
+.title-row .log-note,
+.note-line .log-note {
+  font-variation-settings: normal;
+}
+
+/* === PHONES: "MANAGE MOODS" THE SAME SIZE AS THE REST === */
+@media (max-width: 768px) {
+  /* the moods while managing: a small bin under each, close to the chip */
+  .mood-chips .chip-delete-btn {
+    padding: 0 4px !important;
+  }
+
+  .mood-chips .chip-delete-btn .mt-icon {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  #add-mood-section {
+    padding: 14px !important;
+    margin-top: 12px !important;
+  }
+
+  /* "add a mood" heading: like the other small labels, not spaced-out capitals */
+  #add-mood-section > div:not(#hidden-moods-restore):first-of-type,
+  #add-mood-section > div[style*="uppercase"] {
+    font-size: 12px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: var(--text-secondary, #c9bde6) !important;
+    margin-bottom: 8px !important;
+  }
+
+  #new-mood-input {
+    padding: 8px 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  #new-mood-input::placeholder {
+    font-size: 13px;
+  }
+
+  #add-mood-section > div[style*="font-size:12px"] {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+
+  /* the icon picker: smaller icons, more to a row */
+  #add-mood-section .emoji-opt {
+    padding: 3px !important;
+  }
+
+  #add-mood-section .emoji-opt .mt-icon,
+  #chosen-emoji .mt-icon {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  #add-mood-section div[style*="flex-wrap:wrap"] {
+    gap: 4px !important;
+    margin-bottom: 12px !important;
+  }
+
+  #save-new-mood {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+  }
+
+  /* hidden moods to bring back */
+  #hidden-moods-restore .restore-label {
+    font-size: 12px !important;
+  }
+
+  .restore-chip {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+  }
+
+  #mood-error-msg {
+    font-size: 11.5px !important;
+  }
+}

@@ -22,7 +22,7 @@
     })();
   </script>
   <!-- page opening animation: the content fades and rises in (see "PAGE OPENING" in
-       motion.css). started here, and again when a page prepared in the background or
+       css/motion/). started here, and again when a page prepared in the background or
        kept by the back button is shown, so it always plays as you arrive -->
   <script>
     (function () {
@@ -63,7 +63,14 @@
   </script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/mobile.css" />
-  <link rel="stylesheet" href="css/motion.css" />
+  <!-- the app's look, in 7 parts that must load in this order (see css/motion/01-foundation.css) -->
+  <link rel="stylesheet" href="css/motion/01-foundation.css" />
+  <link rel="stylesheet" href="css/motion/02-app-shell.css" />
+  <link rel="stylesheet" href="css/motion/03-themes.css" />
+  <link rel="stylesheet" href="css/motion/04-pages.css" />
+  <link rel="stylesheet" href="css/motion/05-phone-layouts.css" />
+  <link rel="stylesheet" href="css/motion/06-polish.css" />
+  <link rel="stylesheet" href="css/motion/07-features.css" />
 </head>
 <body>
 

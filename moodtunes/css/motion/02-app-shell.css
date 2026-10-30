@@ -1,0 +1,1426 @@
+/* motion/02-app-shell.css (part 2 of 7)
+   the frame around every page: empty states, keyboard focus, safe areas for notches, the install button and iphone hint, the bottom tab bar, pop-up animations, icons, and the album-art backgrounds.
+
+   sections: empty states, visible focus for keyboard users, safe areas (notch, status bar, home bar), install app button, iphone "add to home screen" hint, bottom tab bar (phones), mood-tinted song cards, pop-up animations, song box in search results, icons, now playing: playback controls, song title + note on one line, background: vignette + grain, background: drifting lights, background: sound waves
+*/
+
+/* === EMPTY STATES === */
+.mt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 20px 40px;
+  border-radius: 16px;
+  border: 1px dashed color-mix(in srgb, var(--mood) 35%, transparent);
+  background: color-mix(in srgb, var(--mood) 6%, transparent);
+  animation: enter 0.5s var(--ease-out) backwards;
+}
+
+.mt-empty-art {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 10px;
+}
+
+.mt-empty-art svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mt-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #f0f0f0);
+  margin-bottom: 6px;
+}
+
+.mt-empty-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary, #aaa);
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.mt-empty-btn {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--mood);
+  color: var(--mood-ink, #fff);
+  box-shadow: 0 8px 24px -10px var(--mood);
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
+}
+
+.mt-empty-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px var(--mood);
+}
+
+.mt-empty-compact {
+  flex-direction: row;
+  text-align: left;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
+.mt-empty-compact .mt-empty-art {
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.mt-empty-compact .mt-empty-title {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.mt-empty-compact .mt-empty-text {
+  font-size: 13px;
+  max-width: none;
+  margin: 0;
+}
+
+.mt-empty-compact .mt-empty-btn {
+  margin-top: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.session-recommendations .mt-empty {
+  flex: 1;
+}
+
+/* illustration parts, all tinted by the mood colour */
+.mt-empty .ea-glow {
+  fill: color-mix(in srgb, var(--mood) 16%, transparent);
+}
+
+.mt-empty .ea-disc {
+  fill: #151515;
+  stroke: color-mix(in srgb, var(--mood) 55%, transparent);
+  stroke-width: 1.5;
+}
+
+.mt-empty .ea-groove {
+  fill: none;
+  stroke: #ffffff14;
+  stroke-width: 1;
+}
+
+.mt-empty .ea-label {
+  fill: var(--mood);
+}
+
+.mt-empty .ea-hole {
+  fill: #151515;
+}
+
+.mt-empty .ea-shine {
+  fill: none;
+  stroke: #ffffff40;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.mt-empty .ea-note path {
+  fill: none;
+  stroke: var(--mood);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mt-empty .ea-note circle {
+  fill: var(--mood);
+}
+
+.mt-empty .ea-lens {
+  fill: #ffffff08;
+  stroke: var(--mood);
+  stroke-width: 4;
+}
+
+.mt-empty .ea-handle {
+  stroke: var(--mood);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.mt-empty .ea-cloud {
+  fill: #ffffff0d;
+  stroke: var(--mood);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.mt-empty .ea-slash {
+  stroke: #e05c5c;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.mt-empty .ea-spin {
+  transform-origin: 60px 62px;
+  animation: ea-spin calc(var(--mood-tempo) * 6) linear infinite;
+}
+
+.mt-empty .ea-note {
+  animation: ea-float 3.2s ease-in-out infinite;
+}
+
+.mt-empty .ea-note.n2 {
+  animation-delay: -1.4s;
+  animation-duration: 2.7s;
+}
+
+.mt-empty .ea-bob {
+  animation: ea-bob 3s ease-in-out infinite;
+  transform-origin: 60px 60px;
+}
+
+@keyframes ea-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ea-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+
+  50% {
+    transform: translateY(-7px);
+    opacity: 0.55;
+  }
+}
+
+@keyframes ea-bob {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+
+  50% {
+    transform: translateY(-4px) rotate(-4deg);
+  }
+}
+
+/* === VISIBLE FOCUS FOR KEYBOARD USERS === */
+.chip:focus-visible,
+button:focus-visible,
+a:focus-visible,
+.mt-empty-btn:focus-visible {
+  outline: 2px solid var(--mood);
+  outline-offset: 3px;
+}
+
+#song-search:focus-visible,
+#song-history-search:focus-visible {
+  outline: none;
+}
+
+/* shortcut key badges in the help modal */
+kbd.mt-kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 7px;
+  margin-right: 6px;
+  border-radius: 6px;
+  text-align: center;
+  font: 600 12px var(--font-body);
+  color: var(--text-primary, #f0f0f0);
+  background: #ffffff10;
+  border: 1px solid #ffffff22;
+  border-bottom-width: 2px;
+}
+
+/* === SAFE AREAS (NOTCH, STATUS BAR, HOME BAR) === */
+/* when installed as an app the page runs edge to edge, so keep content clear of
+   the iPhone notch/status bar and the home bar. these are 0 in a normal browser */
+.navbar {
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-left: calc(32px + env(safe-area-inset-left));
+  padding-right: calc(32px + env(safe-area-inset-right));
+}
+
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mt-toast {
+  bottom: calc(28px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding-top: calc(14px + env(safe-area-inset-top));
+    padding-left: calc(16px + env(safe-area-inset-left));
+    padding-right: calc(16px + env(safe-area-inset-right));
+  }
+}
+
+/* === INSTALL APP BUTTON === */
+.install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mood) 55%, transparent);
+  background: color-mix(in srgb, var(--mood) 14%, transparent);
+  color: var(--text-primary, #f0f0f0);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  animation: enter 0.5s var(--ease-out) backwards;
+  transition: background 0.2s, transform 0.2s var(--ease-spring);
+}
+
+.install-btn:hover {
+  background: color-mix(in srgb, var(--mood) 28%, transparent);
+  transform: translateY(-1px);
+}
+
+.install-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* === IPHONE "ADD TO HOME SCREEN" HINT === */
+.ios-hint {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 100002;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 16px 16px 14px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--mood) 14%, #161616f5);
+  border: 1px solid color-mix(in srgb, var(--mood) 40%, transparent);
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transform: translateY(140%);
+  transition: transform 0.5s var(--ease-spring);
+}
+
+.ios-hint.show {
+  transform: none;
+}
+
+.ios-hint-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #0f0f0f url('../assets/apple-touch-icon.png') center / cover;
+}
+
+.ios-hint-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #f0f0f0);
+  margin-bottom: 3px;
+}
+
+.ios-hint-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #bbb);
+}
+
+.ios-hint-text svg {
+  width: 15px;
+  height: 15px;
+  vertical-align: -3px;
+  color: #3d8bfd;
+}
+
+.ios-hint-close {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff14;
+  color: var(--text-secondary, #bbb);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* installed app: no install prompts */
+@media (display-mode: standalone) {
+
+  .install-btn,
+  .ios-hint {
+    display: none !important;
+  }
+}
+
+/* toast: size to the message instead of being squeezed into half the screen */
+.mt-toast {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+
+/* === BOTTOM TAB BAR (PHONES) === */
+/* built by js/mood.js from the same pages as the top nav; hidden on desktop */
+.tabbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--nav-bg, #0f0f0f) 78%, transparent);
+    border-top: 1px solid var(--nav-border, #222);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  .tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    border-radius: 14px;
+    color: var(--text-secondary, #999);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s;
+  }
+
+  .tab:active {
+    transform: scale(0.94);
+  }
+
+  .tab.active {
+    color: var(--mood);
+  }
+
+  .tab-pill {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 56px;
+    height: 30px;
+    margin-left: -28px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mood) 18%, transparent);
+  }
+
+  .tab-icon {
+    position: relative;
+    display: flex;
+    width: 24px;
+    height: 24px;
+    margin-top: 7px;
+  }
+
+  .tab-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .tab-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* pulsing dot on the session tab while a session is running */
+  .tab-live {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #1db954;
+    box-shadow: 0 0 0 2px var(--bg-page, #0f0f0f);
+    animation: pulse 1.5s infinite;
+  }
+
+  /* room for the tab bar; toasts and the iphone hint sit above it */
+  body {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .mt-toast {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .ios-hint {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  /* === SLIM HEADER (PHONES) === */
+  /* the page links live in the tab bar now, so the header is one short row
+     that scrolls away with the page instead of staying stuck on screen */
+  .navbar {
+    position: relative;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    padding-bottom: 10px;
+  }
+
+  .navbar .nav-links {
+    display: none;
+  }
+
+  .logo {
+    width: 118px;
+    margin-bottom: 0;
+  }
+
+  .nav-right {
+    order: 0;
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .session-btn {
+    padding: 9px 14px;
+    min-height: 40px;
+  }
+
+  /* install button: icon only, to fit the short header */
+  .install-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .install-btn span {
+    display: none;
+  }
+
+  .install-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .container {
+    margin-top: 16px;
+  }
+
+  /* === TAP TARGETS (PHONES) === */
+  /* small controls get an invisible 40px+ touch area without looking any bigger */
+  .delete-btn,
+  .add-note-btn,
+  .edit-note-btn,
+  .session-song-delete,
+  .session-delete-btn,
+  .session-add-btn,
+  .session-play-btn,
+  .play-btn,
+  #manage-moods-btn,
+  .restore-chip,
+  .mt-toast-action {
+    position: relative;
+  }
+
+  .delete-btn::after,
+  .add-note-btn::after,
+  .edit-note-btn::after,
+  .session-song-delete::after,
+  .session-delete-btn::after,
+  .session-add-btn::after,
+  .session-play-btn::after,
+  .play-btn::after,
+  #manage-moods-btn::after,
+  .restore-chip::after,
+  .mt-toast-action::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+
+  .delete-btn {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 14px;
+  }
+
+  .chip {
+    min-height: 40px;
+    padding: 9px 16px;
+  }
+
+  /* === NO ZOOM ON FOCUS (PHONES) === */
+  /* iPhones zoom into any text box under 16px when you tap it */
+  input,
+  textarea,
+  select,
+  #song-search,
+  #song-history-search,
+  .note-textarea {
+    font-size: 16px !important;
+  }
+
+  /* === READABLE TEXT (PHONES) === */
+  .plays-text,
+  .date-text,
+  .thumb-artist,
+  .session-song-thumb p,
+  .rec-title,
+  .rec-artist,
+  .session-rec-card .rec-title,
+  .session-rec-card .rec-artist {
+    font-size: 12px !important;
+  }
+
+  .stat-label,
+  .stat-box-label,
+  .top-song-artist,
+  .top-song-plays,
+  .mood-bar-count,
+  .session-song-delete,
+  .session-add-btn,
+  .np-time,
+  .np-status {
+    font-size: 12px !important;
+  }
+
+  /* the mood graph is drawn 600px wide and scaled down, so its labels need a
+     bigger font to end up readable on a phone */
+  #mood-graph-container svg text {
+    font-size: 17px;
+  }
+
+  /* === SIDEWAYS ROWS (PHONES) === */
+  /* snap card by card and fade the edge, so it's obvious the row scrolls */
+  .session-recommendations,
+  .session-history-songs {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 2px;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, #000 82%, transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+    padding-right: 32px;
+  }
+
+  .session-recommendations>*,
+  .session-history-songs>* {
+    scroll-snap-align: start;
+  }
+
+  /* === SESSION PAGE (PHONES) === */
+  /* while a session runs the mood can't change, so hide the chips and put
+     the timer at the top of the screen */
+  .session-live .mood-section {
+    display: none;
+  }
+
+  .session-live .session-hero {
+    margin-top: 0;
+    padding-top: 8px;
+  }
+
+  /* === HISTORY SESSION CARDS (PHONES) === */
+  .session-history-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'mood delete'
+      'meta delete';
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 2px;
+  }
+
+  .session-history-mood {
+    grid-area: mood;
+  }
+
+  .session-history-meta {
+    grid-area: meta;
+    color: var(--text-secondary, #999) !important;
+  }
+
+  .session-delete-btn {
+    grid-area: delete;
+  }
+}
+
+@media (max-width: 768px) {
+
+  #session-end-btn,
+  #session-refresh-btn,
+  #session-start-btn,
+  .session-end-btn {
+    min-height: 44px;
+  }
+
+  .add-note-btn::after,
+  .edit-note-btn::after,
+  .session-song-delete::after {
+    inset: -14px -10px;
+  }
+
+  .session-delete-btn {
+    font-size: 12px !important;
+  }
+}
+
+/* very small phones: help moves into the profile menu so the header fits */
+@media (max-width: 360px) {
+  .logo {
+    width: 100px;
+  }
+
+  #help-btn {
+    display: none !important;
+  }
+
+  .session-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* === MOOD-TINTED SONG CARDS === */
+/* every logged song picks up its mood's colour: an accent edge, a soft wash and
+   a glow under the album art (set up by js/mood.js from the card's mood badge) */
+.log-card.mood-card,
+.song-history-card.mood-card {
+  border-left: 3px solid var(--mc) !important;
+  background: linear-gradient(100deg,
+      color-mix(in srgb, var(--mc) 13%, var(--bg-card, #141414)) 0%,
+      var(--bg-card, #141414) 60%) !important;
+  transition: border-color 0.2s, box-shadow 0.25s, transform 0.25s var(--ease-out);
+}
+
+.log-card.mood-card:hover,
+.song-history-card.mood-card:hover {
+  border-color: color-mix(in srgb, var(--mc) 45%, transparent) !important;
+  border-left-color: var(--mc) !important;
+  box-shadow: 0 10px 30px -18px var(--mc);
+}
+
+.log-card.mood-card .song-art,
+.song-history-card.mood-card .song-history-header img {
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--mc) 85%, transparent);
+}
+
+.log-card.mood-card .log-note,
+.song-history-card.mood-card .log-note,
+.log-card.mood-card .edit-note-btn,
+.log-card.mood-card .add-note-btn,
+.song-history-card.mood-card .edit-note-btn,
+.song-history-card.mood-card .add-note-btn {
+  color: color-mix(in srgb, var(--mc) 75%, #fff) !important;
+}
+
+/* === POP-UP ANIMATIONS === */
+/* profile menu pops out of its button */
+#profile-dropdown {
+  transform-origin: top right;
+  animation: menu-in 0.26s var(--ease-spring) both;
+}
+
+#profile-dropdown.closing {
+  animation: menu-out 0.16s ease-in both;
+  pointer-events: none;
+}
+
+#profile-dropdown>* {
+  animation: enter 0.3s var(--ease-out) backwards;
+}
+
+#profile-dropdown>*:nth-child(2) {
+  animation-delay: 0.03s;
+}
+
+#profile-dropdown>*:nth-child(3) {
+  animation-delay: 0.06s;
+}
+
+#profile-dropdown>*:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
+#profile-dropdown>*:nth-child(5) {
+  animation-delay: 0.12s;
+}
+
+#profile-dropdown>*:nth-child(6) {
+  animation-delay: 0.15s;
+}
+
+#profile-dropdown>*:nth-child(7) {
+  animation-delay: 0.18s;
+}
+
+#profile-dropdown>*:nth-child(8) {
+  animation-delay: 0.21s;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+}
+
+@keyframes menu-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.95);
+  }
+}
+
+/* help: backdrop fades, the card springs in (slides up as a sheet on phones) */
+#help-modal {
+  animation: backdrop-in 0.25s ease both;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#help-modal>div {
+  animation: card-in 0.42s var(--ease-spring) both;
+}
+
+#help-modal.closing {
+  animation: backdrop-out 0.22s ease both;
+  pointer-events: none;
+}
+
+#help-modal.closing>div {
+  animation: card-out 0.22s ease-in both;
+}
+
+/* "open in spotify" popup */
+#spotify-open-popup {
+  animation: backdrop-in 0.2s ease both;
+}
+
+#spotify-open-popup>div {
+  animation: card-in 0.36s var(--ease-spring) both;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.95);
+  }
+}
+
+@keyframes card-out {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+
+@media (max-width: 768px) {
+  #help-modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  #help-modal>div {
+    max-width: none !important;
+    border-radius: 22px 22px 0 0 !important;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+    animation-name: sheet-in;
+  }
+
+  #help-modal.closing>div {
+    animation-name: sheet-out;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* buttons that open things give a little press feedback */
+/* (the profile menu lives inside its button, so only the icon shrinks - otherwise
+   tapping a menu row would shrink the whole menu) */
+#profile-btn>svg,
+#help-btn {
+  transition: transform 0.15s var(--ease-spring), border-color 0.15s, color 0.15s !important;
+}
+
+#profile-btn:active:not(:has(#profile-dropdown:active))>svg,
+#help-btn:active {
+  transform: scale(0.85);
+}
+
+/* === SONG BOX IN SEARCH RESULTS === */
+/* the "pick a mood / add a note" box under a search result follows the mood too,
+   so picking a mood inside it visibly re-colours it along with the page */
+.search-note-panel {
+  margin: 4px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(160deg,
+      color-mix(in srgb, var(--mood) 20%, var(--bg-card, #141414)) 0%,
+      color-mix(in srgb, var(--mood) 7%, var(--bg-card, #141414)) 100%);
+  border: 1px solid color-mix(in srgb, var(--mood) 45%, transparent);
+  box-shadow: 0 12px 34px -20px var(--mood);
+  animation: enter 0.35s var(--ease-out) backwards;
+  transition: background 0.9s, border-color 0.9s, box-shadow 0.9s;
+}
+
+.result-item.selected {
+  border-radius: 10px;
+  box-shadow: inset 3px 0 0 var(--mood);
+}
+
+/* === ICONS === */
+/* line icons (js/mood.js) used in place of emojis; they take the text colour */
+.mt-icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  vertical-align: -0.2em;
+}
+
+/* mood chips: the icon wears the mood colour; on a selected chip it matches the text */
+.chip .chip-emoji {
+  display: inline-flex;
+  color: var(--mc, currentColor);
+}
+
+.chip .chip-emoji .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.chip.selected .chip-emoji {
+  color: inherit;
+}
+
+/* custom-mood icon picker */
+.emoji-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #aaa);
+  transition: color 0.15s, background 0.15s, transform 0.15s var(--ease-spring);
+}
+
+.emoji-opt:hover {
+  color: var(--text-primary, #f0f0f0);
+  background: #ffffff0f !important;
+  transform: scale(1.1);
+}
+
+.emoji-opt .mt-icon {
+  width: 22px;
+  height: 22px;
+}
+
+#chosen-emoji {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--mood);
+}
+
+#chosen-emoji .mt-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.chip-delete-btn .mt-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.restore-chip .mt-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+/* help headings */
+.help-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9b8cf0;
+}
+
+.help-heading .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* "a month ago" cards */
+.flashback-icon {
+  display: flex;
+  color: var(--mood);
+}
+
+.flashback-icon .mt-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.flashback-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flashback-label .mt-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* placeholders where there's no album art */
+.playlist-cover-empty,
+.rec-no-art,
+.np-art-fallback,
+.sum-cover-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #666);
+}
+
+.playlist-cover-empty .mt-icon {
+  width: 40%;
+  height: 40%;
+}
+
+.rec-no-art .mt-icon,
+.np-art-fallback .mt-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.sum-cover-empty .mt-icon {
+  width: 38%;
+  height: 38%;
+}
+
+/* session summary */
+.sum-emoji {
+  display: flex;
+  justify-content: center;
+  color: var(--mc);
+}
+
+.sum-emoji .mt-icon {
+  width: 46px;
+  height: 46px;
+  filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--mc) 60%, transparent));
+}
+
+/* === NOW PLAYING: PLAYBACK CONTROLS === */
+.np-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.np-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-primary, #f0f0f0);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s var(--ease-spring), opacity 0.15s;
+}
+
+.np-btn:hover {
+  background: #ffffff14;
+}
+
+.np-btn:active {
+  transform: scale(0.88);
+}
+
+.np-btn .mt-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* the big play/pause button wears the song's colour */
+.np-toggle {
+  width: 44px;
+  height: 44px;
+  background: var(--np-color);
+  color: var(--np-ink, #fff);
+  box-shadow: 0 8px 22px -10px var(--np-color);
+}
+
+.np-toggle:hover {
+  background: color-mix(in srgb, var(--np-color) 85%, #fff);
+}
+
+.np-toggle .mt-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.np-btn.np-busy {
+  opacity: 0.6;
+}
+
+.np-idle .np-controls {
+  display: none;
+}
+
+/* "+ added to session" now sits next to the "now playing" label */
+.np-label .np-added {
+  position: static;
+  margin-left: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.np-compact .np-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.np-compact .np-toggle {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 420px) {
+  .np-compact .np-prev {
+    display: none;
+  }
+}
+
+/* === SONG TITLE + NOTE ON ONE LINE === */
+/* the note sits to the right of the title (api.js titleRowHTML). the note gives
+   way first when space is tight; tap it to read it in full */
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* let the text column shrink so a long note is cut off instead of stretching the card */
+.log-card .song-info,
+.song-history-card .song-history-info {
+  min-width: 0;
+}
+
+.title-row .song-title {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 70% !important;
+  /* the title keeps its space; only a very long one is cut off */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-row .log-note {
+  flex: 0 100 auto;
+  min-width: 4em;
+  margin: 0 !important;
+  font-size: 12px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.title-row .log-note[hidden] {
+  display: none;
+}
+
+.title-row .log-note.note-open {
+  white-space: normal;
+}
+
+.title-row:has(.note-open) {
+  align-items: flex-start;
+}
+
+/* === BACKGROUND: VIGNETTE + GRAIN === */
+/* darker edges pull the eye to the middle; a fine grain gives the colour texture */
+.mt-vignette,
+.mt-grain {
+  position: absolute;
+  inset: 0;
+}
+
+.mt-vignette {
+  background: radial-gradient(ellipse 120% 90% at 50% 40%,
+      transparent 55%,
+      color-mix(in srgb, var(--bg-page, #0f0f0f) 45%, rgb(0 0 0 / 0.55)) 100%);
+}
+
+.mt-grain {
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* === BACKGROUND: DRIFTING LIGHTS === */
+.mt-particles i {
+  position: absolute;
+  bottom: -20px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mood) 65%, #fff);
+  box-shadow: 0 0 calc(var(--size) * 2.5) color-mix(in srgb, var(--mood) 80%, transparent);
+  opacity: 0;
+  animation: drift-up var(--dur) linear var(--delay) infinite;
+  transition: background 0.9s, box-shadow 0.9s;
+}
+
+@keyframes drift-up {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: var(--glow);
+  }
+
+  85% {
+    opacity: var(--glow);
+  }
+
+  100% {
+    transform: translate(var(--drift), -110vh);
+    opacity: 0;
+  }
+}
+
+/* === BACKGROUND: SOUND WAVES === */
+/* soft flowing lines across the middle of the screen, behind the cards, while
+   spotify is playing - in the song's colour. they pulse on the song's beat when
+   its tempo is known (js/mood.js), flatten when paused and fade when nothing plays */
+.mt-waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 92vh;
+  transform: translateY(-50%);
+  opacity: 0;
+  visibility: hidden;
+  /* disappear quickly when the music stops... */
+  transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+}
+
+/* ...and fade in gently when it starts. paused or nothing playing = no waves */
+:root.np-live .mt-waves {
+  opacity: 0.9;
+  visibility: visible;
+  transition: opacity 1s ease, visibility 0s;
+}
+
+/* freeze the motion the moment playback stops */
+:root:not(.np-live) .mt-waves .wave,
+:root:not(.np-live) .mt-waves path {
+  animation-play-state: paused;
+}
+
+.mt-waves .wave {
+  position: absolute;
+  left: 0;
+  bottom: var(--y);
+  width: 200%;
+  height: var(--h);
+  overflow: visible;
+  animation: wave-slide calc(var(--mood-tempo) * var(--k)) linear infinite;
+}
+
+.mt-waves .wave-2 {
+  animation-direction: reverse;
+}
+
+.mt-waves .wave-amp {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleY(0.06);
+  transition: transform 0.3s var(--ease-out);
+}
+
+:root.np-live .mt-waves .wave-amp {
+  transform: scaleY(1);
+}
+
+.mt-waves path {
+  fill: none;
+  stroke: var(--np);
+  vector-effect: non-scaling-stroke;
+  transition: stroke 1.4s;
+}
+
+.mt-waves .wave-line {
+  stroke-width: 2;
+  opacity: var(--o);
+}
+
+.mt-waves .wave-glow {
+  stroke-width: 10;
+  opacity: calc(var(--o) * 0.3);
+}
+
+/* no tempo known and not listening: a slow, calm swell (not pretending to be the beat) */
+:root.np-live .mt-waves .wave-line,
+:root.np-live .mt-waves .wave-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wave-swell 7s ease-in-out infinite;
+}
+
+:root.np-live .mt-waves .wave-2 path {
+  animation-delay: -2.5s;
+}
+
+/* on the beat: each hit stretches the waves taller and brighter for a moment */
+:root.np-beat .mt-waves .wave-amp {
+  transform: scaleY(calc(var(--base, 0.78) + var(--pulse, 0) * 0.45 * var(--pk, 1)));
+  transition: transform 0.05s linear;
+}
+
+:root.np-beat .mt-waves path {
+  animation: none;
+}
+
+:root.np-beat .mt-waves .wave-line {
+  opacity: calc(var(--o) * (0.8 + var(--pulse, 0) * 0.7));
+}
+
+@keyframes wave-slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes wave-swell {
+  50% {
+    transform: scaleY(0.7);
+  }
+}
+
+@media (max-width: 768px) {
+  .mt-waves {
+    height: 78vh;
+  }
+}
+
+/* "sync waves to sound" toggle on the now-playing card */
+.np-sync {
+  flex-shrink: 0;
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid #ffffff1f;
+  background: transparent;
+  color: var(--text-muted, #888);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.np-sync:hover {
+  color: var(--text-primary, #fff);
+  border-color: color-mix(in srgb, var(--np-color, var(--mood)) 60%, transparent);
+}
+
+.np-sync.on {
+  color: var(--np-color, var(--mood));
+  border-color: color-mix(in srgb, var(--np-color, var(--mood)) 55%, transparent);
+  background: color-mix(in srgb, var(--np-color, var(--mood)) 12%, transparent);
+}
+
+.np-idle .np-sync {
+  display: none;
+}
+
+.np-sync.map {
+  color: color-mix(in srgb, var(--np-color, var(--mood)) 80%, #fff);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-particles {
+    display: none;
+  }
+
+  .mt-waves .wave,
+  .mt-waves path {
+    animation: none !important;
+  }
+}

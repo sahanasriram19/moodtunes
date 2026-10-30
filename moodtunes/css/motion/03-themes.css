@@ -1,0 +1,387 @@
+/* motion/03-themes.css (part 3 of 7)
+   the default violet-glass theme, play next, the album art behind the page, the sound waves, and the clean light theme.
+
+   sections: default theme: violet glass, play next (spotify queue), album art background, keep the sound waves behind the page, history tabs follow the background, clean light theme
+*/
+
+/* === DEFAULT THEME: VIOLET GLASS === */
+/* the default theme swaps the black boxes for see-through violet cards that let
+   the purple background glow through, plus a few soft accents that sit well with
+   purple: lavender, rose, peach, mint and sky. (other themes are untouched) */
+:root:is(:not([data-theme]), [data-theme="default"]) {
+  --glass: linear-gradient(160deg, rgba(58, 36, 102, 0.94) 0%, rgba(32, 19, 58, 0.95) 100%);
+  --glass-solid: #2a1a48;
+  --glass-edge: rgba(200, 176, 255, 0.16);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 14px 34px -22px rgba(6, 0, 20, 0.9);
+  --c-lavender: #c3b1ff;
+  --c-rose: #ff9fcf;
+  --c-peach: #ffb98f;
+  --c-mint: #82e3c6;
+  --c-sky: #93c8ff;
+}
+
+/* every card-like box */
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-view-header,
+:root:is(:not([data-theme]), [data-theme="default"]) .session-history-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .song-history-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .discover-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .discover-empty,
+:root:is(:not([data-theme]), [data-theme="default"]) .session-summary-box,
+:root:is(:not([data-theme]), [data-theme="default"]) .note-input-container,
+:root:is(:not([data-theme]), [data-theme="default"]) .log-card {
+  background: var(--glass) !important;
+  border: 1px solid var(--glass-edge) !important;
+  box-shadow: var(--glass-shine), var(--glass-shadow);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .note-textarea,
+:root:is(:not([data-theme]), [data-theme="default"]) #song-history-search {
+  background: rgba(24, 12, 44, 0.94) !important;
+  border-color: var(--glass-edge) !important;
+  color: var(--text-primary) !important;
+}
+
+/* song logs: the same dark violet as the stats cards - the mood colour only
+   shows in the thin edge on the left and the mood badge */
+:root:is(:not([data-theme]), [data-theme="default"]) .log-card.mood-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .song-history-card.mood-card {
+  background: var(--glass) !important;
+  border-color: var(--glass-edge) !important;
+  border-left: 3px solid var(--mc) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .log-card.mood-card:hover,
+:root:is(:not([data-theme]), [data-theme="default"]) .song-history-card.mood-card:hover {
+  border-color: var(--border-mid) !important;
+  border-left-color: var(--mc) !important;
+}
+
+/* stats: each card gets its own accent along the top and in its title */
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card {
+  --card-c: var(--c-lavender);
+  border-top: 2px solid color-mix(in srgb, var(--card-c) 70%, transparent) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card-title,
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card .stats-card-title {
+  background: none !important;
+  color: var(--card-c, var(--c-lavender)) !important;
+  opacity: 0.9;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-cal {
+  --card-c: var(--c-lavender);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-grid>.stats-card:nth-child(1) {
+  --card-c: var(--c-rose);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-grid>.stats-card:nth-child(2) {
+  --card-c: var(--c-peach);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) #mood-graph-container {
+  --card-c: var(--c-mint);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) #stats-content>.stats-card:last-child {
+  --card-c: var(--c-sky);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-card {
+  border-top: 2px solid color-mix(in srgb, var(--c-rose) 70%, transparent) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-label {
+  color: var(--c-rose) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-bar-track,
+:root:is(:not([data-theme]), [data-theme="default"]) .time-bar-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .time-bar-fill {
+  background: linear-gradient(90deg, var(--c-peach), var(--c-rose)) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .top-song-plays,
+:root:is(:not([data-theme]), [data-theme="default"]) .mood-bar-count {
+  color: var(--text-secondary) !important;
+}
+
+/* mood calendar on violet */
+:root:is(:not([data-theme]), [data-theme="default"]) .mc-empty {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(200, 176, 255, 0.1);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mc-filled {
+  background: color-mix(in srgb, var(--mc) var(--mc-mix, 60%), #22133d);
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .mc-detail {
+  border-top-color: var(--glass-edge);
+}
+
+/* playlists: every card glows in its mood's colour */
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card {
+  background:
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--mc, var(--c-lavender)) 32%, transparent) 100%),
+    var(--glass) !important;
+  border-color: color-mix(in srgb, var(--mc, var(--c-lavender)) 30%, var(--glass-edge)) !important;
+  overflow: hidden;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.25s, opacity 0.15s;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card:hover {
+  opacity: 1;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card .playlist-cover {
+  border-radius: 8px 8px 0 0;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-title,
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-title * {
+  color: var(--text-primary) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .playlist-card-count {
+  color: color-mix(in srgb, var(--mc, var(--c-lavender)) 70%, #fff) !important;
+}
+
+/* now playing: the album art shows through properly */
+:root:is(:not([data-theme]), [data-theme="default"]) .np-card {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--np-color) 30%, transparent) 0%, transparent 70%),
+    var(--glass);
+  border-color: color-mix(in srgb, var(--np-color) 40%, var(--glass-edge));
+}
+
+/* section headings and quieter text, readable on purple */
+:root:is(:not([data-theme]), [data-theme="default"]) .section-label {
+  opacity: 0.85;
+}
+
+.np-status {
+  white-space: nowrap;
+}
+
+/* === PLAY NEXT (spotify queue) === */
+.queue-btn {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-right: 8px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary, #ccc);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.queue-btn .mt-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.queue-btn:hover {
+  color: #fff;
+  background: rgba(29, 185, 84, 0.18);
+  border-color: rgba(29, 185, 84, 0.55);
+  transform: translateY(-1px);
+}
+
+.queue-btn.done {
+  color: #4be08a;
+  border-color: rgba(29, 185, 84, 0.7);
+}
+
+.queue-btn-sm {
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+}
+
+.queue-btn-sm .mt-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* spotify free: there's no queue to add to */
+.spotify-free .queue-btn {
+  display: none;
+}
+
+/* waiting for spotify to start the song */
+.is-starting {
+  animation: starting-pulse 0.9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes starting-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.94);
+  }
+}
+
+/* === ALBUM ART BACKGROUND === */
+/* while a song plays, its cover fills the page background: blurred, darkened,
+   and washed with the mood colour (so picking a mood still re-tints the page).
+   paused or nothing playing: it fades back to the normal background */
+.mt-cover {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+:root.np-live .mt-cover.has-art {
+  opacity: 1;
+}
+
+.mt-cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+.mt-cover img.on {
+  opacity: 1;
+}
+
+/* only if the cover couldn't be pre-blurred in the browser */
+.mt-cover img.raw {
+  filter: blur(40px) saturate(1.4) brightness(0.6);
+}
+
+/* the mood wash: the mood colour over the cover, darker towards the bottom */
+.mt-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--mood) 26%, rgba(12, 5, 24, 0.28)) 0%,
+      color-mix(in srgb, var(--mood-2) 30%, rgba(12, 5, 24, 0.5)) 100%);
+}
+
+/* the mood glows soften so the cover shows through */
+:root.np-live.has-cover #mood-ambient .blob {
+  opacity: 0.5;
+  transition: opacity 1.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .mt-cover,
+  .mt-cover img {
+    transition: none;
+  }
+}
+
+#mood-ambient .blob {
+  transition: opacity 1.2s ease;
+}
+
+/* === KEEP THE SOUND WAVES BEHIND THE PAGE === */
+/* boxes, pills and inputs are solid enough that the waves (and the album-art
+   background) only show in the gaps between them, never through them */
+.chip:not(.selected),
+.np-sync,
+.restore-chip {
+  background-color: rgba(30, 18, 54, 0.88);
+}
+
+.result-item {
+  background-color: rgba(34, 21, 60, 0.92);
+}
+
+.result-item:hover,
+.result-item.selected {
+  background-color: rgba(52, 32, 92, 0.95);
+}
+
+#song-history-search,
+.note-textarea {
+  background-color: rgba(34, 21, 60, 0.94) !important;
+}
+
+/* play next on a search result sits just before "> play" */
+.result-item .queue-btn {
+  margin-left: auto;
+}
+
+.result-item .queue-btn+.result-hint {
+  margin-left: 0;
+}
+
+/* === HISTORY TABS FOLLOW THE BACKGROUND === */
+/* no boxes: the text sits straight on the page and the active tab gets a
+   soft glow + underline in the current song / mood colour */
+.history-tabs {
+  border-bottom: 1px solid color-mix(in srgb, var(--text-primary, #f0f0f0) 12%, transparent);
+}
+
+.history-tab,
+:root:is(:not([data-theme]), [data-theme="default"]) .history-tab {
+  background: transparent !important;
+  border-radius: 10px 10px 0 0;
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 55%, transparent);
+  transition: color 0.2s, background-color 0.25s, border-color 0.25s;
+}
+
+.history-tab:hover {
+  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 85%, transparent);
+  background: color-mix(in srgb, var(--np, var(--mood)) 8%, transparent) !important;
+}
+
+.history-tab.active {
+  color: var(--text-primary, #f0f0f0);
+  border-bottom-color: var(--np, var(--mood));
+}
+
+/* === CLEAN LIGHT THEME === */
+/* the logo's white "mood" disappears on a light page: flip its lightness
+   (white -> near-black) while keeping the purple */
+:root[data-theme="light"] .logo {
+  filter: invert(1) hue-rotate(180deg) saturate(1.3);
+}
+
+:root[data-theme="light"] #song-search,
+:root[data-theme="light"] #song-history-search,
+:root[data-theme="light"] .note-textarea {
+  background: #fff !important;
+  color: #111;
+  border-color: #dcd6e6;
+}
+
+:root[data-theme="light"] #song-search::placeholder,
+:root[data-theme="light"] #song-history-search::placeholder,
+:root[data-theme="light"] .note-textarea::placeholder {
+  color: #8a8a8a;
+}
+
+/* a song's cover still shows behind the page, but washed out pale instead of
+   darkened, so the page stays light and the text stays readable */
+:root[data-theme="light"] .mt-cover::after {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--mood) 12%, rgba(248, 248, 246, 0.8)) 0%,
+      color-mix(in srgb, var(--mood-2) 16%, rgba(248, 248, 246, 0.86)) 100%);
+}

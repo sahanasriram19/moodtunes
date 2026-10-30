@@ -1,0 +1,428 @@
+/* motion/05-phone-layouts.css (part 5 of 7)
+   phone layouts for history, stats and song logs, plus the stats sentence and plain (not capitalised) labels.
+
+   sections: history on phones: smaller song logs, nothing cut off, stats on phones: the same size as the history boxes, song logs on phones: buttons out of the way, stats: plain boxes, one heading colour, no spaced-out capital labels anywhere, stats as a sentence
+*/
+
+/* === HISTORY ON PHONES: SMALLER SONG LOGS, NOTHING CUT OFF === */
+.log-actions {
+  display: contents;
+}
+
+/* wider screens: the buttons sit where they always did */
+
+@media (max-width: 640px) {
+
+  /* song search results: one line per day, note underneath */
+  .song-history-card {
+    padding: 14px !important;
+  }
+
+  .song-history-header {
+    gap: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .song-history-entry {
+    display: block !important;
+    padding: 2px 0;
+  }
+
+  .she-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+  }
+
+  .she-line .song-history-date {
+    flex: 0 0 auto !important;
+    white-space: nowrap;
+    font-size: 12.5px !important;
+  }
+
+  .she-line .song-history-plays {
+    font-size: 12.5px !important;
+    color: #a59bbd !important;
+  }
+
+  .she-note {
+    display: block;
+    margin: 3px 0 0 !important;
+    font-size: 13px !important;
+    line-height: 1.4;
+  }
+}
+
+/* wider screens: the search result rows keep their old single line */
+@media (min-width: 641px) {
+  .she-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .she-line .song-history-date {
+    flex: 1;
+  }
+
+  .she-note {
+    display: block;
+    margin-top: 4px;
+  }
+}
+
+/* === STATS ON PHONES: THE SAME SIZE AS THE HISTORY BOXES === */
+@media (max-width: 768px) {
+  .stats-summary {
+    gap: 8px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .stats-summary .stat-box {
+    padding: 12px 8px !important;
+  }
+
+  .stats-summary .stat-box-num {
+    font-size: 20px !important;
+    line-height: 1.2;
+  }
+
+  .stats-summary .stat-box-label {
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* === SONG LOGS ON PHONES: BUTTONS OUT OF THE WAY === */
+/* journal, history and playlists. > stays top right with the heart and play next
+   beside it on the artist line; delete sits at the end of the "edit note" line.
+   so the card is only as tall as its text. the card's own wrappers step aside
+   (display: contents) so every piece can be placed on one grid */
+@media (max-width: 640px) {
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) auto auto auto;
+    row-gap: 0 !important;
+    align-items: center;
+    padding: 12px 0 !important;
+    min-height: 0 !important;
+  }
+
+  /* playlists have a drag handle in front */
+  #playlist-block .log-card:has(.drag-handle) {
+    grid-template-columns: 18px 44px minmax(0, 1fr) auto auto auto;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card>.song-info,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-info>.note-line,
+  :is(#timeline, #logs-list, #playlist-block) .log-card>.log-actions {
+    display: contents !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .drag-handle {
+    grid-area: drag;
+    align-self: center;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-art {
+    grid-area: art;
+    grid-row: 1 / -1;
+    align-self: start;
+    width: 44px !important;
+    height: 44px !important;
+    margin: 2px 0 0 !important;
+    border-radius: 6px;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .title-row {
+    grid-area: title;
+    min-width: 0;
+    align-self: end;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-title {
+    font-size: 15px !important;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100% !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-artist {
+    grid-area: artist;
+    align-self: start;
+    min-width: 0;
+    font-size: 13px !important;
+    margin: 1px 0 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* the note: its own full-width line, wrapping up to 3 lines (tap shows all) */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note {
+    grid-area: note;
+    min-width: 0;
+    margin: 5px 0 0 !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    line-clamp: 3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 13px !important;
+    line-height: 1.4;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note.note-open {
+    line-clamp: unset;
+    -webkit-line-clamp: unset;
+    display: block !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note[hidden] {
+    display: none !important;
+  }
+
+  /* mood, plays and time: one full-width line */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta {
+    grid-area: meta;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 5px 0 0 !important;
+    min-width: 0;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta>* {
+    font-size: 12px !important;
+    margin: 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta .date-text {
+    display: inline !important;
+    white-space: nowrap;
+  }
+
+  /* bottom row: "edit note" on the left, the small buttons on the right */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note-area {
+    grid-area: nbtn;
+    min-width: 0;
+    margin: 4px 0 0 !important;
+    align-self: center;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note-area:has(textarea) {
+    grid-column: 2 / -1;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
+    font-size: 12px !important;
+  }
+
+  /* the negative margins let these two overlap the artist line instead of making it taller */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .like-btn {
+    grid-area: heart;
+    margin: -6px 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .queue-btn {
+    grid-area: queue;
+    margin: -6px 0 !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .delete-btn {
+    grid-area: del;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card :is(.like-btn, .queue-btn, .delete-btn) {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+    align-self: center;
+    border: none !important;
+    background: none !important;
+    font-size: 13px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card :is(.like-btn, .queue-btn) svg,
+  :is(#timeline, #logs-list, #playlist-block) .log-card :is(.like-btn, .queue-btn) .mt-icon {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .play-btn {
+    grid-area: play;
+    justify-self: end;
+    align-self: center;
+    min-height: 0 !important;
+  }
+}
+
+/* === STATS: PLAIN BOXES, ONE HEADING COLOUR === */
+/* the number boxes on stats and history are all the same quiet card; only "top
+   mood" carries colour, and it's that mood's own. card titles share one colour
+   and the coloured top edges are gone */
+.stat-box,
+.stat-card,
+.stat-box:nth-child(n),
+.stat-card:nth-child(n) {
+  background: var(--glass, rgba(42, 26, 74, 0.94)) !important;
+  border: 1px solid var(--glass-edge, rgba(196, 170, 255, 0.16)) !important;
+  box-shadow: none !important;
+}
+
+.stat-box.stat-top-mood,
+.stat-card.stat-top-mood {
+  background: color-mix(in srgb, var(--mc, #7f77dd) 22%, var(--glass, rgba(42, 26, 74, 0.94))) !important;
+  border-color: color-mix(in srgb, var(--mc, #7f77dd) 55%, transparent) !important;
+}
+
+.stat-box-num,
+.stat-num {
+  color: var(--text-primary, #f6f1ff) !important;
+}
+
+.stat-box-label,
+.stat-label {
+  color: var(--text-muted, #9384b8) !important;
+}
+
+.stat-top-mood .stat-box-num,
+.stat-top-mood .stat-num {
+  color: color-mix(in srgb, var(--mc, #7f77dd) 45%, #fff) !important;
+}
+
+.stats-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card,
+.flashback-card,
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-card {
+  border-top: 1px solid var(--glass-edge, rgba(196, 170, 255, 0.16)) !important;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"]) .flashback-card {
+  background: var(--glass) !important;
+}
+
+.stats-card-title,
+.stats-card .stats-card-title,
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card-title,
+:root:is(:not([data-theme]), [data-theme="default"]) .stats-card .stats-card-title,
+.mc-title {
+  color: var(--text-primary, #f6f1ff) !important;
+  opacity: 1 !important;
+}
+
+:root[data-theme="light"] .stat-box,
+:root[data-theme="light"] .stat-card {
+  background: #fff !important;
+  border-color: #e6e3ea !important;
+}
+
+:root[data-theme="light"] .stat-box.stat-top-mood,
+:root[data-theme="light"] .stat-card.stat-top-mood {
+  background: color-mix(in srgb, var(--mc) 14%, #fff) !important;
+}
+
+:root[data-theme="light"] .stat-top-mood .stat-box-num,
+:root[data-theme="light"] .stat-top-mood .stat-num {
+  color: color-mix(in srgb, var(--mc) 70%, #1a1a1a) !important;
+}
+
+:root[data-theme="light"] .stats-card-title {
+  color: #1d1b21 !important;
+}
+
+/* === NO SPACED-OUT CAPITAL LABELS ANYWHERE === */
+.auth-field label,
+.session-how-plan,
+.discover-title,
+.flashback-title,
+.flashback-label,
+.sum-stat span,
+#hidden-moods-restore .restore-label,
+.stat-label,
+.stat-box-label,
+.np-label,
+.np-logas,
+.np-upnext-label,
+.ssf-head,
+.ring-sub,
+.section-label,
+.session-hero-label {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* === STATS AS A SENTENCE === */
+/* stats and history open with one line, like a journal entry, instead of a row of
+   number boxes: the numbers in full white, the words joining them quieter, and the
+   top mood in its own colour */
+.stats-sentence-wrap {
+  display: block;
+  margin: 0 0 28px;
+}
+
+.stats-sentence {
+  margin: 0 0 28px;
+  max-width: 30em;
+  font-family: var(--font-body);
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-muted, #a99cc9);
+  text-align: left;
+}
+
+.stats-sentence-wrap .stats-sentence {
+  margin: 0;
+}
+
+.stats-sentence .ss-num {
+  color: var(--text-primary, #f6f1ff);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-sentence .ss-mood {
+  color: color-mix(in srgb, var(--mc, #7f77dd) 55%, #fff);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+:root[data-theme="light"] .stats-sentence {
+  color: #6b6577;
+}
+
+:root[data-theme="light"] .stats-sentence .ss-num {
+  color: #1d1b21;
+}
+
+:root[data-theme="light"] .stats-sentence .ss-mood {
+  color: color-mix(in srgb, var(--mc) 75%, #1a1a1a);
+}
+
+@media (max-width: 640px) {
+  .stats-sentence {
+    font-size: 21px;
+    margin-bottom: 20px;
+  }
+
+  .stats-sentence-wrap {
+    margin-bottom: 20px;
+  }
+}
