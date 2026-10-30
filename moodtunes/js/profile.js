@@ -109,6 +109,14 @@ function applyTheme(key) {
     });
     // also set body bg directly for pages that use it
     document.body.style.backgroundColor = t['--bg-page'];
+    // and the page behind it, so switching pages never flashes white (see the
+    // small script at the top of each page, which does this before anything loads)
+    root.style.background = t['--bg-page'];
+    root.style.colorScheme = key === 'light' ? 'light' : 'dark';
+    var cs = document.querySelector('meta[name="color-scheme"]');
+    if (cs) cs.content = key === 'light' ? 'light' : 'dark';
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.content = t['--bg-page'];
     localStorage.setItem('moodtunes_theme', key);
     if (window.MoodFX) window.MoodFX.setMood(window.MoodFX.getMood());
 }

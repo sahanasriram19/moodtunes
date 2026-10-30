@@ -753,18 +753,8 @@ function decorate(node) {
         b.parentNode.insertBefore(q, b);
     });
  
-    // the heart (save to your spotify liked songs) goes in front of play next
-    plays.forEach(function(b) {
-        if (b.classList.contains('session-thumb-play')) return;
-        var id = trackIdOf(b.dataset.url);
-        if (!id) return;
-        var q = b.previousElementSibling;
-        var before = q && q.classList.contains('queue-btn') ? q : b;
-        var prev = before.previousElementSibling;
-        if (prev && prev.classList.contains('like-btn')) return;
-        var h = likeButton(id, b.classList.contains('session-play-btn'));
-        before.parentNode.insertBefore(h, before);
-    });
+    // (the heart for liked songs lives only on the now-playing card now, not on
+    // every song box; see likeButton below)
  
     // playlist cards glow in their mood's colour
     var plCards = node.matches && node.matches('.playlist-card[data-mood]') ? [node] : [];

@@ -63,7 +63,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('queue') + 'playing songs &amp; play next</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#fff;">queue icon</b> beside ▶ (on your logs and on search results) to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden. the <b style="color:#fff;">heart</b> saves a song to your spotify liked songs (works on any account). if it asks you to reconnect spotify, that\'s a one-time step to allow it.</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">▶ opens the song in the spotify app or your browser. with spotify premium, tap the <b style="color:#fff;">queue icon</b> beside ▶ (on your logs and on search results) to play a song next, after the one that\'s on now (start something playing in spotify first). on a free account the queue icon is hidden. the <b style="color:#fff;">heart</b> on the now playing card saves the song that\'s playing to your spotify liked songs (works on any account). if it asks you to reconnect spotify, that\'s a one-time step to allow it.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -76,7 +76,7 @@ function showHelpModal() {
                         '<li>mood playlists, saving them to spotify and ▶ opening them in spotify</li>' +
                         '<li>sessions and song recommendations</li>' +
                         '<li>seeing what\'s playing, the sound waves and sync to sound</li>' +
-                        '<li>the heart (liked songs), one-tap logging, not logged yet and saving sessions</li>' +
+                        '<li>the heart on now playing (liked songs), one-tap logging, not logged yet and saving sessions</li>' +
                     '</ul>' +
                     '<b style="color:#fff;">needs spotify premium</b>' +
                     '<ul style="margin:4px 0 0 18px;padding:0;">' +

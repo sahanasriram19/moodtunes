@@ -211,7 +211,7 @@ function buildLineGraph(logs) {
         var p = d ? d.split('-') : null;
         var label = p ? new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]))
             .toLocaleDateString(undefined, { day: 'numeric', month: 'short' }).toLowerCase() : '';
-        svg += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9" fill="#555" font-family="Segoe UI,sans-serif">' + label + '</text>';
+        svg += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9" fill="#555" font-family="DM Sans,Segoe UI,sans-serif">' + label + '</text>';
     });
 
     svg += '</svg>';

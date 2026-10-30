@@ -1355,12 +1355,26 @@ select,
   view-transition-name: ambient;
 }
 
+/* a true cross-fade: the old page stays fully visible underneath while the new
+   one fades (and slides slightly) in on top, so there's never a moment where
+   neither page covers the screen (that gap is what showed up as a white flash) */
 ::view-transition-old(root) {
-  animation: vt-out 0.14s ease-in both;
+  animation: vt-hold 0.32s linear both;
 }
 
 ::view-transition-new(root) {
-  animation: vt-in 0.3s var(--ease-out) both;
+  animation: vt-in 0.32s var(--ease-out) both;
+}
+
+/* behind both pages: the theme's own background, never white */
+::view-transition {
+  background: var(--bg-page, #120a20);
+}
+
+@keyframes vt-hold {
+  from, to {
+    opacity: 1;
+  }
 }
 
 ::view-transition-group(ambient) {
@@ -1381,7 +1395,7 @@ select,
 @keyframes vt-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
 }
 
@@ -6336,5 +6350,108 @@ html body .mc-filled.mc-today:hover {
     min-width: 30px !important;
     margin: -6px 0 !important;
     font-size: 11px !important;
+  }
+}
+
+/* === ONE FONT EVERYWHERE === */
+/* headings, song titles, notes, numbers and buttons all use the same font (DM Sans)
+   instead of a mix of DM Sans, Outfit and Fraunces, so the whole app reads as one */
+:root {
+  --font-display: var(--font-body);
+  --font-serif: var(--font-body);
+}
+
+body,
+button,
+input,
+textarea,
+select,
+.sx-title,
+.stats-sentence,
+.ios-hint-title,
+.tab-label {
+  font-family: var(--font-body) !important;
+}
+
+[class],
+.title-row .log-note,
+.note-line .log-note {
+  font-variation-settings: normal;
+}
+
+/* === PHONES: "MANAGE MOODS" THE SAME SIZE AS THE REST === */
+@media (max-width: 768px) {
+  /* the moods while managing: a small bin under each, close to the chip */
+  .mood-chips .chip-delete-btn {
+    padding: 0 4px !important;
+  }
+
+  .mood-chips .chip-delete-btn .mt-icon {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  #add-mood-section {
+    padding: 14px !important;
+    margin-top: 12px !important;
+  }
+
+  /* "add a mood" heading: like the other small labels, not spaced-out capitals */
+  #add-mood-section > div:not(#hidden-moods-restore):first-of-type,
+  #add-mood-section > div[style*="uppercase"] {
+    font-size: 12px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: var(--text-secondary, #c9bde6) !important;
+    margin-bottom: 8px !important;
+  }
+
+  #new-mood-input {
+    padding: 8px 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  #new-mood-input::placeholder {
+    font-size: 13px;
+  }
+
+  #add-mood-section > div[style*="font-size:12px"] {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+
+  /* the icon picker: smaller icons, more to a row */
+  #add-mood-section .emoji-opt {
+    padding: 3px !important;
+  }
+
+  #add-mood-section .emoji-opt .mt-icon,
+  #chosen-emoji .mt-icon {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  #add-mood-section div[style*="flex-wrap:wrap"] {
+    gap: 4px !important;
+    margin-bottom: 12px !important;
+  }
+
+  #save-new-mood {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+  }
+
+  /* hidden moods to bring back */
+  #hidden-moods-restore .restore-label {
+    font-size: 12px !important;
+  }
+
+  .restore-chip {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+  }
+
+  #mood-error-msg {
+    font-size: 11.5px !important;
   }
 }

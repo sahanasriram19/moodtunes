@@ -2,6 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- no white flash between pages: paint the theme's background colour from the
+       very first frame, before any stylesheet or script has loaded -->
+  <meta name="color-scheme" content="dark" />
+  <style>html{background:#120a20;color-scheme:dark}</style>
+  <script>
+    (function () {
+      var bg = { default: '#120a20', warm: '#0a0a0a', purple: '#08061a', light: '#f8f8f6' };
+      var t = 'default';
+      try { t = localStorage.getItem('moodtunes_theme') || 'default'; } catch (e) {}
+      if (!bg[t]) t = 'default';
+      var root = document.documentElement;
+      root.setAttribute('data-theme', t);
+      root.style.background = bg[t];
+      root.style.colorScheme = t === 'light' ? 'light' : 'dark';
+      var meta = document.querySelector('meta[name="color-scheme"]');
+      if (meta) meta.content = t === 'light' ? 'light' : 'dark';
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <!-- installable app (PWA) -->
   <link rel="manifest" href="manifest.json" />

@@ -275,8 +275,7 @@ function showResults(tracks) {
                 ? '<button type="button" class="queue-btn queue-btn-sm" data-url="' + MoodFX.esc(track.external_urls.spotify) + '" title="play next in spotify" aria-label="play next">' + MoodFX.icon('queue') + '</button>'
                 : '') +
             '<span class="result-hint">▶ play</span>';
-        // the heart (save to liked songs) sits before play next
-        if (track.id) item.insertBefore(MoodFX.likeButton(track.id, true), item.querySelector('.queue-btn') || item.querySelector('.result-hint'));
+        // (no heart here: liking a song is done from the now-playing card)
 
         item.addEventListener('click', function() {
             document.querySelectorAll('.result-item').forEach(function(el) { el.classList.remove('selected'); });

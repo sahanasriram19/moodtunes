@@ -138,7 +138,7 @@ input {
 
 .auth-tagline,
 .auth-tab {
-  font-family: 'Outfit', 'DM Sans', 'Segoe UI', sans-serif;
+  font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;   /* one font everywhere */
 }
 
 /* === SAFE AREAS === */
