@@ -5628,27 +5628,45 @@ html body .mc-filled.mc-today:hover {
   -webkit-mask-image: none;
 }
 
-/* === WARM EDITORIAL: SONG LOGS IN WARM BROWN === */
-/* the day boxes (journal + history), "not in your journal yet" and the song
-   search cards were near-black; a deep espresso brown with a soft amber edge
-   goes with the cream text and the orange accent */
+/* === WARM EDITORIAL: SONG LOGS IN A LIGHT, WARM ORANGE === */
+/* the day boxes (journal + history), "not in your journal yet", the song search
+   cards, the sessions list and the "a month ago" card were near-black. now
+   they're a soft burnt orange that goes with the cream text and the orange accent */
 :root[data-theme="warm"] {
-  --warm-box: linear-gradient(160deg, rgba(56, 36, 22, 0.95) 0%, rgba(36, 23, 14, 0.96) 100%);
-  --warm-edge: rgba(212, 140, 70, 0.24);
+  --warm-box: linear-gradient(160deg, rgba(168, 102, 52, 0.9) 0%, rgba(128, 74, 36, 0.92) 100%);
+  --warm-edge: rgba(255, 196, 140, 0.32);
 }
 
 :root[data-theme="warm"] .day-box,
 :root[data-theme="warm"] .inbox-section,
-:root[data-theme="warm"] .song-history-card {
+:root[data-theme="warm"] .song-history-card,
+:root[data-theme="warm"] .session-history-card,
+:root[data-theme="warm"] .flashback-card {
   background: var(--warm-box) !important;
   border: 1px solid var(--warm-edge) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 220, 180, 0.05), 0 14px 30px -22px rgba(0, 0, 0, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 230, 200, 0.12), 0 14px 30px -20px rgba(40, 18, 4, 0.8) !important;
+}
+
+/* text inside them a touch lighter, so it reads well on the orange */
+:root[data-theme="warm"] :is(.day-box, .inbox-section, .song-history-card, .session-history-card, .flashback-card)
+  :is(.song-artist, .plays-text, .date-text, .log-meta, .inbox-meta, .inbox-when, .inbox-count,
+      .flashback-subtitle, .flashback-sub, .flashback-song-artist, .song-history-artist, .song-history-date,
+      .session-history-meta, .delete-btn) {
+  color: #f3dcc2 !important;
+}
+
+:root[data-theme="warm"] :is(.day-box, .inbox-section, .song-history-card, .flashback-card) :is(.add-note-btn, .edit-note-btn, .log-note) {
+  color: #ffe2b8 !important;
+}
+
+:root[data-theme="warm"] .flashback-card :is(.flashback-label, .flashback-title, .flashback-icon) {
+  color: #fff1de !important;
 }
 
 :root[data-theme="warm"] #logs-list .log-card,
 :root[data-theme="warm"] #timeline .log-card,
 :root[data-theme="warm"] .inbox-item {
-  border-bottom-color: rgba(212, 140, 70, 0.14) !important;
+  border-bottom-color: rgba(255, 210, 160, 0.2) !important;
 }
 
 /* === PURPLE, WITH COLOURS THAT GO WITH IT === */
@@ -5784,4 +5802,49 @@ html body .mc-filled.mc-today:hover {
   [data-mt-scroll] {
     transition: none;
   }
+}
+
+/* === HEADER STAYS ON TOP === */
+/* the profile menu opens down from the header. the header had no layer of its
+   own, so the boxes, chips and now-playing card further down the page (which get
+   their own layers from their hover/blur effects) were drawn over the menu.
+   (above the page, the scroll fade and the phone tab bar; below popups and toasts) */
+.navbar {
+  position: relative;
+  z-index: 950;
+}
+
+#profile-dropdown {
+  z-index: 960 !important;
+}
+
+/* === SEARCH BARS FOLLOW THE THEME AND MOOD ON EVERY PAGE === */
+/* the history page's "find a song" was always purple; now it's tinted the same way
+   as the journal's search (the theme's input colour, mixed with the current mood) */
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="purple"]) body #song-history-search {
+  background: color-mix(in srgb, var(--mood) 24%, var(--bg-input)) !important;
+  border: 1px solid color-mix(in srgb, var(--mood) 55%, transparent) !important;
+  color: var(--text-primary) !important;
+  transition: border-color 0.3s, background 0.9s;
+}
+
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="purple"]) body #song-history-search:focus {
+  border-color: var(--mood) !important;
+  box-shadow: none !important;
+}
+
+#song-history-search::placeholder {
+  color: color-mix(in srgb, var(--text-primary, #fff) 45%, transparent);
+}
+
+/* the menu is solid in every theme, so the page never shows through its text
+   (a blur can't work here: the header it sits in already blurs) */
+:root { --menu-bg: #2a1a48; }
+:root[data-theme="warm"] { --menu-bg: #1c140d; }
+:root[data-theme="purple"] { --menu-bg: #19143d; }
+:root[data-theme="light"] { --menu-bg: #ffffff; }
+
+#profile-dropdown {
+  background: var(--menu-bg) !important;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6) !important;
 }
