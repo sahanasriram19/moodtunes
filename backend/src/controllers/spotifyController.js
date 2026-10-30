@@ -6,6 +6,8 @@ const userModel = require('../models/userModel');
 const CLIENT_ID     = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI  = process.env.SPOTIFY_REDIRECT_URI;
+// where people are sent back to after connecting spotify (the app's address, set on render)
+const APP_URL       = (process.env.APP_URL || 'https://moodtunes-main.vercel.app').replace(/\/+$/, '');
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -127,14 +129,14 @@ module.exports.redirectToSpotify = (req, res, next) => {
 
 module.exports.handleCallback = (req, res, next) => {
     const code = req.query.code;
-    if (!code) return res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=error');
+    if (!code) return res.redirect(APP_URL + '/index.html?spotify=error');
     let userId;
     try {
         const st = require('jsonwebtoken').verify(String(req.query.state || ''), process.env.JWT_SECRET_KEY);
         if (st.p !== 'spotify' || !st.uid) throw new Error('bad state');
         userId = st.uid;
     } catch (e) {
-        return res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=error');
+        return res.redirect(APP_URL + '/index.html?spotify=error');
     }
 
     const creds = Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64');
@@ -148,13 +150,13 @@ module.exports.handleCallback = (req, res, next) => {
             spotify_access_token:  r.data.access_token,
             spotify_refresh_token: r.data.refresh_token
         }, function(err) {
-            if (err) return res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=error');
-            res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=connected');
+            if (err) return res.redirect(APP_URL + '/index.html?spotify=error');
+            res.redirect(APP_URL + '/index.html?spotify=connected');
         });
     })
     .catch(function(e) {
         console.error('Callback error:', e.response ? e.response.data : e.message);
-        res.redirect('https://moodtunes-rust.vercel.app/index.html?spotify=error');
+        res.redirect(APP_URL + '/index.html?spotify=error');
     });
 };
 

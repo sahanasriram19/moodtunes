@@ -19,8 +19,13 @@ app.use((req, res, next) => {
     next();
 });
 
+// which websites may call this backend. APP_URL (set on render) is the app's
+// address; the vercel addresses are listed too, so renaming the app doesn't lock it out
+const APP_ORIGIN = (process.env.APP_URL || 'https://moodtunes-main.vercel.app').replace(/\/+$/, '');
 app.use(cors({
     origin: [
+        APP_ORIGIN,
+        'https://moodtunes-main.vercel.app',
         'https://moodtunes-rust.vercel.app',
         'http://127.0.0.1:5500',
         'http://localhost:5500'

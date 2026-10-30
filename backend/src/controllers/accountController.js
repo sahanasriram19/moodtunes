@@ -18,7 +18,7 @@ const pool   = require('../services/db');
 // without BREVO_API_KEY the reset link is printed in the server logs instead,
 // which is handy for testing.
 
-const APP_URL   = (process.env.APP_URL || 'https://moodtunes-rust.vercel.app').replace(/\/+$/, '');
+const APP_URL   = (process.env.APP_URL || 'https://moodtunes-main.vercel.app').replace(/\/+$/, '');
 const RESET_FOR = 30 * 60 * 1000;     // a reset link works for 30 minutes
 
 pool.query(
