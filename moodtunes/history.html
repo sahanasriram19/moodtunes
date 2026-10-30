@@ -8,9 +8,10 @@
   <style>html{background:#120a20;color-scheme:dark}</style>
   <script>
     (function () {
-      var bg = { default: '#120a20', warm: '#0a0a0a', purple: '#08061a', light: '#f8f8f6' };
+      var bg = { default: '#120a20', warm: '#0a0a0a', ocean: '#071821', light: '#f8f8f6' };
       var t = 'default';
       try { t = localStorage.getItem('moodtunes_theme') || 'default'; } catch (e) {}
+      if (t === 'purple') { t = 'ocean'; try { localStorage.setItem('moodtunes_theme', t); } catch (e) {} }   // deep purple became ocean
       if (!bg[t]) t = 'default';
       var root = document.documentElement;
       root.setAttribute('data-theme', t);

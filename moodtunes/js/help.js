@@ -107,7 +107,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:8px;">' +
                 '<div class="help-heading">' + helpIcon('user') + 'profile</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, deep purple, clean light), and log out. your chosen theme is saved and applied across all pages automatically. turn on <b style="color:#fff;">daily check-in</b> and pick a time to get a “how are you feeling?” notification on days you haven\'t logged a song yet (each device is set up on its own; on iphone, add moodtunes to your home screen first).</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, ocean, clean light), and log out. your chosen theme is saved and applied across all pages automatically. turn on <b style="color:#fff;">daily check-in</b> and pick a time to get a “how are you feeling?” notification on days you haven\'t logged a song yet (each device is set up on its own; on iphone, add moodtunes to your home screen first).</div>' +
             '</div>' +
 
             (window.MoodTour

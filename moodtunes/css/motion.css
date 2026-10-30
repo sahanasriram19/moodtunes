@@ -5640,59 +5640,59 @@ html body .mc-filled.mc-today:hover {
   --card-c: var(--c-mint);
 }
 
-/* deep purple theme gets the same partner colours */
-:root[data-theme="purple"] {
-  --c-lavender: #c3b1ff;
-  --c-rose: #ff9fcf;
-  --c-peach: #ffb98f;
-  --c-mint: #82e3c6;
-  --c-sky: #93c8ff;
+/* ocean theme: its own partner colours (aqua, coral, sand, sky) */
+:root[data-theme="ocean"] {
+  --c-lavender: #9fd8e8;
+  --c-rose: #ff9e80;
+  --c-peach: #ffd27a;
+  --c-mint: #5fe0d0;
+  --c-sky: #8fc8ff;
 }
 
-:root[data-theme="purple"] .section-label {
+:root[data-theme="ocean"] .section-label {
   color: var(--text-primary, #fff) !important;
 }
 
-:root[data-theme="purple"] .flashback-label {
+:root[data-theme="ocean"] .flashback-label {
   color: var(--c-rose) !important;
 }
 
-:root[data-theme="purple"] .time-bar-fill {
+:root[data-theme="ocean"] .time-bar-fill {
   background: linear-gradient(90deg, var(--c-mint), var(--c-sky)) !important;
 }
 
-/* the black boxes left on the purple themes: "add a mood" and "open in spotify" */
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #add-mood-section {
+/* the black boxes left on the default theme: "add a mood" and "open in spotify" */
+:root:is(:not([data-theme]), [data-theme="default"]) #add-mood-section {
   background: linear-gradient(160deg, rgba(58, 36, 102, 0.95) 0%, rgba(32, 19, 58, 0.96) 100%) !important;
   border-color: rgba(200, 176, 255, 0.2) !important;
 }
 
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #new-mood-input {
+:root:is(:not([data-theme]), [data-theme="default"]) #new-mood-input {
   background: rgba(24, 12, 44, 0.9) !important;
   border-color: rgba(200, 176, 255, 0.22) !important;
 }
 
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #spotify-open-popup > div {
+:root:is(:not([data-theme]), [data-theme="default"]) #spotify-open-popup > div {
   background: linear-gradient(160deg, #3d2670 0%, #24163f 100%) !important;
   border-color: rgba(200, 176, 255, 0.24) !important;
 }
 
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #spotify-open-popup #open-browser-btn {
+:root:is(:not([data-theme]), [data-theme="default"]) #spotify-open-popup #open-browser-btn {
   background: rgba(255, 255, 255, 0.06) !important;
   border-color: rgba(200, 176, 255, 0.24) !important;
 }
 
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) #spotify-open-popup #cancel-open-btn {
+:root:is(:not([data-theme]), [data-theme="default"]) #spotify-open-popup #cancel-open-btn {
   color: #b5a8d6 !important;
 }
 
 /* phones: the active page in the menu gets the theme's accent, not more purple */
 @media (max-width: 768px) {
-  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) .nav-links a.active {
+  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="ocean"]) .nav-links a.active {
     background: color-mix(in srgb, var(--accent) 24%, transparent) !important;
   }
 
-  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) .nav-links a:hover {
+  :root:is(:not([data-theme]), [data-theme="default"], [data-theme="ocean"]) .nav-links a:hover {
     background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
   }
 }
@@ -5776,14 +5776,14 @@ html body .mc-filled.mc-today:hover {
 /* === SEARCH BARS FOLLOW THE THEME AND MOOD ON EVERY PAGE === */
 /* the history page's "find a song" was always purple; now it's tinted the same way
    as the journal's search (the theme's input colour, mixed with the current mood) */
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="purple"]) body #song-history-search {
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="ocean"]) body #song-history-search {
   background: color-mix(in srgb, var(--mood) 24%, var(--bg-input)) !important;
   border: 1px solid color-mix(in srgb, var(--mood) 55%, transparent) !important;
   color: var(--text-primary) !important;
   transition: border-color 0.3s, background 0.9s;
 }
 
-:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="purple"]) body #song-history-search:focus {
+:root:is(:not([data-theme]), [data-theme="default"], [data-theme="warm"], [data-theme="ocean"]) body #song-history-search:focus {
   border-color: var(--mood) !important;
   box-shadow: none !important;
 }
@@ -5796,7 +5796,7 @@ html body .mc-filled.mc-today:hover {
    (a blur can't work here: the header it sits in already blurs) */
 :root { --menu-bg: #2a1a48; }
 :root[data-theme="warm"] { --menu-bg: #1c140d; }
-:root[data-theme="purple"] { --menu-bg: #19143d; }
+:root[data-theme="ocean"] { --menu-bg: #0c2430; }
 :root[data-theme="light"] { --menu-bg: #ffffff; }
 
 #profile-dropdown {
@@ -6944,12 +6944,12 @@ img.mt-noart {
 }
 
 /* quieter text that was too faint in some themes */
-:root:is([data-theme="warm"], [data-theme="purple"]) :is(.stats-sentence, .playlist-view-hint, #pl-count,
+:root:is([data-theme="warm"], [data-theme="ocean"]) :is(.stats-sentence, .playlist-view-hint, #pl-count,
   .top-song-plays, .inbox-when, #session-mood-label, .session-hero-label, .playlist-view-count) {
   color: var(--text-muted) !important;
 }
 
-:root:is([data-theme="warm"], [data-theme="purple"]) .stats-sentence .ss-num {
+:root:is([data-theme="warm"], [data-theme="ocean"]) .stats-sentence .ss-num {
   color: var(--text-primary) !important;
 }
 
@@ -7067,4 +7067,103 @@ summary:focus-visible {
 :root[data-theme="light"] :is(#logs-list, #timeline, #playlist-block) .mood-badge,
 :root[data-theme="light"] .song-history-card .mood-badge {
   color: color-mix(in srgb, var(--mc, #7a4fa8) 42%, #141414) !important;
+}
+
+/* === OCEAN THEME === */
+/* midnight navy with aqua. the boxes are deep sea-blue glass instead of black, with
+   coral and sand as the partner colours (the default theme's purple stays its own) */
+:root[data-theme="ocean"] {
+  --glass: linear-gradient(160deg, rgba(20, 58, 76, 0.94) 0%, rgba(10, 34, 46, 0.95) 100%);
+  --glass-edge: rgba(120, 220, 230, 0.16);
+  --noart-bg: rgba(95, 224, 208, 0.12);
+}
+
+:root[data-theme="ocean"] :is(.day-box, .inbox-section, .stats-card, .flashback-card, .session-history-card,
+  .song-history-card, .np-card, .playlist-view-header, .recap-card, .discover-card, .note-input-container) {
+  background-color: transparent;
+}
+
+:root[data-theme="ocean"] :is(.day-box, .inbox-section, .stats-card, .flashback-card, .session-history-card,
+  .song-history-card, .playlist-view-header, .note-input-container) {
+  background: var(--glass) !important;
+  border-color: var(--glass-edge) !important;
+}
+
+:root[data-theme="ocean"] .np-card {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--np-color, #2f8fb0) 28%, transparent) 0%, transparent 70%),
+    var(--glass) !important;
+  border-color: color-mix(in srgb, var(--np-color, #2f8fb0) 40%, var(--glass-edge)) !important;
+}
+
+:root[data-theme="ocean"] .flashback-card {
+  border-top: 2px solid color-mix(in srgb, var(--c-rose) 70%, transparent) !important;
+}
+
+:root[data-theme="ocean"] #add-mood-section {
+  background: var(--glass) !important;
+  border-color: var(--glass-edge) !important;
+}
+
+:root[data-theme="ocean"] #new-mood-input {
+  background: rgba(6, 22, 30, 0.9) !important;
+  border-color: rgba(120, 220, 230, 0.22) !important;
+}
+
+:root[data-theme="ocean"] #spotify-open-popup > div {
+  background: linear-gradient(160deg, #13394a 0%, #0a2230 100%) !important;
+  border-color: rgba(120, 220, 230, 0.24) !important;
+}
+
+:root[data-theme="ocean"] #spotify-open-popup #open-browser-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(120, 220, 230, 0.24) !important;
+}
+
+:root[data-theme="ocean"] #spotify-open-popup #cancel-open-btn {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme="ocean"] .recap-card {
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--rc) 30%, transparent), transparent 60%),
+    var(--glass);
+}
+
+:root[data-theme="ocean"] .hf-mood.on[data-mood=""] {
+  color: #062027;
+}
+
+/* the help guide and "how sessions work": sea-blue instead of purple */
+:root[data-theme="ocean"] #help-modal .help-card {
+  background: linear-gradient(160deg, #164257 0%, #0d2c3b 55%, #08202c 100%) !important;
+  border-color: rgba(120, 220, 230, 0.24) !important;
+}
+
+:root[data-theme="ocean"] .session-how {
+  background: var(--glass) !important;
+  border-color: var(--glass-edge) !important;
+}
+
+:root[data-theme="ocean"] .session-how-intro {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="ocean"] .session-how-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--plan) 12%, transparent), transparent 70%),
+    rgba(4, 18, 26, 0.55);
+}
+
+:root[data-theme="ocean"] .session-how-card b {
+  color: #ffc2ae;
+}
+
+:root[data-theme="ocean"] .session-how summary::after {
+  color: var(--accent);
+}
+
+:root[data-theme="ocean"] .rc-save {
+  background: linear-gradient(135deg, #ff9e80, #ffd27a);
+  color: #2a1408;
 }

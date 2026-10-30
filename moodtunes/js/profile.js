@@ -50,28 +50,29 @@ var THEMES = {
         '--circle-bg':      '#2a1200',
         '--circle-border':  '#c4762d',
     },
-    purple: {
-        label: 'deep purple',
-        '--bg-page':        '#08061a',
-        '--bg-card':        'rgba(26,21,62,0.9)',
-        '--bg-input':       'rgba(24,19,58,0.92)',
-        '--bg-hover':       'rgba(36,29,82,0.94)',
-        '--border':         'rgba(127,119,221,0.15)',
-        '--border-mid':     'rgba(127,119,221,0.25)',
-        '--text-primary':   '#fff',
-        '--text-secondary': 'rgba(255,255,255,0.72)',
-        '--text-muted':     'rgba(255,255,255,0.56)',    // readable on the dark purple (was 0.3)
-        '--ambient':        '#a09af5',
-        '--accent':         '#82e3c6',                    // mint, to go with the deep purple
-        '--accent-bg':      'rgba(130,227,198,0.14)',
-        '--chip-bg':        'rgba(127,119,221,0.08)',
-        '--chip-border':    'rgba(127,119,221,0.25)',
+    ocean: {
+        label: 'ocean',
+        // midnight ocean: deep navy with aqua, plus coral and sand as partner colours
+        '--bg-page':        '#071821',
+        '--bg-card':        'rgba(15,42,55,0.92)',
+        '--bg-input':       'rgba(12,36,48,0.94)',
+        '--bg-hover':       'rgba(22,56,72,0.95)',
+        '--border':         'rgba(120,220,230,0.15)',
+        '--border-mid':     'rgba(120,220,230,0.28)',
+        '--text-primary':   '#eefafc',
+        '--text-secondary': '#b9d3da',
+        '--text-muted':     '#86a9b3',
+        '--ambient':        '#2f8fb0',                    // the page glows ocean blue when no mood is picked
+        '--accent':         '#5fe0d0',                    // aqua
+        '--accent-bg':      'rgba(95,224,208,0.14)',
+        '--chip-bg':        'rgba(95,224,208,0.06)',
+        '--chip-border':    'rgba(120,220,230,0.25)',
         '--search-bg':      'rgba(255,255,255,0.04)',
-        '--search-border':  'rgba(127,119,221,0.2)',
-        '--nav-bg':         'rgba(127,119,221,0.06)',
-        '--nav-border':     'rgba(127,119,221,0.15)',
-        '--circle-bg':      'rgba(127,119,221,0.2)',
-        '--circle-border':  '#82e3c6',
+        '--search-border':  'rgba(120,220,230,0.2)',
+        '--nav-bg':         'rgba(10,32,44,0.6)',
+        '--nav-border':     'rgba(120,220,230,0.15)',
+        '--circle-bg':      'rgba(47,143,176,0.2)',
+        '--circle-border':  '#5fe0d0',
     },
     light: {
         label: 'clean light',
@@ -123,6 +124,7 @@ function applyTheme(key) {
 
 // apply on load
 var savedTheme = localStorage.getItem('moodtunes_theme') || 'default';
+if (savedTheme === 'purple') savedTheme = 'ocean';   // deep purple was replaced by ocean
 applyTheme(savedTheme);
 
 // ── inject CSS overrides that use CSS vars ────────────
@@ -288,7 +290,7 @@ function buildDropdown() {
         var swatchColors = {
             default: 'linear-gradient(135deg, #9b6fc2 50%, #ff9fcf 50%)',
             warm:    '#c4762d',
-            purple:  'linear-gradient(135deg, #5a4fc8 50%, #82e3c6 50%)',
+            ocean:   'linear-gradient(135deg, #1f5f7a 50%, #5fe0d0 50%)',
             light:   '#9b6fc2'
         };
         swatch.style.cssText = 'width:12px;height:12px;border-radius:50%;background:' + swatchColors[key] + ';flex-shrink:0;';
