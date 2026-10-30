@@ -373,7 +373,7 @@ function loadLogs(highlightSongId) {
         // group by date
         var grouped = {};
         logs.slice(0, 30).forEach(function(log) {
-            var key = new Date(log.last_logged.replace(' ', 'T') + 'Z').toDateString();
+            var key = logDayKey(log);
             if (!grouped[key]) grouped[key] = [];
             grouped[key].push(log);
         });

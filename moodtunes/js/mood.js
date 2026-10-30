@@ -1246,7 +1246,7 @@ function sessionSummary(mood, startTime, endTime, songs, opts) {
 
     var list = songs.length > 0
         ? '<ol class="sx-list">' + songs.map(function(s) {
-            var at = s.played_at ? new Date(s.played_at) : null;
+            var at = s.played_at ? serverDate(s.played_at) : null;
             var when = at && !isNaN(at) ? clock(at) : '';
             return '<li><a class="sx-row" href="' + esc(s.spotify_url || '#') + '" target="_blank" rel="noopener">' +
                 '<time class="sx-when">' + esc(when) + '</time>' +

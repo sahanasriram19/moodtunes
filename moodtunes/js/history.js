@@ -43,12 +43,12 @@ function searchSongHistory(query) {
 
     songSearchResults.innerHTML = '';
     Object.values(grouped).forEach(function(song) {
-        song.entries.sort(function(a, b) { return new Date(b.last_logged) - new Date(a.last_logged); });
+        song.entries.sort(function(a, b) { return (serverDate(b.last_logged) || 0) - (serverDate(a.last_logged) || 0); });
         var totalPlays = song.entries.reduce(function(sum, e) { return sum + e.play_count; }, 0);
 
         var entryRows = song.entries.map(function(e) {
-            var date = new Date(e.last_logged);
-            var dateStr = date.toLocaleDateString('en-SG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            var date = e.log_date ? new Date(String(e.log_date).slice(0, 10) + 'T12:00:00') : serverDate(e.last_logged);
+            var dateStr = !date ? '' : date.toLocaleDateString('en-SG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
             // one line with the mood, day and plays, and the note (if any) on its own line under it
             return '<div class="song-history-entry">' +
                 '<div class="she-line">' +
@@ -101,7 +101,7 @@ function renderFlashback(logs) {
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
     var match = logs.find(function(l) {
-        return new Date(l.last_logged).toDateString() === oneMonthAgo.toDateString();
+        return logDayKey(l) === oneMonthAgo.toDateString();
     });
 
     if (!match) { flashbackEl.innerHTML = ''; return; }
@@ -138,6 +138,7 @@ function localDay(d) {
     return z.toISOString().slice(0, 10);
 }
 function logDay(log) {
+    if (log.log_date) return String(log.log_date).slice(0, 10);     // the day it was logged on
     return localDay(new Date(String(log.last_logged).replace(' ', 'T') + 'Z'));
 }
 // the [from, to] days (YYYY-MM-DD, both included) for the chosen range, or null for all time
@@ -230,7 +231,7 @@ function renderTimeline(logs, filtered) {
 
     var grouped = {};
     logs.forEach(function(log) {
-        var key = new Date(log.last_logged.replace(' ', 'T') + 'Z').toDateString();
+        var key = logDayKey(log);
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(log);
     });
@@ -325,7 +326,7 @@ function renderSessions() {
             var duration = '';
             if (session.end_time) {
                 // listening time: the minutes it was paused (nothing playing) are left out
-                var mins = Math.max(0, Math.floor((new Date(session.end_time) - new Date(session.start_time) - (Number(session.paused_seconds) || 0) * 1000) / 60000));
+                var mins = Math.max(0, Math.floor(((serverDate(session.end_time) || 0) - (serverDate(session.start_time) || 0) - (Number(session.paused_seconds) || 0) * 1000) / 60000));
                 duration = ', ' + mins + ' min' + (mins !== 1 ? 's' : '');
             }
 

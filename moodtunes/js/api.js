@@ -120,11 +120,47 @@ function loginExpired() {
     setTimeout(function() { window.location.href = 'login.html'; }, 1200);
 }
 
+// reads a time from the server ("2026-10-30 15:20:00", stored in UTC). written out
+// as an ISO time first, because safari (every iphone) can't read the space form and
+// other browsers would read it as local time
+function serverDate(s) {
+    if (!s) return null;
+    if (s instanceof Date) return s;
+    s = String(s);
+    var d = new Date(s.replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z'));
+    return isNaN(d) ? null : d;
+}
+
+// the day a log belongs to: the day it was logged on (log_date, already in your
+// timezone). a song started at 11:50pm and looped past midnight stays on that day
+function logDayKey(log) {
+    if (log.log_date) return new Date(String(log.log_date).slice(0, 10) + 'T12:00:00').toDateString();
+    return new Date(String(log.last_logged).replace(' ', 'T') + 'Z').toDateString();
+}
+
 function logout() {
-    clearApiCache();
-    localStorage.removeItem('moodtunes_token');
-    localStorage.removeItem('moodtunes_username');
-    window.location.href = 'login.html';
+    // this device stops getting the daily check-in (otherwise whoever logs in next
+    // here would still get this account's reminders). waits at most ~1.5s for it
+    var done = false;
+    function finish() {
+        if (done) return;
+        done = true;
+        clearApiCache();
+        localStorage.removeItem('moodtunes_token');
+        localStorage.removeItem('moodtunes_username');
+        window.location.href = 'login.html';
+    }
+    setTimeout(finish, 1500);
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker.getRegistration) return finish();
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+        return reg && reg.pushManager ? reg.pushManager.getSubscription() : null;
+    }).then(function(sub) {
+        if (!sub) return finish();
+        try { localStorage.removeItem('moodtunes_reminder_' + (localStorage.getItem('moodtunes_username') || '')); } catch (e) {}
+        apiCall('/reminders', 'DELETE', { endpoint: sub.endpoint }, function() {
+            sub.unsubscribe().catch(function() {}).then(finish);
+        });
+    }).catch(finish);
 }
 
 function formatTimestamp(isoString) {
