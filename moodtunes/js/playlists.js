@@ -236,7 +236,7 @@ function buildCoverHTML(songs, mood, size) {
     var html = '<div class="' + (size === 'large' ? 'playlist-header-cover' : 'playlist-cover') + '">';
     for (var i = 0; i < 4; i++) {
         if (songs[i] && songs[i].album_art) {
-            html += '<img src="' + MoodFX.esc(songs[i].album_art) + '" alt="album art" />';
+            html += '<img src="' + MoodFX.esc(songs[i].album_art) + '" alt="" />';
         } else {
             html += '<div class="playlist-cover-empty">' + moodIconHTML + '</div>';
         }
@@ -384,7 +384,7 @@ function openPlaylist(mood) {
         card.dataset.albumArt = song.album_art;
         card.innerHTML =
             '<div class="drag-handle" title="drag to reorder" tabindex="0" role="button" aria-label="move ' + MoodFX.esc(song.title) + ', use the up and down arrow keys">⠿</div>' +
-            '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="album art" draggable="false" />' +
+            '<img class="song-art" src="' + MoodFX.esc(song.album_art) + '" alt="" draggable="false" />' +
             '<div class="song-info">' +
                 songTitleHTML(song.title) +
                 '<div class="song-artist">' + MoodFX.esc(song.artist) + '</div>' +

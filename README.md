@@ -34,6 +34,16 @@ Built as a personal portfolio project to explore full-stack development with rea
 - "Flashback" card showing what you were listening to a month ago
 - Full timeline of logged songs grouped by date
 - Session history with the ability to delete sessions or individual songs
+- Filter the timeline by mood and by date (last 7 / 30 days, this month, or your own dates)
+
+### Monthly recap
+- A card on the stats page sums up each month: plays, songs, days, your main mood and how the month split between moods, your top 3 songs, when you listened most and your busiest day
+- Arrows step back through earlier months
+- "Save as image" makes a 1080 × 1350 picture to share (share sheet on phones, download on computers)
+
+### Daily check-in
+- Turn on a daily reminder in the profile menu and pick a time
+- It's skipped on days you've already logged a song
 
 ### Spotify integration
 - OAuth login connects your real Spotify account
@@ -194,7 +204,21 @@ In your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard):
 
 `moodtunes/js/config.js` no longer holds any keys. Spotify search goes through the backend (`/api/spotify/search-tracks`), so the client secret only lives in `backend/.env`.
 
-### 6. Run the app
+### 6. Daily check-in reminders (optional)
+
+Reminders are web push notifications sent by the backend.
+
+1. Make a key pair: `npx web-push generate-vapid-keys`
+2. On Render (backend → Environment), add:
+   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: the two keys from step 1
+   - `VAPID_SUBJECT`: `mailto:` followed by your email
+   - `CRON_SECRET`: any long random text
+   - `APP_URL`: the frontend address, e.g. `https://moodtunes-main.vercel.app`
+3. On GitHub (repo → Settings → Secrets and variables → Actions), add a secret called `CRON_SECRET` with the same text.
+
+The workflow in `.github/workflows/keep-awake.yml` runs every 10 minutes. It keeps the Render server awake and sends any reminders that are due. On iPhone, reminders only work after adding moodtunes to the home screen (iOS 16.4+).
+
+### 7. Run the app
 
 Backend:
 ```bash

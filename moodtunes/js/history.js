@@ -64,7 +64,7 @@ function searchSongHistory(query) {
         card.classList.add('song-history-card');
         card.innerHTML =
             '<div class="song-history-header">' +
-                '<img src="' + MoodFX.esc(song.album_art) + '" alt="album art" />' +
+                '<img src="' + MoodFX.esc(song.album_art) + '" alt="" />' +
                 '<div class="song-history-info">' +
                     '<div class="song-history-title">' + MoodFX.esc(song.title) + '</div>' +
                     '<div class="song-history-artist">' + MoodFX.esc(song.artist) + '</div>' +
@@ -114,7 +114,7 @@ function renderFlashback(logs) {
                 '<div class="flashback-title">a month ago today</div>' +
                 '<div class="flashback-sub">on ' + monthName + ' you were listening to</div>' +
                 '<div class="flashback-song">' +
-                    '<img src="' + MoodFX.esc(match.album_art) + '" alt="album art" />' +
+                    '<img src="' + MoodFX.esc(match.album_art) + '" alt="" />' +
                     '<div>' +
                         '<div class="flashback-song-title">' + MoodFX.esc(match.title) + '</div>' +
                         '<div class="flashback-song-artist">' + MoodFX.esc(match.artist) + '</div>' +
@@ -125,8 +125,104 @@ function renderFlashback(logs) {
 }
 
 // ── timeline ───────────────────────────────────────────
-function renderTimeline(logs) {
+// ── filter the timeline ─────────────────────────────────
+// a bar above the timeline: pick a mood (only moods you've logged show up) and a
+// date range (all time, last 7 / 30 days, this month, or your own from-to dates).
+// the choice is kept while you move around the app (for this visit)
+var FILTER_KEY = 'moodtunes_history_filter';
+var filter = { mood: '', range: 'all', from: '', to: '' };
+try { var savedFilter = JSON.parse(sessionStorage.getItem(FILTER_KEY) || 'null'); if (savedFilter) filter = Object.assign(filter, savedFilter); } catch (e) {}
+
+function localDay(d) {
+    var z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return z.toISOString().slice(0, 10);
+}
+function logDay(log) {
+    return localDay(new Date(String(log.last_logged).replace(' ', 'T') + 'Z'));
+}
+// the [from, to] days (YYYY-MM-DD, both included) for the chosen range, or null for all time
+function filterDays() {
+    var today = new Date();
+    if (filter.range === '7') { var a = new Date(today); a.setDate(a.getDate() - 6); return [localDay(a), localDay(today)]; }
+    if (filter.range === '30') { var b = new Date(today); b.setDate(b.getDate() - 29); return [localDay(b), localDay(today)]; }
+    if (filter.range === 'month') { return [localDay(new Date(today.getFullYear(), today.getMonth(), 1)), localDay(today)]; }
+    if (filter.range === 'custom' && (filter.from || filter.to)) { return [filter.from || '0000-01-01', filter.to || '9999-12-31']; }
+    return null;
+}
+function filteredLogs() {
+    var days = filterDays();
+    return allLogs.filter(function(log) {
+        if (filter.mood && log.mood !== filter.mood) return false;
+        if (days) { var d = logDay(log); if (d < days[0] || d > days[1]) return false; }
+        return true;
+    });
+}
+function filterActive() { return !!(filter.mood || filterDays()); }
+
+var filterBar = document.createElement('div');
+filterBar.className = 'hist-filter';
+filterBar.setAttribute('role', 'group');
+filterBar.setAttribute('aria-label', 'filter your history');
+document.getElementById('timeline-section').insertBefore(filterBar, timeline);
+
+function drawFilterBar() {
+    var moods = [];
+    allLogs.forEach(function(l) { if (moods.indexOf(l.mood) === -1) moods.push(l.mood); });
+    var order = MoodFX.visibleMoods();
+    moods.sort(function(a, b) {
+        var ia = order.indexOf(a), ib = order.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+    });
+    if (filter.mood && moods.indexOf(filter.mood) === -1) filter.mood = '';
+    var chips = '<button type="button" class="hf-mood' + (!filter.mood ? ' on' : '') + '" data-mood="" aria-pressed="' + !filter.mood + '">all moods</button>' +
+        moods.map(function(m) {
+            return '<button type="button" class="hf-mood' + (filter.mood === m ? ' on' : '') + '" data-mood="' + MoodFX.esc(m) + '" aria-pressed="' + (filter.mood === m) + '" style="--mc:' + MoodFX.color(m) + ';--mc-ink:' + MoodFX.ink(MoodFX.color(m)) + '">' +
+                MoodFX.icon(MoodFX.moodIcon(m)) + '<span>' + MoodFX.esc(m) + '</span></button>';
+        }).join('');
+    var ranges = [['all', 'all time'], ['7', 'last 7 days'], ['30', 'last 30 days'], ['month', 'this month'], ['custom', 'pick dates']];
+    filterBar.innerHTML =
+        '<div class="hf-moods">' + chips + '</div>' +
+        '<div class="hf-row">' +
+            '<select class="hf-range" aria-label="date range">' + ranges.map(function(r) {
+                return '<option value="' + r[0] + '"' + (filter.range === r[0] ? ' selected' : '') + '>' + r[1] + '</option>';
+            }).join('') + '</select>' +
+            (filter.range === 'custom'
+                ? '<label class="hf-date"><span>from</span><input type="date" class="hf-from" value="' + MoodFX.esc(filter.from) + '" /></label>' +
+                  '<label class="hf-date"><span>to</span><input type="date" class="hf-to" value="' + MoodFX.esc(filter.to) + '" /></label>'
+                : '') +
+            '<span class="hf-count" aria-live="polite"></span>' +
+            (filterActive() ? '<button type="button" class="hf-clear">clear</button>' : '') +
+        '</div>';
+}
+
+function applyFilter() {
+    try { sessionStorage.setItem(FILTER_KEY, JSON.stringify(filter)); } catch (e) {}
+    drawFilterBar();
+    var list = filteredLogs();
+    renderTimeline(list, true);
+    var count = filterBar.querySelector('.hf-count');
+    if (count) count.textContent = filterActive() ? list.length + ' song' + (list.length !== 1 ? 's' : '') : '';
+}
+
+filterBar.addEventListener('click', function(e) {
+    var m = e.target.closest('.hf-mood');
+    if (m) { filter.mood = m.dataset.mood; return applyFilter(); }
+    if (e.target.closest('.hf-clear')) { filter = { mood: '', range: 'all', from: '', to: '' }; return applyFilter(); }
+});
+filterBar.addEventListener('change', function(e) {
+    if (e.target.matches('.hf-range')) { filter.range = e.target.value; if (filter.range !== 'custom') { filter.from = ''; filter.to = ''; } return applyFilter(); }
+    if (e.target.matches('.hf-from')) { filter.from = e.target.value; return applyFilter(); }
+    if (e.target.matches('.hf-to')) { filter.to = e.target.value; return applyFilter(); }
+});
+// moods added or removed elsewhere: redraw the chips
+window.addEventListener('moodtunes:moods-changed', function() { if (allLogs.length) drawFilterBar(); });
+
+function renderTimeline(logs, filtered) {
     timeline.innerHTML = '';
+    if (logs.length === 0 && filtered && allLogs.length) {
+        timeline.innerHTML = MoodFX.emptyState({ art: 'search', title: 'nothing matches', text: 'no songs for this mood and these dates. try another mood or a wider date range', action: { label: 'clear filters', click: '.hf-clear' } });
+        return;
+    }
     if (logs.length === 0) {
         timeline.innerHTML = MoodFX.emptyState({ title: 'no history yet', text: 'every song you log in your journal lands here, grouped by day', action: { label: 'go to journal', href: 'index.html' } });
         return;
@@ -152,7 +248,7 @@ function renderTimeline(logs) {
                 card.classList.add('log-card');
                 card.id = 'history-log-' + log.id;
                 card.innerHTML =
-                    '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
+                    '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="" />' +
                     '<div class="song-info">' +
                         songTitleHTML(log.title) +
                         '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
@@ -248,7 +344,7 @@ function renderSessions() {
                         songs.map(function(s) {
                             return '<div class="session-song-thumb" id="ssong-' + s.id + '">' +
                                 '<div class="thumb-img-wrap">' +
-                                    '<img src="' + MoodFX.esc(s.album_art) + '" alt="album art" />' +
+                                    '<img src="' + MoodFX.esc(s.album_art) + '" alt="" />' +
                                     '<div class="thumb-play-overlay">' +
                                         '<button class="play-btn session-thumb-play" data-url="' + MoodFX.esc(s.spotify_url) + '">▶</button>' +
                                     '</div>' +
@@ -373,7 +469,7 @@ function refreshHistory() {
         apiCacheSet('/logs/perday', allLogs);
         window.__mtQuietUntil = performance.now() + 100;    // swap in place, no entrance animation
         renderStats(allLogs);
-        renderTimeline(allLogs);
+        applyFilter();
         var q = songSearchInput ? songSearchInput.value.trim().toLowerCase() : '';
         if (q) searchSongHistory(q);
     });
@@ -387,5 +483,5 @@ apiCallCached('/logs/perday', function(err, result) {
     allLogs = Array.isArray(result.data) ? result.data : [];
     renderStats(allLogs);
     renderFlashback(allLogs);
-    renderTimeline(allLogs);
+    applyFilter();
 });

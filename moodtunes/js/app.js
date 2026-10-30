@@ -269,7 +269,7 @@ function showResults(tracks) {
         var item = document.createElement('div');
         item.classList.add('result-item');
         item.innerHTML =
-            (art ? '<img src="' + MoodFX.esc(art) + '" alt="album art" />' : '<div style="width:44px;height:44px;background:#2a2a2a;border-radius:6px;flex-shrink:0;"></div>') +
+            (art ? '<img src="' + MoodFX.esc(art) + '" alt="" />' : '<div style="width:44px;height:44px;background:#2a2a2a;border-radius:6px;flex-shrink:0;"></div>') +
             '<div class="result-text"><div class="result-title">' + MoodFX.esc(track.name) + '</div><div class="result-artist">' + MoodFX.esc(artists) + '</div></div>' +
             (track.external_urls && track.external_urls.spotify
                 ? '<button type="button" class="queue-btn queue-btn-sm" data-url="' + MoodFX.esc(track.external_urls.spotify) + '" title="play next in spotify" aria-label="play next">' + MoodFX.icon('queue') + '</button>'
@@ -399,7 +399,7 @@ function loadLogs(highlightSongId) {
                         highlighted = true;
                     }
                     card.innerHTML =
-                        '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="album art" />' +
+                        '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="" />' +
                         '<div class="song-info">' +
                             songTitleHTML(log.title) +
                             '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
@@ -486,7 +486,7 @@ function loadSessionRecs(mood) {
                 card.classList.add('session-rec-card');
                 card.innerHTML =
                     '<div class="rec-img-wrap">' +
-                        (track.albumArt ? '<img src="' + MoodFX.esc(track.albumArt) + '" alt="album art" />' : '<div class="rec-no-art">' + MoodFX.icon('note') + '</div>') +
+                        (track.albumArt ? '<img src="' + MoodFX.esc(track.albumArt) + '" alt="" />' : '<div class="rec-no-art">' + MoodFX.icon('note') + '</div>') +
                         '<div class="rec-play-overlay"><button class="play-btn">▶</button></div>' +
                     '</div>' +
                     '<div class="rec-title">' + MoodFX.esc(track.title) + '</div>' +

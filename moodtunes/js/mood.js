@@ -756,6 +756,19 @@ function decorate(node) {
     // (the heart for liked songs lives only on the now-playing card now, not on
     // every song box; see likeButton below)
  
+    // cards you click (a playlist, a search result, a recommendation) can be reached
+    // with tab and opened with enter or space too. ones with their own buttons inside
+    // aren't announced as one big button, they just get focus
+    var CLICKABLE = '.playlist-card, .result-item, .session-rec-card, .rec-tile';
+    var clickables = node.matches && node.matches(CLICKABLE) ? [node] : [];
+    clickables = clickables.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll(CLICKABLE) : []));
+    clickables.forEach(function(el) {
+        if (el.hasAttribute('tabindex')) return;
+        el.tabIndex = 0;
+        if (!el.querySelector('button, a[href], input')) el.setAttribute('role', 'button');
+        if (el.classList.contains('playlist-card') && el.dataset.mood) el.setAttribute('aria-label', 'open your ' + el.dataset.mood + ' playlist');
+    });
+
     // playlist cards glow in their mood's colour
     var plCards = node.matches && node.matches('.playlist-card[data-mood]') ? [node] : [];
     plCards = plCards.concat(Array.prototype.slice.call(node.querySelectorAll ? node.querySelectorAll('.playlist-card[data-mood]') : []));
@@ -2139,7 +2152,7 @@ function closeTopLayer() {
     var help = document.getElementById('help-modal');
     if (help && !help.classList.contains('closing')) { var x = document.getElementById('close-help'); if (x) x.click(); else help.remove(); return true; }
     var dd = document.getElementById('profile-dropdown');
-    if (dd) { document.body.click(); return true; }
+    if (dd && !dd.classList.contains('closing')) { document.body.click(); var pb = document.getElementById('profile-btn'); if (pb) pb.focus(); return true; }
     var note = document.getElementById('search-note-panel');
     if (note) {
         note.remove();
@@ -2149,6 +2162,16 @@ function closeTopLayer() {
     return false;
 }
  
+// enter / space on a focused card opens it, like a click
+document.addEventListener('keydown', function(e) {
+    if ((e.key !== 'Enter' && e.key !== ' ') || e.defaultPrevented) return;
+    var el = e.target;
+    if (el && el.matches && el.matches('.playlist-card, .result-item, .session-rec-card, .rec-tile')) {
+        e.preventDefault();
+        el.click();
+    }
+});
+
 document.addEventListener('keydown', function(e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
     var t = e.target;
@@ -2370,6 +2393,30 @@ function boot() {
     if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }
  
+// -- covers that are missing or won't load ----------------
+// some songs have no album art (or the link has expired). instead of the browser's
+// broken-image text, the picture becomes a soft tile with a music note (see
+// img.mt-noart in motion.css). backgrounds and the now-playing art have their own fallbacks
+var NOART_SKIP = '.mt-cover img, .np-bg, .np-art, .mt-noart';
+var BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+function noArt(img) {
+    if (!img || img.tagName !== 'IMG' || img.matches(NOART_SKIP)) return;
+    img.classList.add('mt-noart');
+    img.alt = '';
+    img.removeAttribute('srcset');
+    img.src = BLANK_GIF;
+}
+// error events don't bubble, so listen while they travel down (capture)
+document.addEventListener('error', function(e) { if (e.target && e.target.tagName === 'IMG') noArt(e.target); }, true);
+function sweepArt() {
+    document.querySelectorAll('img').forEach(function(img) {
+        var src = img.getAttribute('src');
+        if (src === '' || (src === null && img.closest('.log-card, .result-item, .song-history-card, .flashback-song, .top-song-row, .session-song-thumb, .rec-img-wrap, .playlist-cover'))) noArt(img);
+        else if (img.complete && src && img.naturalWidth === 0 && !/^data:/.test(src)) noArt(img);
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweepArt); else setTimeout(sweepArt, 0);
+
 // -- leaving a page: a quick fade --------------------------
 // tapping another page in the header or tab bar fades this page's content out for
 // 120ms before going, so the switch feels like one smooth motion with the next

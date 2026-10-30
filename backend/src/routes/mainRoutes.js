@@ -7,5 +7,6 @@ router.use('/sessions', require('./sessionRoutes'));
 router.use('/spotify',  require('./spotifyRoutes'));
 router.use('/moods',    require('./customMoodRoutes'));
 router.use('/playlists', require('./playlistRoutes'));
+router.use('/reminders', require('./reminderRoutes'));   // daily check-in notifications
 
 module.exports = router;

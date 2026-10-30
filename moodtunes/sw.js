@@ -19,7 +19,7 @@ var APP_SHELL = [
   'css/style.css', 'css/mobile.css', 'css/motion.css', 'css/session.css', 'css/history.css',
   'css/playlists.css', 'css/stats.css', 'css/auth.css',
   'js/config.js', 'js/api.js', 'js/mood.js', 'js/app.js', 'js/session.js', 'js/history.js',
-  'js/playlists.js', 'js/stats.js', 'js/help.js', 'js/intro.js', 'js/profile.js', 'js/auth.js',
+  'js/playlists.js', 'js/stats.js', 'js/recap.js', 'js/help.js', 'js/intro.js', 'js/profile.js', 'js/auth.js',
   'images/moodtunes_logo.png', 'images/favicon.png',
   'assets/icon-192.png', 'assets/icon-512.png', 'assets/apple-touch-icon.png'
 ];
@@ -115,4 +115,32 @@ self.addEventListener('fetch', function(e) {
   if (url.pathname.endsWith('/sw.js')) return;
 
   e.respondWith(networkFirst(req, req.mode === 'navigate' ? NETWORK_TIMEOUT_MS : 0));
+});
+
+// ── daily check-in reminder ─────────────────────────────
+// the server sends a push ("how are you feeling?") at the time picked in the
+// profile menu. show it, and open (or bring forward) moodtunes when it's tapped
+self.addEventListener('push', function(e) {
+  var data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (err) { data = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(data.title || 'how are you feeling?', {
+    body: data.body || 'log what you\u2019re listening to today',
+    icon: 'assets/icon-192.png',
+    badge: 'assets/icon-192.png',
+    tag: data.tag || 'moodtunes-checkin',
+    data: { url: data.url || '/index.html' }
+  }));
+});
+
+self.addEventListener('notificationclick', function(e) {
+  e.notification.close();
+  var target = new URL((e.notification.data && e.notification.data.url) || '/index.html', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].url.indexOf(self.location.origin) === 0 && 'focus' in list[i]) {
+        return list[i].focus().then(function(client) { return client.navigate ? client.navigate(target) : client; });
+      }
+    }
+    return self.clients.openWindow(target);
+  }));
 });

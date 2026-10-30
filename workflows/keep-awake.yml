@@ -1,0 +1,37 @@
+# keeps the render backend awake and sends due daily check-in reminders.
+#
+# render's free plan puts the server to sleep after ~15 minutes without visitors,
+# so the next person waits up to a minute. this runs every 10 minutes and:
+#   1. opens /api/health, which keeps the server awake (or wakes it up)
+#   2. calls /api/reminders/tick, which sends any daily check-in reminders that are due
+#
+# setup (once): github repo → settings → secrets and variables → actions →
+#   new repository secret  CRON_SECRET   (the same text as CRON_SECRET on render)
+# github runs scheduled jobs a few minutes late sometimes, which is fine here.
+# note: github pauses scheduled workflows after 60 days with no commits to the repo;
+# re-enable it from the actions tab if that happens.
+
+name: keep server awake
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:        # lets you run it by hand from the actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: wake the server
+        run: |
+          curl -sS --max-time 90 --retry 2 --retry-delay 10 -o /dev/null -w "health: %{http_code}\n" \
+            https://moodtunes-2avk.onrender.com/api/health || true
+
+      - name: send due reminders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "CRON_SECRET not set, skipping reminders"; exit 0; fi
+          curl -sS --max-time 90 -X POST -H "X-Cron-Secret: $CRON_SECRET" \
+            https://moodtunes-2avk.onrender.com/api/reminders/tick || true

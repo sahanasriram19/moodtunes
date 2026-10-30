@@ -82,7 +82,7 @@ function render(data) {
         '<div class="time-bar-row"><div class="time-bar-label">afternoon</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.afternoon||0)/maxTime)*100) + '%;"></div></div></div>' +
         '<div class="time-bar-row"><div class="time-bar-label">evening</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.evening||0)/maxTime)*100) + '%;"></div></div></div>' +
         '<div class="time-bar-row"><div class="time-bar-label">late night</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.late_night||0)/maxTime)*100) + '%;"></div></div></div>' +
-        '<div style="font-size:11px;color:#555;margin-top:10px;">you\'re mostly a ' + peakTime + ' listener</div>' +
+        '<div style="font-size:11px;color:var(--text-muted,#9384b8);margin-top:10px;">you\'re mostly a ' + peakTime + ' listener</div>' +
     '</div>';
 
     html += '</div>'; // close stats-grid
@@ -159,7 +159,7 @@ function buildLineGraph(logs) {
     var moods = Object.keys(moodSet);
     if (activeDays < 2) {
         var c0 = document.getElementById('mood-graph-container');
-        if (c0) c0.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:#888;font-size:13px;">log songs on a couple of different days to see your mood graph</p>';
+        if (c0) c0.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:var(--text-muted,#9384b8);font-size:13px;">log songs on a couple of different days to see your mood graph</p>';
         return;
     }
 
@@ -220,7 +220,7 @@ function buildLineGraph(logs) {
     var legend = '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px;">';
     moods.forEach(function(mood) {
         var color = getMoodColor(mood);
-        legend += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:#888;">' + MoodFX.esc(mood) + '</span></div>';
+        legend += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:var(--text-muted,#9384b8);">' + MoodFX.esc(mood) + '</span></div>';
     });
     legend += '</div>';
 
@@ -431,7 +431,7 @@ apiCallCached('/logs/stats', function(err, result) {
     render(result.data);
     // fetch per-day logs for the graph
     apiCallCached('/logs/perday', function(err2, r2) {
-        if (!err2 && r2 && r2.data) { buildLineGraph(r2.data); MoodCalendar.show(r2.data); }
-        else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:#555;font-size:13px;">not enough data yet</p>'; }
+        if (!err2 && r2 && r2.data) { buildLineGraph(r2.data); MoodCalendar.show(r2.data); if (window.MoodRecap) MoodRecap.show(r2.data); }
+        else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:var(--text-muted,#9384b8);font-size:13px;">not enough data yet</p>'; }
     });
 });

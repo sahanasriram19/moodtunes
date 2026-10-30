@@ -37,8 +37,8 @@ var THEMES = {
         '--border':         '#2a2a2a',
         '--border-mid':     '#333',
         '--text-primary':   '#f5f0e8',
-        '--text-secondary': '#998',
-        '--text-muted':     '#555',
+        '--text-secondary': '#b3aa9a',
+        '--text-muted':     '#958c7e',                   // readable on black (was #555, too faint)
         '--accent':         '#c4762d',
         '--accent-bg':      '#1a1008',
         '--chip-bg':        '#141414',
@@ -59,8 +59,8 @@ var THEMES = {
         '--border':         'rgba(127,119,221,0.15)',
         '--border-mid':     'rgba(127,119,221,0.25)',
         '--text-primary':   '#fff',
-        '--text-secondary': 'rgba(255,255,255,0.55)',
-        '--text-muted':     'rgba(255,255,255,0.3)',
+        '--text-secondary': 'rgba(255,255,255,0.72)',
+        '--text-muted':     'rgba(255,255,255,0.56)',    // readable on the dark purple (was 0.3)
         '--ambient':        '#a09af5',
         '--accent':         '#82e3c6',                    // mint, to go with the deep purple
         '--accent-bg':      'rgba(130,227,198,0.14)',
@@ -82,9 +82,9 @@ var THEMES = {
         '--border':         '#e8e8e4',
         '--border-mid':     '#e0e0da',
         '--text-primary':   '#111',
-        '--text-secondary': '#666',
-        '--text-muted':     '#858585',
-        '--accent':         '#9b6fc2',
+        '--text-secondary': '#555',
+        '--text-muted':     '#666',                      // readable on white (was #858585)
+        '--accent':         '#7a4fa8',                    // a deeper purple, readable on white
         '--accent-bg':      '#f0eff9',
         '--chip-bg':        '#fff',
         '--chip-border':    '#e0e0da',
@@ -225,7 +225,16 @@ profileBtn.style.cssText = [
 ].join(';');
 profileBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 
-navRight.appendChild(profileBtn);
+profileBtn.setAttribute('aria-label', 'profile and settings');
+profileBtn.setAttribute('aria-haspopup', 'true');
+profileBtn.setAttribute('aria-expanded', 'false');
+// the menu opens next to the button (not inside it), so its own buttons, switch and
+// time box work normally and don't count as clicks on the profile button
+var profileWrap = document.createElement('div');
+profileWrap.className = 'profile-wrap';
+profileWrap.style.cssText = 'position:relative;display:flex;flex-shrink:0;';
+profileWrap.appendChild(profileBtn);
+navRight.appendChild(profileWrap);
 
 // ── dropdown ───────────────────────────────────────────
 function buildDropdown() {
@@ -310,6 +319,8 @@ function buildDropdown() {
         d.appendChild(row);
     });
 
+    d.appendChild(buildReminderSection());
+
     // logout
     var logoutRow = document.createElement('button');
     logoutRow.style.cssText = [
@@ -319,9 +330,10 @@ function buildDropdown() {
         'border-top:1px solid var(--border,#222)',
         'margin-top:10px', 'padding-top:12px',
         'cursor:pointer', 'text-align:left',
-        'color:#e05c5c', 'font-size:13px',
+        'font-size:13px',
         'border-radius:0',
     ].join(';');
+    logoutRow.className = 'pd-logout';      // its red is set in motion.css (readable in every theme)
     logoutRow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> logout';
     logoutRow.addEventListener('click', function() { logout(); });
     d.appendChild(logoutRow);
@@ -334,10 +346,131 @@ function buildDropdown() {
         'text-decoration:underline', 'text-underline-offset:2px',
     ].join(';');
     deleteRow.textContent = 'delete account';
-    deleteRow.addEventListener('click', function(e) { e.stopPropagation(); closeDropdown(); showDeleteAccount(); });
+    deleteRow.addEventListener('click', function() { closeDropdown(); showDeleteAccount(); });
     d.appendChild(deleteRow);
 
     return d;
+}
+
+// ── daily check-in reminder ────────────────────────────
+// "remind me at 9:00 pm": a notification ("how are you feeling?") once a day at
+// that time, sent by the server, skipped on days you've already logged a song
+// (see backend reminderController.js and the push handler in sw.js). each device
+// is set up separately. on iPhone it needs moodtunes added to the home screen.
+var REMINDER_KEY = 'moodtunes_reminder_' + (localStorage.getItem('moodtunes_username') || '');
+function reminderState() {
+    try { return Object.assign({ on: false, time: '21:00' }, JSON.parse(localStorage.getItem(REMINDER_KEY) || '{}')); }
+    catch (e) { return { on: false, time: '21:00' }; }
+}
+function saveReminderState(st) { try { localStorage.setItem(REMINDER_KEY, JSON.stringify(st)); } catch (e) {} }
+
+function api(endpoint, method, body) {
+    return new Promise(function(resolve) {
+        apiCall(endpoint, method, body, function(err, res) { resolve(err ? { status: 0, data: null } : res); });
+    });
+}
+function keyBytes(base64) {
+    var pad = '='.repeat((4 - base64.length % 4) % 4);
+    var raw = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+}
+function pushSupported() {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function swReady() {
+    return Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(function(_, reject) { setTimeout(function() { reject(new Error('no service worker')); }, 6000); })
+    ]);
+}
+
+// turns the reminder on (or changes its time) for this device. resolves to an error message or ''
+function enableReminder(time) {
+    if (!pushSupported()) {
+        return Promise.resolve(isIOS()
+            ? 'on iPhone, add moodtunes to your home screen first (share → add to home screen), then turn this on from there'
+            : 'this browser can’t show notifications');
+    }
+    return Notification.requestPermission().then(function(perm) {
+        if (perm !== 'granted') return 'notifications are blocked. allow them for this site in your browser settings, then try again';
+        return api('/reminders/key', 'GET', null).then(function(res) {
+            if (!res || res.status !== 200 || !res.data || !res.data.publicKey) {
+                return res && res.status === 503 ? 'reminders aren’t switched on on the server yet' : 'couldn’t reach the server, try again';
+            }
+            return swReady().then(function(reg) {
+                return reg.pushManager.getSubscription().then(function(sub) {
+                    return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(res.data.publicKey) });
+                });
+            }).then(function(sub) {
+                return api('/reminders', 'POST', { subscription: sub.toJSON(), time: time, tz_offset: new Date().getTimezoneOffset() });
+            }).then(function(r) {
+                return r && r.status === 200 ? '' : ((r && r.data && r.data.message) || 'couldn’t save your reminder, try again');
+            });
+        });
+    }).catch(function() { return 'couldn’t set up notifications on this device'; });
+}
+
+function disableReminder() {
+    if (!pushSupported()) return Promise.resolve();
+    return swReady().then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+        if (!sub) return;
+        return api('/reminders', 'DELETE', { endpoint: sub.endpoint }).then(function() { return sub.unsubscribe(); });
+    }).catch(function() {});
+}
+
+function timeLabel(t) {
+    var h = Number(t.slice(0, 2)), m = t.slice(3, 5);
+    return ((h % 12) || 12) + ':' + m + (h < 12 ? ' am' : ' pm');
+}
+
+function buildReminderSection() {
+    var st = reminderState();
+    var box = document.createElement('div');
+    box.className = 'pd-reminder';
+    box.style.cssText = 'margin-top:10px;padding-top:12px;border-top:1px solid var(--border,#222);';
+    box.innerHTML =
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted,#555);margin-bottom:8px;" id="pd-reminder-label">daily check-in</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 10px;">' +
+            '<span style="font-size:13px;color:var(--text-secondary,#aaa);" id="pd-reminder-text">remind me to log</span>' +
+            '<button type="button" class="pd-switch" role="switch" aria-checked="' + st.on + '" aria-labelledby="pd-reminder-label pd-reminder-text"><i></i></button>' +
+        '</div>' +
+        '<label class="pd-time" style="display:' + (st.on ? 'flex' : 'none') + ';align-items:center;justify-content:space-between;gap:10px;padding:8px 10px 0;font-size:13px;color:var(--text-secondary,#aaa);">at ' +
+            '<input type="time" value="' + st.time + '" step="300" aria-label="reminder time" /></label>' +
+        '<p class="pd-reminder-note" role="status" style="margin:8px 10px 0;font-size:11.5px;line-height:1.45;color:var(--text-muted,#888);"></p>';
+
+    var sw = box.querySelector('.pd-switch'), timeRow = box.querySelector('.pd-time'), input = box.querySelector('input'), note = box.querySelector('.pd-reminder-note');
+    function show(on, msg) {
+        sw.setAttribute('aria-checked', String(on));
+        timeRow.style.display = on ? 'flex' : 'none';
+        note.textContent = msg || (on ? 'you’ll get a nudge at ' + timeLabel(input.value) + ' on days you haven’t logged a song yet' : '');
+    }
+    show(st.on);
+    sw.addEventListener('click', function() {
+        if (sw.disabled) return;
+        sw.disabled = true;
+        if (sw.getAttribute('aria-checked') === 'true') {
+            show(false, 'turning off…');
+            disableReminder().then(function() { st.on = false; saveReminderState(st); sw.disabled = false; show(false, 'reminder off'); });
+        } else {
+            note.textContent = 'setting up…';
+            enableReminder(input.value).then(function(err) {
+                sw.disabled = false;
+                if (err) { show(false, err); return; }
+                st.on = true; st.time = input.value; saveReminderState(st); show(true);
+            });
+        }
+    });
+    input.addEventListener('change', function() {
+        if (!/^\d\d:\d\d$/.test(input.value)) return;
+        st.time = input.value; saveReminderState(st);
+        if (sw.getAttribute('aria-checked') !== 'true') return;
+        note.textContent = 'saving…';
+        enableReminder(input.value).then(function(err) { show(true, err); });
+    });
+    return box;
 }
 
 // ── delete account ─────────────────────────────────────
@@ -415,20 +548,25 @@ function closeDropdown() {
     // let it animate out (see #profile-dropdown.closing in motion.css) before removing
     var closing = dropdown;
     dropdown = null;
+    profileBtn.setAttribute('aria-expanded', 'false');
     closing.classList.add('closing');
     setTimeout(function() { closing.remove(); }, 170);
 }
 
-profileBtn.style.position = 'relative';
 profileBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     if (dropdown) { closeDropdown(); return; }
     dropdown = buildDropdown();
-    profileBtn.appendChild(dropdown);
+    profileWrap.appendChild(dropdown);
+    profileBtn.setAttribute('aria-expanded', 'true');
 });
 
 document.addEventListener('click', function(e) {
-    if (dropdown && !profileBtn.contains(e.target)) closeDropdown();
+    if (dropdown && !profileWrap.contains(e.target)) closeDropdown();
+});
+// esc closes the menu and puts you back on the profile button
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && dropdown) { closeDropdown(); profileBtn.focus(); }
 });
 
 // wire up help btn logout redirect if it still exists

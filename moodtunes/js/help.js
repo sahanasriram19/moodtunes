@@ -3,7 +3,7 @@
 function closeHelpModal(modal) {
     if (!modal || modal.classList.contains('closing')) return;
     modal.classList.add('closing');
-    setTimeout(function() { modal.remove(); }, 220);
+    setTimeout(function() { modal.dispatchEvent(new Event('mt-closed')); modal.remove(); }, 220);
 }
 
 function helpIcon(name) {
@@ -20,11 +20,11 @@ function showHelpModal() {
     modal.innerHTML =
         // the card holds the colour; the layer inside it scrolls (so its edges can fade
         // without fading the card itself, see "SCROLL HINTS" in motion.css)
-        '<div class="help-card" style="border-radius:16px;width:100%;max-width:480px;overflow:hidden;">' +
+        '<div class="help-card" role="dialog" aria-modal="true" aria-labelledby="help-title" style="border-radius:16px;width:100%;max-width:480px;overflow:hidden;">' +
         '<div class="help-scroll" style="padding:28px;max-height:85vh;overflow-y:auto;box-sizing:border-box;">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<div style="font-size:18px;font-weight:600;color:#fff;">how to use moodtunes</div>' +
-                '<button id="close-help" style="background:none;border:none;color:#c9bde6;font-size:20px;cursor:pointer;">✕</button>' +
+                '<h2 id="help-title" style="margin:0;font-size:18px;font-weight:600;color:#fff;">how to use moodtunes</h2>' +
+                '<button id="close-help" aria-label="close" style="background:none;border:none;color:#c9bde6;font-size:20px;cursor:pointer;">✕</button>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -115,7 +115,10 @@ function showHelpModal() {
             '<button id="close-help-2" style="width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,#ff9fcf,#ffb98f);border:none;border-radius:8px;color:#2a1038;font-size:14px;cursor:pointer;font-weight:700;">got it!</button>' +
         '</div></div>';
 
+    var opener = document.activeElement;
     document.body.appendChild(modal);
+    document.getElementById('close-help').focus({ preventScroll: true });
+    modal.addEventListener('mt-closed', function() { if (opener && opener.focus) opener.focus({ preventScroll: true }); });
     modal.addEventListener('click', function(e) { if (e.target === modal) closeHelpModal(modal); });
     document.getElementById('close-help').addEventListener('click', function() { closeHelpModal(modal); });
     // replay the quick intro for this page (see intro.js)

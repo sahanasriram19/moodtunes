@@ -141,12 +141,6 @@
   line-height: 1;
 }
 
-.chip.selected {
-  box-shadow:
-    0 0 0 1px var(--mc, var(--mood)),
-    0 6px 22px -6px color-mix(in srgb, var(--mc, var(--mood)) 70%, transparent);
-}
-
 .chip.mt-pop {
   animation: chip-pop 0.38s var(--ease-spring);
 }
@@ -195,11 +189,6 @@
 
 .result-item.selected {
   background: color-mix(in srgb, var(--mood) 12%, transparent);
-}
-
-/* === STAGGERED ENTRANCE === */
-.mt-in {
-  animation: enter 0.5s var(--ease-out) backwards;
 }
 
 @keyframes enter {
@@ -386,8 +375,6 @@
   color: #f0f0f0;
   background: color-mix(in srgb, var(--mc) 18%, #121212f2);
   border: 1px solid color-mix(in srgb, var(--mc) 45%, transparent);
-  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--mc) 60%, transparent);
-  backdrop-filter: blur(10px);
   transition: transform 0.4s var(--ease-spring), opacity 0.3s;
 }
 
@@ -533,7 +520,6 @@
 
 .np-title {
   font-size: 15px;
-  font-weight: 600;
   color: var(--text-primary, #f0f0f0);
   white-space: nowrap;
   overflow: hidden;
@@ -1121,10 +1107,6 @@
 }
 
 @media (max-width: 768px) {
-  .session-timer-circle {
-    width: 210px !important;
-    height: 210px !important;
-  }
 
   .np-card {
     gap: 12px;
@@ -1336,7 +1318,6 @@ select,
 
 .section-label {
   letter-spacing: 0.14em;
-  font-weight: 500;
 }
 
 .song-title,
@@ -1909,7 +1890,6 @@ body {
     width: auto;
     margin-left: auto;
     justify-content: flex-end;
-    gap: 8px;
   }
 
   .session-btn {
@@ -1932,12 +1912,6 @@ body {
   .install-btn svg {
     width: 17px;
     height: 17px;
-  }
-
-  #help-btn,
-  #profile-btn {
-    width: 40px !important;
-    height: 40px !important;
   }
 
   .container {
@@ -1985,10 +1959,6 @@ body {
   .chip {
     min-height: 40px;
     padding: 9px 16px;
-  }
-
-  .history-tab {
-    min-height: 44px;
   }
 
   /* === NO ZOOM ON FOCUS (PHONES) === */
@@ -2200,7 +2170,6 @@ body {
   animation-delay: 0.21s;
 }
 
-
 @keyframes menu-in {
   from {
     opacity: 0;
@@ -2312,7 +2281,6 @@ body {
 #help-btn:active {
   transform: scale(0.85);
 }
-
 
 /* === SONG BOX IN SEARCH RESULTS === */
 /* the "pick a mood / add a note" box under a search result follows the mood too,
@@ -2824,8 +2792,6 @@ body {
   color: color-mix(in srgb, var(--np-color, var(--mood)) 80%, #fff);
 }
 
-
-
 @media (prefers-reduced-motion: reduce) {
   .mt-particles {
     display: none;
@@ -2836,8 +2802,6 @@ body {
     animation: none !important;
   }
 }
-
-
 
 /* === DEFAULT THEME: VIOLET GLASS === */
 /* the default theme swaps the black boxes for see-through violet cards that let
@@ -2929,9 +2893,6 @@ body {
 }
 
 :root:is(:not([data-theme]), [data-theme="default"]) .flashback-card {
-  background:
-    radial-gradient(120% 140% at 0% 0%, rgba(255, 159, 207, 0.22), transparent 55%),
-    var(--glass) !important;
   border-top: 2px solid color-mix(in srgb, var(--c-rose) 70%, transparent) !important;
 }
 
@@ -2979,7 +2940,6 @@ body {
 
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card:hover {
   opacity: 1;
-  box-shadow: var(--glass-shine), 0 18px 40px -20px var(--mc, var(--c-lavender));
 }
 
 :root:is(:not([data-theme]), [data-theme="default"]) .playlist-card .playlist-cover {
@@ -3005,7 +2965,6 @@ body {
 
 /* section headings and quieter text, readable on purple */
 :root:is(:not([data-theme]), [data-theme="default"]) .section-label {
-  color: var(--c-lavender) !important;
   opacity: 0.85;
 }
 
@@ -3195,9 +3154,6 @@ body {
 .history-tab.active {
   color: var(--text-primary, #f0f0f0);
   border-bottom-color: var(--np, var(--mood));
-  background: linear-gradient(0deg,
-      color-mix(in srgb, var(--np, var(--mood)) 22%, transparent),
-      transparent 85%) !important;
 }
 
 /* === CLEAN LIGHT THEME === */
@@ -3487,10 +3443,6 @@ body {
   gap: 12px;
 }
 
-.inbox-head .section-label {
-  margin-bottom: 12px;
-}
-
 .inbox-count {
   opacity: 0.7;
   letter-spacing: 0.04em;
@@ -3524,14 +3476,8 @@ body {
 
 .inbox-item {
   display: flex;
-  align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: var(--bg-card, #141414);
-  border: 1px dashed color-mix(in srgb, var(--text-primary, #fff) 18%, transparent);
   transition: opacity 0.28s, transform 0.28s;
-  animation: enter 0.4s var(--ease-out, ease) backwards;
 }
 
 .inbox-item.leaving {
@@ -3554,7 +3500,6 @@ body {
 }
 
 .inbox-title {
-  font-size: 14px;
   color: var(--text-primary, #f0f0f0);
   white-space: nowrap;
   overflow: hidden;
@@ -4049,11 +3994,6 @@ body {
   border-radius: 4px;
 }
 
-.log-card .song-title {
-  font-size: 18px !important;
-  font-weight: 500 !important;
-}
-
 /* notes look like something you wrote in the margin */
 .title-row .log-note {
   font-family: var(--font-serif);
@@ -4426,7 +4366,6 @@ body {
 .np-card {
   padding-top: 20px !important;
   padding-bottom: 16px !important;
-  row-gap: 10px;
 }
 
 .np-extra {
@@ -4653,12 +4592,6 @@ body {
 
 .log-meta .date-text {
   white-space: nowrap;
-}
-
-/* no line under the last song in a day's box */
-#logs-list .day-box .log-card:last-child,
-#timeline .day-box .log-card:last-child {
-  border-bottom: 0 !important;
 }
 
 /* now playing: "log as" and the moods across the top, the song under them */
@@ -5102,13 +5035,6 @@ body {
   :is(#timeline, #logs-list, #playlist-block) .log-card {
     display: grid !important;
     grid-template-columns: 44px minmax(0, 1fr) auto auto auto;
-    grid-template-areas:
-      "art title  title title play"
-      "art artist heart queue play"
-      "art note   note  note  note"
-      "art meta   meta  meta  meta"
-      "art nbtn   nbtn  nbtn  del";
-    column-gap: 12px !important;
     row-gap: 0 !important;
     align-items: center;
     padding: 12px 0 !important;
@@ -5118,12 +5044,6 @@ body {
   /* playlists have a drag handle in front */
   #playlist-block .log-card:has(.drag-handle) {
     grid-template-columns: 18px 44px minmax(0, 1fr) auto auto auto;
-    grid-template-areas:
-      "drag art title  title title play"
-      "drag art artist heart queue play"
-      "drag art note   note  note  note"
-      "drag art meta   meta  meta  meta"
-      "drag art nbtn   nbtn  nbtn  del";
     padding-left: 10px !important;
     padding-right: 10px !important;
   }
@@ -5208,7 +5128,6 @@ body {
     display: flex !important;
     flex-wrap: wrap;
     align-items: center;
-    gap: 2px 10px !important;
     margin: 5px 0 0 !important;
     min-width: 0;
   }
@@ -5221,10 +5140,6 @@ body {
   :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta .date-text {
     display: inline !important;
     white-space: nowrap;
-  }
-
-  #playlist-block .log-card .log-meta .mood-badge {
-    padding: 1px 9px !important;
   }
 
   /* bottom row: "edit note" on the left, the small buttons on the right */
@@ -5242,7 +5157,6 @@ body {
   :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
   :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
     font-size: 12px !important;
-    padding: 4px 0 !important;
   }
 
   /* the negative margins let these two overlap the artist line instead of making it taller */
@@ -5258,7 +5172,6 @@ body {
 
   :is(#timeline, #logs-list, #playlist-block) .log-card .delete-btn {
     grid-area: del;
-    margin: 4px 0 0 !important;
   }
 
   :is(#timeline, #logs-list, #playlist-block) .log-card :is(.like-btn, .queue-btn, .delete-btn) {
@@ -5287,11 +5200,7 @@ body {
     grid-area: play;
     justify-self: end;
     align-self: center;
-    width: 36px !important;
-    height: 36px !important;
     min-height: 0 !important;
-    margin: 0 !important;
-    font-size: 12px !important;
   }
 }
 
@@ -5610,7 +5519,6 @@ html body .mc-filled.mc-today:hover {
     transform: scale(1);
   }
 }
-
 
 /* === MOOD ICONS ON SONG LOGS === */
 /* each song's mood shows its icon (built-in or the custom one you picked) */
@@ -6498,4 +6406,642 @@ html.mt-leave main.container {
     transform: none;
     transition: none;
   }
+}
+
+/* === SONGS WITHOUT A COVER === */
+/* a soft tile with a music note instead of broken-image text (set by mood.js) */
+img.mt-noart {
+  background: var(--noart-bg, rgba(200, 176, 255, 0.12))
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9bde6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18V5l12-2v13'/%3E%3Ccircle cx='6' cy='18' r='3'/%3E%3Ccircle cx='18' cy='16' r='3'/%3E%3C/svg%3E")
+    center / 46% no-repeat !important;
+  object-fit: contain;
+}
+
+:root[data-theme="warm"] {
+  --noart-bg: rgba(255, 210, 160, 0.14);
+}
+
+:root[data-theme="light"] img.mt-noart {
+  background-color: #ece6f6 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a5aa6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18V5l12-2v13'/%3E%3Ccircle cx='6' cy='18' r='3'/%3E%3Ccircle cx='18' cy='16' r='3'/%3E%3C/svg%3E") !important;
+}
+
+/* === HISTORY FILTERS === */
+/* a row of mood chips (slides sideways when there are many) and a date range,
+   above the timeline (history.js) */
+.hist-filter {
+  margin: 4px 0 22px;
+}
+
+.hf-moods {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+}
+
+.hf-mood {
+  --mc: var(--accent, #ff9fcf);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mc) 45%, transparent);
+  background: color-mix(in srgb, var(--mc) 10%, transparent);
+  color: color-mix(in srgb, var(--mc) 45%, var(--text-primary, #fff));
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.hf-mood .mt-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--mc);
+}
+
+.hf-mood:hover {
+  border-color: var(--mc);
+}
+
+.hf-mood.on {
+  background: var(--mc);
+  border-color: var(--mc);
+  color: var(--mc-ink, #1a1026);
+}
+
+.hf-mood.on .mt-icon {
+  color: inherit;
+}
+
+.hf-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+
+.hf-range,
+.hf-date input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary, #f6f1ff);
+  background: color-mix(in srgb, var(--mood, #9b6fc2) 16%, var(--bg-input, #1d1233));
+  border: 1px solid color-mix(in srgb, var(--mood, #9b6fc2) 40%, transparent);
+  border-radius: 10px;
+  padding: 7px 10px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] :is(.hf-range, .hf-date input) {
+  color-scheme: light;
+  background: #fff;
+  border-color: #dcd6e6;
+  color: #111;
+}
+
+.hf-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.hf-count {
+  font-size: 12.5px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.hf-clear {
+  background: none;
+  border: 0;
+  padding: 4px 2px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--accent, #ff9fcf);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .hf-mood {
+    font-size: 11.5px;
+    padding: 4px 10px;
+  }
+
+  /* phones: text boxes stay 16px so iPhones don't zoom in */
+  .hf-range,
+  .hf-date input {
+    font-size: 16px !important;
+    padding: 5px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* custom dates: "from" and "to" share a row, each half the width */
+  .hf-row:has(.hf-date) .hf-range {
+    flex: 1 1 100%;
+  }
+
+  .hf-date {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+  }
+
+  .hf-date input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* === MONTHLY RECAP (stats page) === */
+/* one month at a glance, glowing in that month's main mood (recap.js) */
+.recap-card {
+  --rc: #9b6fc2;
+  position: relative;
+  margin: 0 0 18px;
+  padding: 22px 24px 20px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--rc) 40%, transparent);
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--rc) 34%, transparent), transparent 60%),
+    var(--glass, var(--bg-card, #1d1233));
+  overflow: hidden;
+}
+
+.rc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.rc-title {
+  flex: 1;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.rc-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--text-primary, #fff) 25%, transparent);
+  background: none;
+  color: var(--text-primary, #fff);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rc-arrow[data-step="1"] {
+  order: 2;
+}
+
+.rc-arrow[data-step="-1"] {
+  order: 3;
+}
+
+.rc-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.rc-numbers {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.rc-numbers b {
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+}
+
+.rc-mood {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.rc-mood-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--mc) 70%, #fff);
+  vertical-align: middle;
+}
+
+.rc-mood-name .mt-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--mc);
+}
+
+.rc-pct {
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.rc-split {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.rc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: var(--text-secondary, #c9bde6);
+  margin-bottom: 18px;
+}
+
+.rc-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.rc-section-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary, #c9bde6);
+  margin-bottom: 8px;
+}
+
+.rc-songs {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rc-song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rc-song img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.rc-first img {
+  width: 56px;
+  height: 56px;
+}
+
+.rc-song-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rc-song-title,
+.rc-song-artist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-song-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.rc-first .rc-song-title {
+  font-size: 16px;
+}
+
+.rc-song-artist {
+  font-size: 12px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.rc-song-plays {
+  font-size: 12px;
+  color: var(--text-secondary, #c9bde6);
+  white-space: nowrap;
+}
+
+.rc-facts p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.rc-facts b {
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+}
+
+.rc-actions {
+  margin-top: 14px;
+}
+
+.rc-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(135deg, #ff9fcf, #ffb98f);
+  color: #2a1038;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rc-save .mt-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.rc-save:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+:root[data-theme="warm"] .recap-card {
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--rc) 30%, transparent), transparent 60%),
+    var(--warm-box);
+}
+
+:root[data-theme="light"] .recap-card {
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 60%),
+    #fff;
+}
+
+:root[data-theme="light"] .rc-mood-name {
+  color: color-mix(in srgb, var(--mc) 70%, #1a1a1a);
+}
+
+@media (max-width: 768px) {
+  .recap-card {
+    padding: 18px 16px 16px;
+  }
+
+  .rc-title {
+    font-size: 18px;
+  }
+
+  .rc-mood-name {
+    font-size: 21px;
+  }
+}
+
+/* === DAILY CHECK-IN SWITCH (profile menu) === */
+.pd-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--text-primary, #fff) 22%, transparent);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pd-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pd-switch[aria-checked="true"] {
+  background: var(--accent, #ff9fcf);
+}
+
+.pd-switch[aria-checked="true"] i {
+  transform: translateX(16px);
+}
+
+.pd-switch:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.pd-time input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary, #fff);
+  background: var(--bg-input, #1d1233);
+  border: 1px solid var(--border-mid, #444);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] .pd-time input {
+  color-scheme: light;
+}
+
+@media (max-width: 768px) {
+  .pd-time input {
+    font-size: 16px;
+  }
+}
+
+/* === ACCESSIBILITY === */
+/* text readable against its background in every theme (at least 4.5:1, the
+   WCAG AA level), headings for screen readers, and visible keyboard focus */
+
+/* text only screen readers announce (each page's main heading) */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* "start session": spotify green with near-black text, like spotify's own
+   buttons (white on this green is too faint to read comfortably) */
+.session-btn,
+#session-btn {
+  color: #08170d !important;
+  font-weight: 600;
+}
+
+.session-btn.active-session,
+#session-btn.active-session {
+  color: #fff !important;
+}
+
+/* quieter text that was too faint in some themes */
+:root:is([data-theme="warm"], [data-theme="purple"]) :is(.stats-sentence, .playlist-view-hint, #pl-count,
+  .top-song-plays, .inbox-when, #session-mood-label, .session-hero-label, .playlist-view-count) {
+  color: var(--text-muted) !important;
+}
+
+:root:is([data-theme="warm"], [data-theme="purple"]) .stats-sentence .ss-num {
+  color: var(--text-primary) !important;
+}
+
+#profile-dropdown [id="pd-reminder-label"],
+#profile-dropdown > div:nth-child(2) {
+  color: var(--text-secondary) !important;
+}
+
+/* logout: a lighter red that reads on the dark menus */
+#profile-dropdown button[style*="e05c5c"] {
+  color: #ff7b7b !important;
+}
+
+:root[data-theme="light"] #profile-dropdown button[style*="e05c5c"] {
+  color: #c0392b !important;
+}
+
+/* calendar day numbers sit on a soft dark backing so they read on any colour */
+.mc-filled .mc-num {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  padding: 1px 3px;
+  text-shadow: none;
+}
+
+/* clean light: darker versions of the colours that were too pale on white */
+:root[data-theme="light"] :is(#manage-moods-btn, .back-btn, .playlist-view-hint, .top-song-plays, #session-mood-label, .hf-count) {
+  color: #5a5a5a !important;
+}
+
+:root[data-theme="light"] .history-tab {
+  color: color-mix(in srgb, var(--text-primary, #111) 72%, transparent);
+}
+
+:root[data-theme="light"] .mood-chips .chip[data-mood]:not(.selected),
+:root[data-theme="light"] .np-mood:not(.done),
+:root[data-theme="light"] .hf-mood:not(.on) {
+  color: color-mix(in srgb, var(--mc) 45%, #1a1a1a) !important;
+}
+
+:root[data-theme="light"] .ss-mood {
+  color: color-mix(in srgb, var(--mc) 55%, #1a1a1a) !important;
+}
+
+:root[data-theme="light"] .tab.active .tab-label,
+:root[data-theme="light"] .tab[aria-current="page"] .tab-label {
+  color: #7a4fa8 !important;
+}
+
+:root[data-theme="light"] #pl-save-btn,
+:root[data-theme="light"] .pl-save-btn {
+  color: #137a3a !important;
+  border-color: #137a3a !important;
+}
+
+/* keyboard focus: a clear ring on everything you can reach with tab */
+[tabindex]:focus-visible,
+.playlist-card:focus-visible,
+.result-item:focus-visible,
+.session-rec-card:focus-visible,
+.rec-tile:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent, #ff9fcf) !important;
+  outline-offset: 2px;
+}
+
+.pd-logout {
+  color: #ff7b7b;
+}
+
+:root[data-theme="light"] .pd-logout {
+  color: #c0392b;
+}
+
+/* calendar: days still to come are quieter, but still readable */
+.mc-future .mc-num {
+  color: color-mix(in srgb, var(--text-primary, #fff) 50%, transparent) !important;
+}
+
+:root[data-theme="light"] .mc-future .mc-num {
+  color: #6b6b6b !important;
+}
+
+/* clean light: mood-coloured words on songs, deep enough to read on white */
+:root[data-theme="light"] .mood-badge,
+:root[data-theme="light"] .log-card.mood-card :is(.add-note-btn, .edit-note-btn),
+:root[data-theme="light"] .ss-mood {
+  color: color-mix(in srgb, var(--mc, #7a4fa8) 42%, #141414) !important;
+}
+
+:root[data-theme="light"] #session-mix-toggle,
+:root[data-theme="light"] label:has(#session-mix-input) {
+  color: #555 !important;
+}
+
+/* future days: the box fades, the number stays readable */
+.mc-future {
+  opacity: 1 !important;
+  background: color-mix(in srgb, var(--text-primary, #fff) 3%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.mc-future .mc-num {
+  color: color-mix(in srgb, var(--text-primary, #fff) 58%, transparent) !important;
+}
+
+:root[data-theme="light"] .mc-future .mc-num {
+  color: #6b6b6b !important;
+}
+
+/* history filter: "all moods" when picked: dark text on the pale accents of the
+   dark themes, white on the light theme's deep purple */
+.hf-mood.on[data-mood=""] {
+  color: #1a1026;
+}
+
+:root[data-theme="light"] .hf-mood.on[data-mood=""] {
+  color: #fff;
+}
+
+:root[data-theme="light"] :is(#logs-list, #timeline, #playlist-block) .mood-badge,
+:root[data-theme="light"] .song-history-card .mood-badge {
+  color: color-mix(in srgb, var(--mc, #7a4fa8) 42%, #141414) !important;
 }
