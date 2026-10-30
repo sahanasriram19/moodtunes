@@ -5672,9 +5672,10 @@ html body .mc-filled.mc-today:hover {
 /* === PURPLE, WITH COLOURS THAT GO WITH IT === */
 /* default theme: purple stays the base, and the accents that used to be more
    purple are now rose, peach, mint and sky (defined at "VIOLET GLASS" above) */
+/* section headings stay white on purple (the partner colours are for accents) */
 :root:is(:not([data-theme]), [data-theme="default"]) .section-label {
-  color: var(--c-peach) !important;
-  opacity: 0.95;
+  color: var(--text-primary, #f6f1ff) !important;
+  opacity: 1;
 }
 
 :root:is(:not([data-theme]), [data-theme="default"]) .stats-card {
@@ -5695,7 +5696,7 @@ html body .mc-filled.mc-today:hover {
 }
 
 :root[data-theme="purple"] .section-label {
-  color: var(--c-mint) !important;
+  color: var(--text-primary, #fff) !important;
 }
 
 :root[data-theme="purple"] .flashback-label {
@@ -5847,4 +5848,157 @@ html body .mc-filled.mc-today:hover {
 #profile-dropdown {
   background: var(--menu-bg) !important;
   box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* === PHONES: A LITTLE SMALLER, 4 MOODS TO A ROW === */
+/* text everywhere is a notch smaller on phones, and the mood chips are compact
+   enough that about 4 fit on a row. song logs keep their size. (text boxes stay
+   at 16px, or iPhones zoom in when you tap them; only their placeholder shrinks) */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+
+  .section-label,
+  .mood-section > .section-label,
+  .inbox-head .section-label {
+    font-size: 18px !important;
+  }
+
+  /* mood chips (journal + session) */
+  .mood-chips {
+    gap: 6px !important;
+  }
+
+  .mood-chips .chip-wrap {
+    gap: 3px !important;
+  }
+
+  .mood-chips .chip,
+  .inline-mood-picker .chip {
+    min-height: 32px;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    gap: 4px;
+  }
+
+  .mood-chips .chip .chip-emoji .mt-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  #manage-moods-btn {
+    font-size: 11px !important;
+  }
+
+  /* "not in your journal yet": smaller buttons, and the mood row uses the full
+     width of the box (under the cover too), so 3-4 fit on a row */
+  .inbox-moods {
+    gap: 5px !important;
+    margin-left: -58px;
+    width: calc(100% + 58px);
+  }
+
+  .inbox-moods .np-mood,
+  .np-moods .np-mood {
+    font-size: 11px;
+    padding: 3px 8px 3px 6px;
+    gap: 4px;
+  }
+
+  .inbox-moods .np-mood .mt-icon,
+  .np-moods .np-mood .mt-icon {
+    width: 11px;
+    height: 11px;
+  }
+
+  .inbox-title {
+    font-size: 13.5px;
+  }
+
+  .inbox-meta,
+  .inbox-when {
+    font-size: 11.5px;
+  }
+
+  /* search boxes: smaller placeholder, a bit less padding */
+  #song-search,
+  #song-history-search {
+    padding: 11px 14px !important;
+  }
+
+  #song-search::placeholder,
+  #song-history-search::placeholder,
+  .note-textarea::placeholder {
+    font-size: 14px;
+  }
+
+  /* now playing card */
+  .np-title {
+    font-size: 15px;
+  }
+
+  .np-artist,
+  .np-label,
+  .np-logas,
+  .np-upnext-label {
+    font-size: 12px;
+  }
+
+  /* session page */
+  .session-how summary {
+    font-size: 12.5px;
+  }
+
+  .session-how-intro,
+  .session-how-card ol {
+    font-size: 12.5px;
+  }
+
+  .session-how-note {
+    font-size: 11.5px;
+  }
+
+  /* history + stats headline sentence, and other boxed text */
+
+  .flashback-title,
+  .flashback-sub,
+  .stats-card-title {
+    font-size: 13px !important;
+  }
+
+  .playlist-card-title {
+    font-size: 21px !important;
+  }
+
+  .help-scroll {
+    padding: 22px !important;
+  }
+}
+
+/* === "HOW SESSIONS WORK" OPENS AND CLOSES SMOOTHLY === */
+/* the height animation is done in session.js; this keeps the box tidy while it moves */
+.session-how {
+  overflow: hidden;
+}
+
+.session-how summary::after {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.session-how .session-how-intro,
+.session-how .session-how-grid {
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.session-how.is-closing .session-how-intro,
+.session-how.is-closing .session-how-grid,
+.session-how.is-opening .session-how-intro,
+.session-how.is-opening .session-how-grid {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.session-how.is-closing summary::after {
+  transform: none;
 }

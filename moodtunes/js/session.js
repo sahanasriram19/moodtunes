@@ -199,6 +199,47 @@ try {
     }
 } catch (e) {}
 
+// "how sessions work" opens and closes smoothly: the box grows / shrinks to its new
+// height while the steps fade in or out (a plain <details> just jumps)
+(function() {
+    var box = document.getElementById('session-how');
+    if (!box || !box.animate) return;
+    var summary = box.querySelector('summary');
+    var anim = null;
+    var EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+    function finish(open) {
+        box.open = open;
+        box.classList.remove('is-opening', 'is-closing');
+        box.style.height = '';
+        anim = null;
+    }
+    summary.addEventListener('click', function(e) {
+        if (MoodFX.reduceMotion) return;          // straight open / close
+        e.preventDefault();
+        var from = box.offsetHeight;
+        var opening = anim ? box.classList.contains('is-closing') : !box.open;
+        if (anim) anim.cancel();
+        var to;
+        if (opening) {
+            box.open = true;
+            box.classList.remove('is-closing');
+            box.classList.add('is-opening');
+            box.style.height = 'auto';
+            to = box.offsetHeight;
+            // let the content fade in as the box opens
+            requestAnimationFrame(function() { box.classList.remove('is-opening'); });
+        } else {
+            box.classList.add('is-closing');
+            to = summary.offsetHeight + (box.offsetHeight - box.clientHeight);   // summary + borders
+        }
+        box.style.height = from + 'px';
+        anim = box.animate([{ height: from + 'px' }, { height: to + 'px' }],
+            { duration: opening ? 420 : 340, easing: EASE });
+        anim.onfinish = function() { finish(opening); };
+        anim.oncancel = function() { anim = null; };
+    });
+})();
+
 var pendingUris = [];       // songs not in the spotify queue yet
 var sessionUris = [];       // every song this session recommended (what "save as playlist" saves)
 var queueRetry  = null;
