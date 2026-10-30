@@ -6455,3 +6455,47 @@ select,
     font-size: 11.5px !important;
   }
 }
+
+/* === PAGE OPENING === */
+/* switching pages: the header, tab bar and background stay put, and only the
+   page's content fades and rises gently into place (no waiting for it first, so
+   there's no lag). leaving, the content fades out for a split second as you tap a
+   tab (see mood.js). each page's <head> adds .mt-enter as it's shown */
+@keyframes mt-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  60% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html.mt-enter main.container {
+  animation: mt-page-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html.mt-leave main.container {
+  animation: none;                /* let go of the opening animation, so the fade-out can run */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.12s ease-in, transform 0.12s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.mt-enter main.container {
+    animation: none;
+  }
+
+  html.mt-leave main.container {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

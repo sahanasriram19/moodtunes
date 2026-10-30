@@ -2370,6 +2370,22 @@ function boot() {
     if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }
  
+// -- leaving a page: a quick fade --------------------------
+// tapping another page in the header or tab bar fades this page's content out for
+// 120ms before going, so the switch feels like one smooth motion with the next
+// page's fade-in (see "PAGE OPENING" in motion.css). new tab / ctrl-click work as usual
+document.addEventListener('click', function(e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest('.navbar a[href], .tabbar a[href]');
+    if (!a || a.target === '_blank' || !/\.html(\?|#|$)/.test(a.getAttribute('href'))) return;
+    var url = new URL(a.href, location.href);
+    if (url.origin !== location.origin || url.pathname === location.pathname) return;
+    if (reduceMotion) return;
+    e.preventDefault();
+    document.documentElement.classList.add('mt-leave');
+    setTimeout(function() { location.href = url.href; }, 120);
+});
+
 // -- scroll hints (no scrollbars) -------------------------
 // scrollbars are hidden everywhere (see style.css). anything that scrolls shows
 // it instead: its edge fades out on whichever side has more to see (top / bottom

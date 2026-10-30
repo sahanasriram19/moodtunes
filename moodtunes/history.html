@@ -20,6 +20,22 @@
       if (meta) meta.content = t === 'light' ? 'light' : 'dark';
     })();
   </script>
+  <!-- page opening animation: the content fades and rises in (see "PAGE OPENING" in
+       motion.css). started here, and again when a page prepared in the background or
+       kept by the back button is shown, so it always plays as you arrive -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      function enter() {
+        root.classList.remove('mt-enter');
+        void root.offsetWidth;
+        root.classList.add('mt-enter');
+      }
+      if (document.prerendering) document.addEventListener('prerenderingchange', enter, { once: true });
+      else enter();
+      addEventListener('pageshow', function (e) { if (e.persisted) { root.classList.remove('mt-leave'); enter(); } });
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <!-- installable app (PWA) -->
   <link rel="manifest" href="manifest.json" />
