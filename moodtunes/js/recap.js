@@ -312,6 +312,101 @@ function saveImage(btn) {
     });
 }
 
-window.MoodRecap = { show: show, _summarise: summarise, _render: renderImage };
+// ── insights: what your listening says, in plain words ──
+// a few short observations from all your logs, shown under the recap. each one
+// only appears when the data clearly backs it (enough plays, a clear lean), so
+// there's no "insight" made out of two songs
+function bucketOf(h) { return h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 18 ? 'afternoon' : h >= 18 && h < 22 ? 'evening' : 'late at night'; }
+function bucketPhrase(b) { return b === 'late at night' ? 'late at night' : 'in the ' + b; }
+
+function insights() {
+    var out = [];
+    if (!allLogs.length) return out;
+    var esc = MoodFX.esc;
+    var moodTimes = {}, moodPlays = {}, moodWeekend = {}, total = 0, weekendTotal = 0, days = {};
+    allLogs.forEach(function(l) {
+        var n = plays(l), d = dayOf(l), t = parseUTC(l.last_logged);
+        total += n;
+        moodPlays[l.mood] = (moodPlays[l.mood] || 0) + n;
+        if (d) {
+            days[d] = true;
+            var wd = new Date(d + 'T12:00:00').getDay();
+            if (wd === 0 || wd === 6) { weekendTotal += n; moodWeekend[l.mood] = (moodWeekend[l.mood] || 0) + n; }
+        }
+        if (t) {
+            var b = bucketOf(t.getHours());
+            var mt = moodTimes[l.mood] || (moodTimes[l.mood] = {});
+            mt[b] = (mt[b] || 0) + n;
+        }
+    });
+    var moods = Object.keys(moodPlays).sort(function(a, b) { return moodPlays[b] - moodPlays[a]; });
+    var tag = function(m) { return '<span class="ins-mood" style="--mc:' + MoodFX.color(m) + '">' + esc(m) + '</span>'; };
+
+    // 1. when each mood happens: a mood with 6+ plays, over half of them in one part of the day
+    moods.some(function(m) {
+        if (moodPlays[m] < 6) return false;
+        var mt = moodTimes[m] || {};
+        var best = Object.keys(mt).sort(function(a, b) { return mt[b] - mt[a]; })[0];
+        if (!best || mt[best] / moodPlays[m] < 0.5) return false;
+        out.push({ icon: 'moon', html: 'you play ' + tag(m) + ' songs mostly <b>' + bucketPhrase(best) + '</b>' });
+        return true;
+    });
+
+    // 2. a mood that leans to the weekend: clearly more of it on sat/sun than your usual share
+    var weekendShare = total ? weekendTotal / total : 0;
+    moods.some(function(m) {
+        if (moodPlays[m] < 6 || weekendShare <= 0 || weekendShare >= 0.9) return false;
+        var share = (moodWeekend[m] || 0) / moodPlays[m];
+        if (share < 0.5 || share < weekendShare * 1.5) return false;
+        out.push({ icon: 'sun', html: tag(m) + ' turns up on <b>weekends</b>: ' + Math.round(share * 100) + '% of those plays are on a saturday or sunday' });
+        return true;
+    });
+
+    // 3. your biggest loop: the most plays of one song in one day (3 or more)
+    var loop = allLogs.reduce(function(best, l) { return plays(l) > (best ? plays(best) : 0) ? l : best; }, null);
+    if (loop && plays(loop) >= 3) {
+        var ld = dayOf(loop);
+        var when = ld ? new Date(ld + 'T12:00:00') : null;
+        out.push({ icon: 'queue', html: 'your biggest loop: <b>' + esc(loop.title) + '</b>, ' + plays(loop) + ' plays' + (when ? ' on ' + DAYS[when.getDay()] + ' ' + when.getDate() + ' ' + MONTHS[when.getMonth()].slice(0, 3) : '') });
+    }
+
+    // 4. a streak: days in a row with something logged, up to today (or yesterday)
+    var streak = 0, cur = new Date();
+    var key = function(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
+    if (!days[key(cur)]) cur.setDate(cur.getDate() - 1);
+    while (days[key(cur)]) { streak++; cur.setDate(cur.getDate() - 1); }
+    if (streak >= 3) out.push({ icon: 'flame', html: 'you’ve logged songs <b>' + streak + ' days in a row</b>' });
+
+    // 5. a change of mood: this month's main mood vs last month's
+    if (monthKeys.length >= 2 && monthKeys[0] === thisMonthKey()) {
+        var now = summarise(monthKeys[0]), before = summarise(monthKeys[1]);
+        if (now.moods[0] && before.moods[0] && now.moods[0].mood !== before.moods[0].mood && now.total >= 5) {
+            out.push({ icon: 'sparkles', html: 'this month you moved from ' + tag(before.moods[0].mood) + ' to ' + tag(now.moods[0].mood) });
+        }
+    }
+    return out.slice(0, 4);
+}
+
+function drawInsights() {
+    var list = insights();
+    var host = document.getElementById('insights-card');
+    if (!list.length) { if (host) host.remove(); return; }
+    if (!host) {
+        host = document.createElement('section');
+        host.id = 'insights-card';
+        host.className = 'insights-card';
+        host.setAttribute('aria-labelledby', 'insights-title');
+        var recap = document.getElementById('recap-card');
+        if (recap) recap.insertAdjacentElement('afterend', host);
+        else return;
+    }
+    host.innerHTML = '<h2 class="ins-title" id="insights-title">what we noticed</h2><ul class="ins-list">' +
+        list.map(function(i) { return '<li>' + MoodFX.icon(i.icon) + '<span>' + i.html + '</span></li>'; }).join('') + '</ul>';
+}
+
+var _show = show;
+show = function(logs) { _show(logs); drawInsights(); };
+
+window.MoodRecap = { show: show, _summarise: summarise, _render: renderImage, _insights: insights };
 
 })();

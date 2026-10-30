@@ -7207,3 +7207,82 @@ summary:focus-visible {
     bottom: 54px;
   }
 }
+
+/* === INSIGHTS (stats page, under the recap) === */
+.insights-card {
+  margin: 0 0 18px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: var(--glass, var(--bg-card, #1d1233));
+  border: 1px solid var(--glass-edge, var(--border, rgba(255, 255, 255, 0.1)));
+}
+
+:root[data-theme="warm"] .insights-card {
+  background: var(--warm-box);
+  border-color: var(--warm-edge);
+}
+
+:root[data-theme="light"] .insights-card {
+  background: #fff;
+  border-color: #e6e3ea;
+}
+
+.ins-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.ins-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ins-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.ins-list li .mt-icon {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  color: var(--accent, #ff9fcf);
+}
+
+.ins-list b {
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+}
+
+.ins-mood {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--mc) 65%, var(--text-primary, #fff));
+}
+
+:root[data-theme="light"] .ins-mood {
+  color: color-mix(in srgb, var(--mc) 42%, #141414);
+}
+
+:root[data-theme="warm"] .ins-list li {
+  color: #f3dcc2;
+}
+
+@media (max-width: 768px) {
+  .insights-card {
+    padding: 16px;
+  }
+
+  .ins-list li {
+    font-size: 13px;
+  }
+}
