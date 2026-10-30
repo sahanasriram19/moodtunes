@@ -31,15 +31,6 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="images/favicon.png" />
   <title>Session</title>
-  <!-- page transitions: declared here (not in motion.css) so Chrome sees the opt-in
-       before the new page is shown — otherwise it sometimes skips the transition -->
-  <style>
-    @view-transition { navigation: auto; }
-    @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
-  </style>
-  <!-- don't reveal this page until #mt-ready (after the scripts) is parsed, so the
-       transition lands on the finished page — glow, mood colour and content included -->
-  <link rel="expect" href="#mt-ready" blocking="render" />
   <!-- fonts: connect early and load in parallel with the other stylesheets -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
