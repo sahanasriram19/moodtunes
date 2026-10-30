@@ -70,55 +70,58 @@ Built as a personal portfolio project to explore full-stack development with rea
 
 ```
 moodtunes-main/
+├── .github/workflows/
+│   └── keep-awake.yml              # every 10 min: keeps the server awake, sends due reminders
 ├── backend/
-│   ├── .env                       # environment variables (not committed)
-│   ├── index.js                   # server entry point
-│   ├── configs/
-│   │   ├── createSchema.js
-│   │   └── initTables.js
+│   ├── .env                        # environment variables (not committed)
+│   ├── index.js                    # server entry point
+│   ├── configs/                    # createSchema.js, initTables.js
 │   └── src/
-│       ├── app.js                 # express app setup, CORS
-│       ├── services/
-│       │   └── db.js              # mysql2 connection pool
-│       ├── middlewares/
-│       │   ├── jwtMiddleware.js
-│       │   ├── bcryptMiddleware.js
-│       │   └── response.js
-│       ├── models/
-│       │   ├── userModel.js
-│       │   ├── logModel.js
-│       │   └── sessionModel.js
+│       ├── app.js                  # express app setup, CORS
+│       ├── services/db.js          # mysql2 connection pool
+│       ├── middlewares/            # jwt, bcrypt, rate limits, spotify token, responses
+│       ├── models/                 # userModel, logModel (plays, loops), sessionModel
 │       ├── controllers/
-│       │   ├── userController.js
-│       │   ├── logController.js
-│       │   ├── sessionController.js
-│       │   └── spotifyController.js
-│       └── routes/
-│           ├── authRoutes.js
-│           ├── logRoutes.js
-│           ├── sessionRoutes.js
-│           ├── spotifyRoutes.js
-│           └── mainRoutes.js
-└── moodtunes/                      # frontend
-    ├── index.html                  # journal page
+│       │   ├── accountController.js        # password reset, delete account
+│       │   ├── customMoodController.js     # custom + hidden moods
+│       │   ├── logController.js            # journal logs, play counts, loop counting
+│       │   ├── playlistOrderController.js  # playlist order + removed songs
+│       │   ├── reminderController.js       # daily check-in push notifications
+│       │   ├── sessionController.js        # listening sessions
+│       │   ├── sessionSpotifyController.js # session queue / playlist in spotify
+│       │   ├── spotifyController.js        # spotify login, now playing, search
+│       │   ├── spotifyExtrasController.js  # recommendations, likes, not-logged-yet
+│       │   ├── spotifyPlayerController.js  # play / pause / skip
+│       │   ├── spotifyPlaylistController.js# mood playlists saved to spotify
+│       │   ├── beatmapController.js        # beat data for the sound waves
+│       │   └── userController.js           # sign up, log in
+│       └── routes/                 # one file per area, joined in mainRoutes.js
+└── moodtunes/                      # frontend (static, on vercel)
+    ├── index.html                  # journal
     ├── playlists.html
+    ├── session.html
     ├── history.html
-    ├── discover.html
-    ├── login.html
+    ├── stats.html
+    ├── login.html, reset.html
+    ├── offline.html                # shown when there's no connection
+    ├── sw.js                       # service worker: offline copies, reminder notifications
+    ├── manifest.json               # installable app
     ├── css/
-    │   ├── style.css
-    │   ├── playlists.css
-    │   ├── history.css
-    │   ├── discover.css
-    │   └── auth.css
+    │   ├── style.css               # base styles
+    │   ├── mobile.css              # phone layout
+    │   ├── motion.css              # themes, animations and most of the current look
+    │   ├── auth.css                # login + reset
+    │   └── history.css, playlists.css, session.css, stats.css
     └── js/
-        ├── app.js                  # journal page logic
-        ├── config.js               # API keys (not committed)
-        ├── token.js                 # spotify client credentials token
-        ├── auth.js
-        ├── playlists.js
-        ├── history.js
-        └── discover.js
+        ├── api.js                  # backend calls, play counting, open in spotify
+        ├── mood.js                 # shared: mood colours, now playing, toasts, scroll hints
+        ├── profile.js              # profile menu, themes, daily check-in
+        ├── help.js, intro.js       # help guide and first-visit tours
+        ├── app.js                  # journal page
+        ├── playlists.js, session.js, history.js, stats.js
+        ├── recap.js                # monthly recap on the stats page
+        ├── auth.js                 # login / sign up / reset
+        └── config.js, index.js
 ```
 
 ---

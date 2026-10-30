@@ -93,12 +93,12 @@
 .flashback-song-title {
   font-size: 14px;
   font-weight: 500;
-  color: #f0f0f0;
+  color: var(--text-primary, #f0f0f0);   /* the theme's text colour (was always near-white, invisible on clean light) */
 }
 
 .flashback-song-artist {
   font-size: 12px;
-  color: #888;
+  color: var(--text-secondary, #888);
   margin-top: 2px;
 }
 

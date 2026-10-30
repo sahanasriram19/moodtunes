@@ -39,12 +39,12 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('history') + 'history</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">see everything you\'ve logged organised by date. search for any song to see every day you\'ve listened to it, how many plays, and any notes you left. the sessions tab shows your past listening sessions with the songs played in each. tap <b style="color:#fff;">save to spotify</b> on one to keep it as a playlist (“session 1”, “session 2”, …).</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">see everything you\'ve logged organised by date. search for any song to see every day you\'ve listened to it, how many plays, and any notes you left. the sessions tab shows your past listening sessions with the songs played in each. tap <b style="color:#fff;">save to spotify</b> on one to keep it as a playlist (“session 1”, “session 2”, …). above the timeline, pick a mood or a date range (last 7 days, last 30 days, this month, or your own dates) to show only those songs, and tap <b style="color:#fff;">clear</b> to see everything again.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('stats') + 'stats</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">a full breakdown of your listening: total plays, unique songs, days active, top mood, a mood calendar (each day shows the cover of the song you played most that day, with a strip in that day\'s mood colour; tap a day to see its songs and notes), mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago.</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">a full breakdown of your listening: total plays, unique songs, days active, top mood, a mood calendar (each day shows the cover of the song you played most that day, with a strip in that day\'s mood colour; tap a day to see its songs and notes), mood breakdown bars, time-of-day chart, your top 5 most played songs, a 14-day mood activity line graph, and a flashback to songs you were playing about a month ago. at the top, <b style="color:#fff;">your month</b> sums up a month like a wrapped: your main mood and how the month split between moods, your top 3 songs, when you listened most and your busiest day. the arrows step back through earlier months, and <b style="color:#fff;">save as image</b> makes a picture you can share.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -99,14 +99,15 @@ function showHelpModal() {
                         '<kbd class="mt-kbd">1</kbd>–<kbd class="mt-kbd" style="margin-left:6px;">9</kbd> pick a mood<br>' +
                         '<kbd class="mt-kbd">/</kbd> jump to search<br>' +
                         '<kbd class="mt-kbd">esc</kbd> close a popup<br>' +
-                        '<kbd class="mt-kbd">?</kbd> open this help' +
+                        '<kbd class="mt-kbd">?</kbd> open this help<br>' +
+                        '<kbd class="mt-kbd">tab</kbd> + <kbd class="mt-kbd">enter</kbd> reach and open any card or button' +
                     '</div>' +
                   '</div>'
                 : '') +
 
             '<div style="margin-bottom:8px;">' +
                 '<div class="help-heading">' + helpIcon('user') + 'profile</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, deep purple, clean light), and log out. your chosen theme is saved and applied across all pages automatically.</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">click the profile icon in the top right to see your account info, switch between themes (default, warm editorial, deep purple, clean light), and log out. your chosen theme is saved and applied across all pages automatically. turn on <b style="color:#fff;">daily check-in</b> and pick a time to get a “how are you feeling?” notification on days you haven\'t logged a song yet (each device is set up on its own; on iphone, add moodtunes to your home screen first).</div>' +
             '</div>' +
 
             (window.MoodTour

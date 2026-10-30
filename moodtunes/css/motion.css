@@ -1,6 +1,95 @@
 /* motion.css - mood theming, live animations, skeletons, now-playing, session ring
    loaded after style.css on every page. works with js/mood.js
-   fonts (Outfit + DM Sans) are loaded by a <link> in each page's <head> */
+   the font (DM Sans) is loaded by a <link> in each page's <head>
+
+   how this file is laid out: each section starts with a /* === NAME === */
+   /*
+   heading, and later sections build on (and override) earlier ones, so the
+   newest look for anything is usually near the end. search for a heading to
+   jump to it. sections, in order:
+      1. ambient glow
+      2. mood chips
+      3. mood badges
+      4. search
+      5. just-logged highlight
+      6. skeletons
+      7. toast
+      8. now playing card
+      9. session hero ring
+     10. session summary
+     11. stats bars grow in
+     12. accessibility: respect reduced motion
+     13. toast action (undo)
+     14. "pick a mood first" shake
+     15. restore hidden moods (manage mode)
+     16. session recommendation grid
+     17. typography
+     18. empty states
+     19. visible focus for keyboard users
+     20. safe areas (notch, status bar, home bar)
+     21. install app button
+     22. iphone "add to home screen" hint
+     23. bottom tab bar (phones)
+     24. mood-tinted song cards
+     25. pop-up animations
+     26. song box in search results
+     27. icons
+     28. now playing: playback controls
+     29. song title + note on one line
+     30. background: vignette + grain
+     31. background: drifting lights
+     32. background: sound waves
+     33. default theme: violet glass
+     34. play next (spotify queue)
+     35. album art background
+     36. keep the sound waves behind the page
+     37. history tabs follow the background
+     38. clean light theme
+     39. spotify: the heart (liked songs)
+     40. now playing: log in one tap + up next
+     41. journal: played on spotify, not logged yet
+     42. sessions: this session so far . why these recs . save to spotify
+     43. mood chips in their own colours
+     44. "manage moods" up by the heading, on the right
+     45. notes beside song titles: easier to read
+     46. now playing: layout
+     47. "sync waves" as a switch
+     48. up next on one line in the side column
+     49. "sync waves": just the words and the switch
+     50. playlist covers: no strip underneath
+     51. now playing: a little more room at the top, less in the middle
+     52. not in your journal yet: in a box that scrolls
+     53. the note on its own line, with "edit note" beside it
+     54. headings in outfit
+     55. each day's songs in a box
+     56. notes: nostalgic on every theme
+     57. history on phones: smaller song logs, nothing cut off
+     58. stats on phones: the same size as the history boxes
+     59. song logs on phones: buttons out of the way
+     60. stats: plain boxes, one heading colour
+     61. no spaced-out capital labels anywhere
+     62. stats as a sentence
+     63. hover: a clear, smooth lift on everything
+     64. no glows
+     65. mood icons on song logs
+     66. warm editorial: song logs in a light, warm orange
+     67. purple, with colours that go with it
+     68. scroll hints (no scrollbars)
+     69. header stays on top
+     70. search bars follow the theme and mood on every page
+     71. phones: a little smaller, 4 moods to a row
+     72. "how sessions work" opens and closes smoothly
+     73. phones: smaller buttons
+     74. phones: song boxes, buttons in line
+     75. one font everywhere
+     76. phones: "manage moods" the same size as the rest
+     77. page opening
+     78. songs without a cover
+     79. history filters
+     80. monthly recap (stats page)
+     81. daily check-in switch (profile menu)
+     82. accessibility
+*/
 
 /* registered so the colour can transition smoothly between moods */
 @property --mood {
@@ -1262,7 +1351,7 @@ body .section-subtitle {
 /* === TYPOGRAPHY === */
 :root {
   --font-body: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-display: 'Outfit', 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-body);
 }
 
 body,
@@ -1323,61 +1412,6 @@ select,
 .song-title,
 .result-title {
   letter-spacing: -0.1px;
-}
-
-/* === PAGE TRANSITIONS === */
-/* Chrome, Edge, Safari 18.2+; others navigate normally.
-   the opt-in (@view-transition) is in each page's <head> so it's seen in time */
-.navbar {
-  view-transition-name: navbar;
-}
-
-#mood-ambient {
-  view-transition-name: ambient;
-}
-
-/* a true cross-fade: the old page stays fully visible underneath while the new
-   one fades (and slides slightly) in on top, so there's never a moment where
-   neither page covers the screen (that gap is what showed up as a white flash) */
-::view-transition-old(root) {
-  animation: vt-hold 0.32s linear both;
-}
-
-::view-transition-new(root) {
-  animation: vt-in 0.32s var(--ease-out) both;
-}
-
-/* behind both pages: the theme's own background, never white */
-::view-transition {
-  background: var(--bg-page, #120a20);
-}
-
-@keyframes vt-hold {
-  from, to {
-    opacity: 1;
-  }
-}
-
-::view-transition-group(ambient) {
-  animation-duration: 0.6s;
-}
-
-::view-transition-group(navbar) {
-  animation-duration: 0.3s;
-}
-
-@keyframes vt-out {
-  to {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.995);
-  }
-}
-
-@keyframes vt-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
 }
 
 /* === EMPTY STATES === */
@@ -1767,7 +1801,6 @@ body {
 
 @media (max-width: 768px) {
   .tabbar {
-    view-transition-name: tabbar;
     position: fixed;
     left: 0;
     right: 0;
@@ -1806,7 +1839,6 @@ body {
   }
 
   .tab-pill {
-    view-transition-name: tab-pill;
     position: absolute;
     top: 4px;
     left: 50%;
@@ -4521,7 +4553,7 @@ body {
 /* the clean rounded font from before, for day headings, section headings,
    playlist names and stats titles. notes are the normal font in italic */
 :root {
-  --font-serif: 'Outfit', 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: var(--font-body);
 }
 
 .timeline-date,
@@ -4726,7 +4758,7 @@ body {
 
 .sx-title {
   margin: 0 0 4px;
-  font-family: 'Outfit', var(--font-body, 'DM Sans'), system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 26px;
   line-height: 1.15;
   font-weight: 600;
@@ -5311,7 +5343,7 @@ body {
 .stats-sentence {
   margin: 0 0 28px;
   max-width: 30em;
-  font-family: 'Outfit', var(--font-body, 'DM Sans'), system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 28px;
   line-height: 1.3;
   font-weight: 400;
@@ -6993,15 +7025,6 @@ summary:focus-visible {
 
 :root[data-theme="light"] .pd-logout {
   color: #c0392b;
-}
-
-/* calendar: days still to come are quieter, but still readable */
-.mc-future .mc-num {
-  color: color-mix(in srgb, var(--text-primary, #fff) 50%, transparent) !important;
-}
-
-:root[data-theme="light"] .mc-future .mc-num {
-  color: #6b6b6b !important;
 }
 
 /* clean light: mood-coloured words on songs, deep enough to read on white */

@@ -55,7 +55,7 @@ var STEPS = {
         { target: pageLink('session.html'), title: 'sessions', text: 'pick a mood and start a listening session. moodtunes recommends new songs from the genres you already love in that mood, and keeps track of what you play.' },
         { target: pageLink('history.html'), title: 'history', text: 'everything you’ve ever logged, day by day. search any song to see every time you played it, and look back at past sessions.' },
         { target: pageLink('stats.html'), title: 'stats', text: 'your listening in numbers: top moods, when you listen, your most played songs, and a calendar of your month in moods.' },
-        { target: '#profile-btn', title: 'your profile', text: 'switch between themes and log out here.', skipIf: has('#profile-btn') },
+        { target: '#profile-btn', title: 'your profile', text: 'switch themes, turn on a daily check-in reminder, and log out here.', skipIf: has('#profile-btn') },
         { target: helpTarget, title: 'need more detail?', text: 'the full guide is always behind this button. each page also gives you a quick tour the first time you open it.' }
     ],
     playlists: [
@@ -77,12 +77,14 @@ var STEPS = {
     history: [
         { target: '#stats-grid', title: 'your totals', text: 'how many songs you’ve logged, your total plays and your top mood.', skipIf: has('#stats-grid') },
         { target: '.song-search-section', title: 'find any song', text: 'search a song to see every day you played it, how many times, and your notes.' },
+        { target: '.hist-filter', title: 'filter by mood and date', text: 'show only one mood, or a date range like the last 7 days, this month or your own dates. clear brings everything back.', skipIf: has('.hist-filter') },
         { target: '.history-tabs', title: 'timeline and sessions', text: 'switch between everything you logged day by day, and your past listening sessions.' },
         { target: '#timeline', title: 'your timeline', text: 'edit notes or delete entries here. removing a song from a playlist never touches this.', skipIf: has('#timeline') },
         { target: '#tab-sessions', title: 'past sessions', text: 'each session shows the songs you played in it. save one to spotify as a playlist, or delete it.' }
     ],
     stats: [
         { target: '.stats-sentence', title: 'your listening at a glance', text: 'plays, songs, days and your top mood, all in one line.' },
+        { target: '#recap-card', title: 'your month, wrapped', text: 'a recap of each month: your main mood, top songs and busiest day. the arrows go back through earlier months, and save as image makes a picture to share.', skipIf: has('#recap-card') },
         { target: '.flashback-card', title: 'a month ago', text: 'what you were listening to about a month ago, and how you were feeling.', skipIf: has('.flashback-card') },
         { target: '.stats-grid', title: 'moods and timing', text: 'which moods you play most, and when in your day you listen (in your own timezone).', skipIf: has('.stats-grid') },
         { target: '#mood-graph-container', title: 'the last two weeks', text: 'how each mood has risen and fallen day by day.', skipIf: has('#mood-graph-container') },
@@ -118,7 +120,7 @@ function injectCSS() {
         '#mt-tour .mtt-body{animation:mtt-swap .35s cubic-bezier(.2,.8,.2,1);}',
         '@keyframes mtt-swap{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}',
         '#mt-tour .mtt-step{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mood,#b99cff);margin-bottom:6px;font-weight:600;}',
-        '#mt-tour .mtt-title{font:600 18px/1.25 var(--font-display,"Outfit","DM Sans",sans-serif);margin-bottom:6px;color:var(--text-primary,#fff);}',
+        '#mt-tour .mtt-title{font:600 18px/1.25 var(--font-display,"DM Sans",sans-serif);margin-bottom:6px;color:var(--text-primary,#fff);}',
         '#mt-tour .mtt-text{color:var(--text-secondary,#c9bde6);font-size:14px;}',
         '#mt-tour .mtt-foot{display:flex;align-items:center;gap:8px;margin-top:16px;}',
         '#mt-tour .mtt-dots{display:flex;gap:5px;margin-right:auto;}',
