@@ -6,10 +6,19 @@ requireAuth();
 // custom moods: remember the emoji each was saved with, so its playlist cover
 // shows the matching icon (built-in moods have their own icons)
 var customMoodEmoji = {};
+// the custom moods that still exist ({ name: id }). a mood you delete takes its
+// playlist with it (the songs stay in your history and stats). kept on this device
+// too, so the grid is right before the server answers
+var CUSTOM_KEY = 'moodtunes_custom_moods_' + (localStorage.getItem('moodtunes_username') || '');
+var customMoodIds = null;
+try { customMoodIds = JSON.parse(localStorage.getItem(CUSTOM_KEY) || 'null'); } catch (e) {}
 apiCall('/moods', 'GET', null, function(err, result) {
     if (err || !result.data) return;
     var customs = Array.isArray(result.data) ? result.data : [];
-    customs.forEach(function(m) { customMoodEmoji[m.name] = m.emoji; });
+    customMoodIds = {};
+    customs.forEach(function(m) { customMoodEmoji[m.name] = m.emoji; customMoodIds[m.name] = m.id; });
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customMoodIds)); } catch (e) {}
+    if (typeof renderPlaylists === 'function' && !playlistIsOpen()) renderPlaylists();
     // redraw empty cover tiles now that we know the icons
     document.querySelectorAll('.playlist-card[data-mood]').forEach(function(card) {
         var mood = card.dataset.mood;
@@ -216,15 +225,52 @@ function setRemoved(mood, songId, on) {
 function playlistLogs() {
     return (latestLogs || []).filter(function(l) { return !isRemoved(l.mood, l.song_id); });
 }
+// deletes a playlist by deleting its mood. built-in moods are removed from your
+// moods (bring them back any time from manage moods); custom moods are deleted.
+// either way there's a few seconds to undo, and the songs stay in history
+var pendingDeletes = {};
+function deletePlaylist(mood) {
+    var builtIn = MoodFX.DEFAULT_MOODS.indexOf(mood) !== -1;
+    var id = customMoodIds && customMoodIds[mood];
+    if (!builtIn && !id) return MoodFX.toast('couldn’t find that mood, refresh and try again');
+    var view = document.getElementById('playlist-view');
+    if (view.classList.contains('active')) document.getElementById('back-btn').click();
+    pendingDeletes[mood] = true;
+    renderPlaylists();
+    MoodFX.undoable({
+        message: 'deleted “' + mood + '” and its playlist. your songs stay in history', mood: mood,
+        hide: function() {},
+        restore: function() { delete pendingDeletes[mood]; renderPlaylists(); },
+        commit: function() {
+            delete pendingDeletes[mood];
+            if (builtIn) { MoodFX.hideMood(mood); return; }
+            apiCall('/moods/' + id, 'DELETE', null, function(err, res) {
+                if (err || !res || res.status >= 400) { MoodFX.toast('couldn’t delete that mood, try again'); return renderPlaylists(); }
+                delete customMoodIds[mood];
+                try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customMoodIds)); } catch (e) {}
+                renderPlaylists();
+            });
+        }
+    });
+}
+
 // the songs currently in a mood's playlist, in playlist order
 function playlistSongs(mood) {
     return orderedSongs(mood, playlistLogs().filter(function(l) { return l.mood === mood; }));
 }
 
 // every mood you've logged keeps its playlist, even when all its songs are removed
+// a mood still exists if it's a built-in one you haven't removed, or a custom one
+// you haven't deleted (until the custom list is known, every logged mood counts)
+function moodExists(mood) {
+    if (MoodFX.DEFAULT_MOODS.indexOf(mood) !== -1) return !MoodFX.isHidden(mood);
+    return !customMoodIds || Object.prototype.hasOwnProperty.call(customMoodIds, mood);
+}
+
 function groupByMood(logs) {
     var grouped = {};
     logs.forEach(function(log) {
+        if (!moodExists(log.mood) || pendingDeletes[log.mood]) return;   // deleted mood: no playlist (songs stay in history)
         if (!grouped[log.mood]) grouped[log.mood] = [];
         if (!isRemoved(log.mood, log.song_id)) grouped[log.mood].push(log);
     });
@@ -368,6 +414,7 @@ function openPlaylist(mood) {
                 '<div class="playlist-view-count" id="pl-count">' + listSongs.length + ' song' + (listSongs.length !== 1 ? 's' : '') + ' from your journal</div>' +
                 '<div class="playlist-view-hint">new songs go to the top, and you can drag to reorder. the cover shows the top 4. ✕ takes a song out of this playlist but keeps it in your history.</div>' +
                 '<button type="button" class="pl-save-btn" id="pl-save-btn"></button>' +
+                '<button type="button" class="pl-delete-btn" id="pl-delete-btn" title="deletes this mood and its playlist. your songs stay in your history and stats">delete playlist</button>' +
             '</div>' +
             '<button class="playlist-play-btn" id="sync-btn" title="play in spotify" style="border:none;cursor:pointer;">▶</button>' +
         '</div>' +
@@ -411,6 +458,12 @@ function openPlaylist(mood) {
         view.classList.remove('active');
         view.dataset.mood = '';
         document.getElementById('grid-view').classList.remove('hidden');
+    });
+
+    // delete: the playlist is the mood, so this deletes the mood (with undo).
+    // your songs stay in history and stats; a copy saved in spotify stays there
+    document.getElementById('pl-delete-btn').addEventListener('click', function() {
+        deletePlaylist(mood);
     });
 
     // save / update in spotify
@@ -758,7 +811,12 @@ function renderPlaylists() {
         playlistsList.innerHTML = MoodFX.emptyState({ title: 'no playlists yet', text: 'every mood gets its own playlist as soon as you log a song with it', action: { label: 'log your first song', href: 'index.html' } });
         return;
     }
-    renderGrid(groupByMood(latestLogs));
+    var grouped = groupByMood(latestLogs);
+    if (!Object.keys(grouped).length) {
+        playlistsList.innerHTML = MoodFX.emptyState({ title: 'no playlists right now', text: 'the moods you logged songs with have been deleted. log a song with one of your moods and its playlist appears here', action: { label: 'go to journal', href: 'index.html' } });
+        return;
+    }
+    renderGrid(grouped);
     syncCovers();
 }
 
@@ -820,3 +878,7 @@ apiCallCached('/logs', function(err, result, fromCache) {
     latestLogs = Array.isArray(result.data) ? result.data : [];
     renderPlaylists();
 });
+
+// a mood was deleted, removed or brought back (here, on another page, or synced from
+// the server): its playlist goes or comes back with it
+window.addEventListener('moodtunes:moods-changed', function() { if (!playlistIsOpen()) renderPlaylists(); });

@@ -649,7 +649,7 @@ function addChip(name, emoji, id) {
     delBtn.addEventListener('click', function() {
         if (selectedMood === name && !activeSession) selectedMood = null;
         MoodFX.undoable({
-            message: 'deleted “' + name + '”', mood: name,
+            message: 'deleted “' + name + '” and its playlist (songs stay in history)', mood: name,
             hide:    function() { wrap.style.display = 'none'; },
             restore: function() { wrap.style.display = ''; },
             commit:  function() { apiCall('/moods/' + id, 'DELETE', null, function() { wrap.remove(); }); }
@@ -679,7 +679,7 @@ chips.forEach(function(chip) {
         var m = chip.dataset.mood;
         if (selectedMood === m && !activeSession) { selectedMood = null; chip.classList.remove('selected'); }
         MoodFX.hideMood(m);
-        MoodFX.toast('removed “' + m + '” from your moods', m, {
+        MoodFX.toast('removed “' + m + '” and its playlist (songs stay in history)', m, {
             action: 'undo', duration: 5000,
             onAction: function() { MoodFX.unhideMood(m); }
         });

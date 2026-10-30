@@ -7167,3 +7167,43 @@ summary:focus-visible {
   background: linear-gradient(135deg, #ff9e80, #ffd27a);
   color: #2a1408;
 }
+
+/* === DELETE A PLAYLIST === */
+/* a quiet text button under "save to spotify" in an open playlist (playlists.js) */
+.pl-delete-btn {
+  display: block;
+  width: fit-content;
+  margin: 8px 0 0;
+  padding: 4px 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: #ff8f8f;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.pl-delete-btn:hover {
+  color: #ffb3b3;
+}
+
+:root[data-theme="light"] .pl-delete-btn {
+  color: #c0392b;
+}
+
+@media (max-width: 768px) {
+  .pl-delete-btn {
+    font-size: 12px;
+  }
+}
+
+/* phones: ▶ stays level with "save to spotify" (delete playlist sits under them) */
+@media (max-width: 768px) {
+  .playlist-view-header #sync-btn,
+  .playlist-view-header .playlist-play-btn {
+    bottom: 54px;
+  }
+}

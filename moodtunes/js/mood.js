@@ -1045,9 +1045,10 @@ function visibleMoods() {
         timer = setTimeout(function() {
             var now = signature();
             if (now === last) return;
-            var first = last === null;
             last = now;
-            if (!first) window.dispatchEvent(new CustomEvent('moodtunes:moods-changed'));
+            // (also the first time: the moods synced from the server may differ from
+            // what the page drew with, e.g. a mood removed on another device)
+            window.dispatchEvent(new CustomEvent('moodtunes:moods-changed'));
         }, 80);
     }
     function watch() {
