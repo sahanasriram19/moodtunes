@@ -690,3 +690,22 @@ html, body {
 .logs-section .timeline-date:first-child {
   margin-top: 4px;
 }
+/* === NO SCROLLBARS ANYWHERE === */
+/* every scrollbar is hidden (scrolling still works with touch, wheel, trackpad
+   and keyboard). instead, anything that scrolls fades out at the edge where
+   there's more to see - see "SCROLL HINTS" in motion.css and scrollHints() in mood.js */
+html,
+body,
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}

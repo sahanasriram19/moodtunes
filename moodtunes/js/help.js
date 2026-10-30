@@ -18,7 +18,10 @@ function showHelpModal() {
     modal.id = 'help-modal';
     modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(12,5,26,0.78);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
     modal.innerHTML =
-        '<div class="help-card" style="border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">' +
+        // the card holds the colour; the layer inside it scrolls (so its edges can fade
+        // without fading the card itself, see "SCROLL HINTS" in motion.css)
+        '<div class="help-card" style="border-radius:16px;width:100%;max-width:480px;overflow:hidden;">' +
+        '<div class="help-scroll" style="padding:28px;max-height:85vh;overflow-y:auto;box-sizing:border-box;">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
                 '<div style="font-size:18px;font-weight:600;color:#fff;">how to use moodtunes</div>' +
                 '<button id="close-help" style="background:none;border:none;color:#c9bde6;font-size:20px;cursor:pointer;">✕</button>' +
@@ -110,7 +113,7 @@ function showHelpModal() {
                 ? '<button id="help-tour-btn" style="width:100%;margin-top:20px;padding:11px;background:rgba(130,227,198,0.08);border:1px solid #82e3c6;border-radius:8px;color:#a6f0da;font-size:14px;cursor:pointer;font-weight:600;">show me around this page</button>'
                 : '') +
             '<button id="close-help-2" style="width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,#ff9fcf,#ffb98f);border:none;border-radius:8px;color:#2a1038;font-size:14px;cursor:pointer;font-weight:700;">got it!</button>' +
-        '</div>';
+        '</div></div>';
 
     document.body.appendChild(modal);
     modal.addEventListener('click', function(e) { if (e.target === modal) closeHelpModal(modal); });
@@ -140,14 +143,11 @@ document.getElementById('help-btn').addEventListener('click', showHelpModal);
         // the guide itself: a violet card in every theme, with each section's heading
         // in one of the colours that sit well with purple (rose, peach, mint, sky, lavender)
         '#help-modal .help-card{background:linear-gradient(160deg,#3d2670 0%,#2a1850 55%,#1f1240 100%);border:1px solid rgba(200,176,255,0.24);box-shadow:inset 0 1px 0 rgba(255,255,255,0.07),0 24px 60px -24px rgba(0,0,0,0.8);color:#f6f1ff;}' +
-        '#help-modal .help-card::-webkit-scrollbar{width:8px;}' +
-        '#help-modal .help-card::-webkit-scrollbar-thumb{background:rgba(200,176,255,0.25);border-radius:8px;}' +
-        '#help-modal .help-card{scrollbar-color:rgba(200,176,255,0.3) transparent;}' +
-        '#help-modal .help-card>div:nth-of-type(5n+2) .help-heading{color:#ff9fcf;}' +
-        '#help-modal .help-card>div:nth-of-type(5n+3) .help-heading{color:#ffb98f;}' +
-        '#help-modal .help-card>div:nth-of-type(5n+4) .help-heading{color:#82e3c6;}' +
-        '#help-modal .help-card>div:nth-of-type(5n+5) .help-heading{color:#93c8ff;}' +
-        '#help-modal .help-card>div:nth-of-type(5n+1) .help-heading{color:#d4c6ff;}' +
+        '#help-modal .help-scroll>div:nth-of-type(5n+2) .help-heading{color:#ff9fcf;}' +
+        '#help-modal .help-scroll>div:nth-of-type(5n+3) .help-heading{color:#ffb98f;}' +
+        '#help-modal .help-scroll>div:nth-of-type(5n+4) .help-heading{color:#82e3c6;}' +
+        '#help-modal .help-scroll>div:nth-of-type(5n+5) .help-heading{color:#93c8ff;}' +
+        '#help-modal .help-scroll>div:nth-of-type(5n+1) .help-heading{color:#d4c6ff;}' +
         '#help-modal .help-card kbd.mt-kbd{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);color:#fff;}' +
         '#help-modal #close-help-2:hover{filter:brightness(1.06);}' +
         '#help-modal #help-tour-btn:hover{background:rgba(130,227,198,0.16) !important;}' +

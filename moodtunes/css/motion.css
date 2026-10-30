@@ -4442,17 +4442,6 @@ body {
   margin-right: -8px;
   padding-right: 8px;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
-}
-
-.inbox-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.inbox-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 3px;
 }
 
 .inbox-list .inbox-item:last-child {
@@ -5732,5 +5721,67 @@ html body .mc-filled.mc-today:hover {
 
   :root:is(:not([data-theme]), [data-theme="default"], [data-theme="purple"]) .nav-links a:hover {
     background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+  }
+}
+
+/* === SCROLL HINTS (NO SCROLLBARS) === */
+/* scrollbars are hidden everywhere (style.css). anything that scrolls fades out
+   at the edge where there's more to see; mood.js (scrollHints) works out which
+   edges and sets --mt-fs (start edge) and --mt-fe (end edge). the fades ease in
+   and out as you scroll, and disappear once you reach that end */
+@property --mt-fs {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --mt-fe {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+[data-mt-scroll] {
+  transition: --mt-fs 0.25s ease, --mt-fe 0.25s ease;
+}
+
+/* nothing to scroll right now: no fade (this also drops the old fixed edge fades) */
+[data-mt-scroll="none"] {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+[data-mt-scroll="y"] {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+}
+
+[data-mt-scroll="x"] {
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--mt-fs), #000 calc(100% - var(--mt-fe)), transparent 100%) !important;
+}
+
+/* the page: a soft fade along the bottom of the screen while there's more below
+   (sits just above the tab bar on phones) */
+.mt-page-fade {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  z-index: 800;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--bg-page, #120a20) 82%, transparent));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.mt-page-fade.on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mt-scroll] {
+    transition: none;
   }
 }

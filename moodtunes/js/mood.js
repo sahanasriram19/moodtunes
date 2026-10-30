@@ -2380,6 +2380,139 @@ function boot() {
     if (/(^|\/)(index\.html)?$/.test(location.pathname)) setTimeout(maybeShowIOSHint, 4000);
 }
  
+// -- scroll hints (no scrollbars) -------------------------
+// scrollbars are hidden everywhere (see style.css). anything that scrolls shows
+// it instead: its edge fades out on whichever side has more to see (top / bottom
+// for lists and popups, left / right for sideways rows), and the fade goes away
+// once you reach that end. sideways rows also peek a little the first time they
+// come into view, and a mouse wheel scrolls them sideways. the page itself gets a
+// soft fade along the bottom of the screen while there's more page below.
+function scrollHints() {
+    var tracked = new Set();
+    var seen = new WeakSet();
+    var FADE_Y = 28, FADE_X = 36;
+
+    function scrollsY(cs) { return /(auto|scroll)/.test(cs.overflowY); }
+    function scrollsX(cs) { return /(auto|scroll)/.test(cs.overflowX); }
+
+    function consider(el) {
+        if (!el || el.nodeType !== 1 || el === document.body || el === document.documentElement) return;
+        if (el.closest('svg') || el.classList.contains('mt-page-fade')) return;
+        var cs = getComputedStyle(el);
+        if (!scrollsY(cs) && !scrollsX(cs)) {
+            if (tracked.has(el)) { tracked.delete(el); el.removeAttribute('data-mt-scroll'); }
+            return;
+        }
+        if (tracked.has(el)) return;
+        tracked.add(el);
+        el.addEventListener('scroll', function() { update(el); }, { passive: true });
+        // a mouse wheel moves sideways rows sideways (there's no scrollbar to drag);
+        // at either end the page scrolls as usual
+        el.addEventListener('wheel', function(e) {
+            if (el.dataset.mtScroll !== 'x' || e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+            var max = el.scrollWidth - el.clientWidth;
+            if ((e.deltaY > 0 && el.scrollLeft >= max - 1) || (e.deltaY < 0 && el.scrollLeft <= 0)) return;
+            e.preventDefault();
+            el.scrollLeft += e.deltaY;
+        }, { passive: false });
+        if (window.ResizeObserver) ro.observe(el);
+        update(el);
+    }
+
+    function update(el) {
+        if (!el.isConnected) { tracked.delete(el); return; }
+        var cs = getComputedStyle(el);
+        var canY = scrollsY(cs) && el.scrollHeight > el.clientHeight + 2;
+        var canX = !canY && scrollsX(cs) && el.scrollWidth > el.clientWidth + 2;
+        var start = 0, end = 0, axis = 'none';
+        if (canY) {
+            axis = 'y';
+            var fy = Math.min(FADE_Y, el.clientHeight * 0.22);
+            start = el.scrollTop > 2 ? fy : 0;
+            end = el.scrollTop + el.clientHeight < el.scrollHeight - 2 ? fy : 0;
+        } else if (canX) {
+            axis = 'x';
+            var fx = Math.min(FADE_X, el.clientWidth * 0.18);
+            start = el.scrollLeft > 2 ? fx : 0;
+            end = el.scrollLeft + el.clientWidth < el.scrollWidth - 2 ? fx : 0;
+        }
+        if (el.dataset.mtScroll !== axis) el.dataset.mtScroll = axis;
+        el.style.setProperty('--mt-fs', start + 'px');
+        el.style.setProperty('--mt-fe', end + 'px');
+        if (axis === 'x' && io && !seen.has(el)) io.observe(el);
+    }
+
+    // a sideways row peeks once, the first time it's on screen, to show it moves
+    var io = window.IntersectionObserver && !reduceMotion ? new IntersectionObserver(function(entries) {
+        entries.forEach(function(en) {
+            var el = en.target;
+            if (!en.isIntersecting || seen.has(el)) return;
+            seen.add(el);
+            io.unobserve(el);
+            if (el.dataset.mtScroll !== 'x' || el.scrollLeft > 0) return;
+            setTimeout(function() {
+                el.scrollTo({ left: 34, behavior: 'smooth' });
+                setTimeout(function() { if (el.scrollLeft <= 40) el.scrollTo({ left: 0, behavior: 'smooth' }); }, 520);
+            }, 600);
+        });
+    }, { threshold: 0.8 }) : null;
+
+    var ro = window.ResizeObserver ? new ResizeObserver(function(entries) {
+        entries.forEach(function(en) { update(en.target); });
+    }) : null;
+
+    function scanAll() {
+        document.body.querySelectorAll('*').forEach(consider);
+        tracked.forEach(function(el) { update(el); });
+        updatePage();
+    }
+
+    // new things on the page: check them, and refresh every tracked box (its
+    // content may have grown or shrunk)
+    var pendingNodes = [], timer = null;
+    new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+            m.addedNodes.forEach(function(n) { if (n.nodeType === 1) pendingNodes.push(n); });
+        });
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+            var nodes = pendingNodes; pendingNodes = [];
+            nodes.forEach(function(n) {
+                if (!n.isConnected) return;
+                consider(n);
+                if (n.querySelectorAll) n.querySelectorAll('*').forEach(consider);
+            });
+            tracked.forEach(function(el) { update(el); });
+            updatePage();
+        }, 120);
+    }).observe(document.body, { childList: true, subtree: true });
+
+    // the page: a fade along the bottom of the screen while there's more below
+    var pageFade = document.createElement('div');
+    pageFade.className = 'mt-page-fade';
+    pageFade.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(pageFade);
+    function updatePage() {
+        var se = document.scrollingElement || document.documentElement;
+        var more = se.scrollTop + innerHeight < se.scrollHeight - 8;
+        pageFade.classList.toggle('on', more);
+        var bar = document.querySelector('.tabbar');
+        var h = bar && getComputedStyle(bar).display !== 'none' ? bar.offsetHeight : 0;
+        pageFade.style.bottom = h + 'px';
+    }
+    addEventListener('scroll', updatePage, { passive: true });
+
+    var resizeTimer = null;
+    addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(scanAll, 200);     // media queries can turn scrolling on or off
+    });
+    scanAll();
+    setTimeout(scanAll, 1500);                       // after fonts and late content settle
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scrollHints);
+else setTimeout(scrollHints, 0);
+
 // set colour vars and create the glow layer immediately, so they're already there
 // when a page transition reveals this page; the rest waits for the DOM + profile.js
 setMood(initialMood());
