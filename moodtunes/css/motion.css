@@ -5933,16 +5933,19 @@ html body .mc-filled.mc-today:hover {
     font-size: 14px;
   }
 
-  /* now playing card */
-  .np-title {
-    font-size: 15px;
+  /* now playing card: the song title the same size as the song logs */
+  .np-title,
+  .np-card .np-title {
+    font-size: 13.5px !important;
   }
 
   .np-artist,
   .np-label,
   .np-logas,
-  .np-upnext-label {
-    font-size: 12px;
+  .np-upnext-label,
+  .np-sync-text,
+  .np-time {
+    font-size: 11.5px !important;
   }
 
   /* session page */
@@ -5973,6 +5976,108 @@ html body .mc-filled.mc-today:hover {
 
   .help-scroll {
     padding: 22px !important;
+  }
+
+  /* song logs (journal, history, playlists): the same sizes as "not in your
+     journal yet" - title 13.5, artist and details 11.5 */
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-title,
+  .log-card .song-title {
+    font-size: 13.5px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-artist {
+    font-size: 11.5px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note,
+  .title-row .log-note,
+  .note-line .log-note {
+    font-size: 12px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta > *,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
+    font-size: 11px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-art {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card {
+    grid-template-columns: 42px minmax(0, 1fr) auto auto auto;
+    column-gap: 11px !important;
+    padding: 10px 0 !important;
+  }
+
+  #playlist-block .log-card:has(.drag-handle) {
+    grid-template-columns: 18px 42px minmax(0, 1fr) auto auto auto;
+  }
+
+  :is(#timeline, #logs-list, #playlist-block) .log-card .play-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* day headings ("Today", "Yesterday") and other big titles */
+  #logs-list .timeline-date,
+  #timeline .timeline-date,
+  .timeline-date {
+    font-size: 20px !important;
+  }
+
+  .stats-sentence {
+    font-size: 18px !important;
+  }
+
+  .song-history-title,
+  .session-history-mood,
+  .result-title {
+    font-size: 13.5px !important;
+  }
+
+  .song-history-artist,
+  .song-history-date,
+  .song-history-total,
+  .session-history-meta,
+  .result-artist {
+    font-size: 11.5px !important;
+  }
+
+  .playlist-view-title {
+    font-size: 24px !important;
+  }
+
+  .stat-num,
+  .stat-box-num {
+    font-size: 24px !important;
+  }
+
+  .flashback-song-title,
+  .top-song-title {
+    font-size: 13.5px !important;
+  }
+
+  .flashback-song-artist,
+  .top-song-artist {
+    font-size: 11.5px !important;
+  }
+
+  .session-hero-timer {
+    font-size: 46px !important;
+  }
+
+  .session-btn,
+  .install-btn,
+  #session-start-btn,
+  #session-end-btn {
+    font-size: 12px !important;
+  }
+
+  .tab {
+    font-size: 11px;
   }
 }
 

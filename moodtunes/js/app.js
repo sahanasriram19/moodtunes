@@ -56,7 +56,8 @@ function addChip(name, emoji, id) {
         document.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = name;
-        songSearch.focus();
+        // (the search box isn't focused here: on phones that popped the keyboard open
+        // every time you picked a mood. it opens only when you tap the search box)
     });
 
     var delBtn = document.createElement('button');
@@ -109,7 +110,8 @@ chips.forEach(function(chip) {
         document.querySelectorAll('.custom-chip').forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
         selectedMood = chip.dataset.mood;
-        songSearch.focus();
+        // (the search box isn't focused here: on phones that popped the keyboard open
+        // every time you picked a mood. it opens only when you tap the search box)
     });
 });
 
