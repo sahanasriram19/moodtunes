@@ -1,14 +1,11 @@
 const express = require('express');
-const cors    = require('cors');
+const cors = require('cors');
 
 const app = express();
 
-// render sits in front of the app as a proxy, so trust its "real visitor IP"
-// header — the login limit (see middlewares/rateLimit.js) counts by that IP
 app.set('trust proxy', 1);
-
-// basic security headers on every response (and don't advertise "Express")
 app.disable('x-powered-by');
+
 app.use((req, res, next) => {
     res.set({
         'X-Content-Type-Options': 'nosniff',
@@ -19,9 +16,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// which websites may call this backend. APP_URL (set on render) is the app's
-// address; the vercel addresses are listed too, so renaming the app doesn't lock it out
 const APP_ORIGIN = (process.env.APP_URL || 'https://moodtunes-main.vercel.app').replace(/\/+$/, '');
+
 app.use(cors({
     origin: [
         APP_ORIGIN,
@@ -33,23 +29,16 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json({ limit: '1mb' }));     // room for playlist cover images
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// open https://<your-backend>/api/health in a browser to check the server is up
-// and that the one-log-per-day database upgrade finished
 app.get('/api/health', (req, res) => {
     res.json({ ok: true, dailyLogs: require('./models/logModel').dailyLogsStatus });
 });
 
-// spotify's beat map for the background sound waves
-app.get('/api/beatmap', require('./middlewares/jwtMiddleware').verifyToken, require('./controllers/beatmapController').getBeatmap);
-
 const mainRoutes = require('./routes/mainRoutes');
 app.use('/api', mainRoutes);
 
-// any unexpected error comes back as JSON (with the CORS headers above), so the
-// app can show what went wrong instead of failing to read the response
 app.use((err, req, res, next) => {
     console.error(req.method + ' ' + req.originalUrl + ' failed:', err);
     if (res.headersSent) return next(err);

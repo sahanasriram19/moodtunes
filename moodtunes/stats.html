@@ -2,8 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- no white flash between pages: paint the theme's background colour from the
-       very first frame, before any stylesheet or script has loaded -->
   <meta name="color-scheme" content="dark" />
   <style>html{background:#120a20;color-scheme:dark}</style>
   <script>
@@ -11,7 +9,7 @@
       var bg = { default: '#120a20', warm: '#0a0a0a', ocean: '#071821', light: '#f8f8f6' };
       var t = 'default';
       try { t = localStorage.getItem('moodtunes_theme') || 'default'; } catch (e) {}
-      if (t === 'purple') { t = 'ocean'; try { localStorage.setItem('moodtunes_theme', t); } catch (e) {} }   // deep purple became ocean
+      if (t === 'purple') { t = 'ocean'; try { localStorage.setItem('moodtunes_theme', t); } catch (e) {} }
       if (!bg[t]) t = 'default';
       var root = document.documentElement;
       root.setAttribute('data-theme', t);
@@ -21,9 +19,6 @@
       if (meta) meta.content = t === 'light' ? 'light' : 'dark';
     })();
   </script>
-  <!-- page opening animation: the content fades and rises in (see "PAGE OPENING" in
-       css/motion/). started here, and again when a page prepared in the background or
-       kept by the back button is shown, so it always plays as you arrive -->
   <script>
     (function () {
       var root = document.documentElement;
@@ -34,11 +29,15 @@
       }
       if (document.prerendering) document.addEventListener('prerenderingchange', enter, { once: true });
       else enter();
-      addEventListener('pageshow', function (e) { if (e.persisted) { root.classList.remove('mt-leave'); enter(); } });
+      addEventListener('pageshow', function (e) {
+        if (e.persisted) {
+          root.classList.remove('mt-leave');
+          enter();
+        }
+      });
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <!-- installable app (PWA) -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0f0f0f" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -48,13 +47,10 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="images/favicon.png" />
   <title>Stats</title>
-  <!-- fonts: connect early and load in parallel with the other stylesheets -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://moodtunes-2avk.onrender.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&amp;display=swap" />
-  <!-- fetch the other pages early, and fully prepare one as soon as you hover or touch its
-       link, so it opens almost instantly (Chrome/Edge; other browsers ignore this) -->
   <script type="speculationrules">
     {
       "prerender": [{ "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }],
@@ -64,7 +60,6 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/stats.css" />
   <link rel="stylesheet" href="css/mobile.css" />
-  <!-- the app's look, in 7 parts that must load in this order (see css/motion/01-foundation.css) -->
   <link rel="stylesheet" href="css/motion/01-foundation.css" />
   <link rel="stylesheet" href="css/motion/02-app-shell.css" />
   <link rel="stylesheet" href="css/motion/03-themes.css" />
@@ -72,17 +67,17 @@
   <link rel="stylesheet" href="css/motion/05-phone-layouts.css" />
   <link rel="stylesheet" href="css/motion/06-polish.css" />
   <link rel="stylesheet" href="css/motion/07-features.css" />
+  <link rel="stylesheet" href="css/motion/08-mobile.css" />
 </head>
 <body>
   <nav class="navbar">
-      <img src="images/moodtunes_logo.png" class="logo" alt="moodtunes logo">
-        <ul class="nav-links">
+    <img src="images/moodtunes_logo.png" class="logo" alt="moodtunes logo">
+    <ul class="nav-links">
       <li><a href="index.html">journal</a></li>
       <li><a href="playlists.html">playlists</a></li>
       <li><a href="session.html">session</a></li>
       <li><a href="history.html">history</a></li>
-      <li><a href="stats.html" >stats</a></li>
-  
+      <li><a href="stats.html">stats</a></li>
     </ul>
     <div class="nav-right">
       <button class="session-btn" id="session-btn">▶ start session</button>
@@ -90,7 +85,7 @@
     </div>
   </nav>
 
-  <main class="container">
+  <main class="container stats-page">
     <h1 class="sr-only">your stats</h1>
     <div id="stats-content">
       <p style="color:#555;font-size:14px;">loading your stats...</p>
