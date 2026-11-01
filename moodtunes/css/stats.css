@@ -609,3 +609,20 @@
 .mc-filled.mc-art .mc-dots {
   bottom: 9px;
 }
+
+/* Match the homepage container width */
+main.container.stats-page {
+  width: 100%;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+@media (max-width: 768px) {
+  main.container.stats-page {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
