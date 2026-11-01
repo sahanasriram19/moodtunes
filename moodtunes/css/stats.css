@@ -763,3 +763,85 @@ main.container.stats-page {
         font-size: 18px;
     }
 }
+
+/* =================================
+   STATS TYPOGRAPHY IMPROVEMENTS
+================================= */
+
+/* Main stats heading */
+.stats-page h1 {
+    font-size: 36px !important;
+    line-height: 1.2;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+/* Stats summary sentence */
+.stats-sentence {
+    font-size: 18px !important;
+    line-height: 1.6;
+}
+
+/* Card headings */
+.stats-card-title {
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+/* Mood and listening labels */
+.mood-bar-name,
+.time-bar-label {
+    font-size: 13px;
+}
+
+.mood-bar-count {
+    font-size: 12px;
+}
+
+/* Top songs */
+.top-song-title {
+    font-size: 14px;
+}
+
+.top-song-artist,
+.top-song-plays {
+    font-size: 12px;
+}
+
+/* Flashback text */
+.flashback-label {
+    font-size: 11px;
+}
+
+.flashback-subtitle {
+    font-size: 14px;
+}
+
+.flashback-title {
+    font-size: 12px;
+}
+
+.flashback-plays {
+    font-size: 11px;
+}
+
+/* Calendar supporting text */
+.mc-wd,
+.mc-none,
+.mc-hint {
+    font-size: 12px;
+}
+
+.mc-legend {
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .stats-page h1 {
+        font-size: 30px !important;
+    }
+
+    .stats-sentence {
+        font-size: 16px !important;
+    }
+}
