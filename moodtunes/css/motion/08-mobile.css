@@ -14,12 +14,12 @@
     gap: 8px;
   }
 
-  .hist-filter .hf-range {
+   .hist-filter .hf-range {
     flex: 0 0 auto;
     width: auto;
     min-height: 0;
-    padding: 7px 16px;
-    font-size: 13px;
+    padding: 5px 12px;
+    font-size: 11px;
     border-radius: 20px;
   }
 
