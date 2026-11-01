@@ -549,3 +549,26 @@
     font-size: 13px;
   }
 }
+
+/* History page title */
+.history-page h1,
+.history-header h1,
+h1.page-title {
+  font-size: clamp(30px, 7vw, 40px);
+  line-height: 1.15;
+}
+
+/* All Time filter and other history filter controls */
+.history-filter,
+.history-filter select,
+.history-filter button,
+#history-filter,
+#history-filter select,
+#time-filter,
+#time-filter select,
+select[name="time-filter"] {
+  min-height: 44px;
+  font-size: 16px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+}
