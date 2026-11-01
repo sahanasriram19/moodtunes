@@ -1,11 +1,24 @@
+
 /* === STATS PAGE === */
 
+/* Summary / title */
 .stats-summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 28px;
+  display: block !important;
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 12px;
 }
+
+.stats-sentence {
+  display: block;
+  width: 100%;
+  margin: 0;
+  font-size: 28px !important;
+  line-height: 1.35 !important;
+  font-weight: 600 !important;
+}
+
+/* === STAT BOXES === */
 
 .stat-box {
   border-radius: 12px;
@@ -59,13 +72,16 @@
   border: 1px solid #222;
   border-radius: 12px;
   padding: 16px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .stats-card-title {
-  font-size: 11px;
-  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
   letter-spacing: 0.06em;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 /* === MOOD BREAKDOWN === */
@@ -78,7 +94,7 @@
 }
 
 .mood-bar-name {
-  font-size: 12px;
+  font-size: 13px;
   color: #aaa;
   width: 80px;
   flex-shrink: 0;
@@ -97,8 +113,8 @@
 }
 
 .mood-bar-count {
-  font-size: 11px;
-  color: #555;
+  font-size: 12px;
+  color: #777;
   width: 28px;
   text-align: right;
   flex-shrink: 0;
@@ -114,7 +130,7 @@
 }
 
 .time-bar-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #aaa;
   width: 72px;
   flex-shrink: 0;
@@ -144,7 +160,7 @@
 
 .top-song-num {
   font-size: 12px;
-  color: #555;
+  color: #777;
   width: 14px;
   flex-shrink: 0;
 }
@@ -164,7 +180,8 @@
 }
 
 .top-song-title {
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 500;
   color: #f0f0f0;
   white-space: nowrap;
   overflow: hidden;
@@ -172,13 +189,13 @@
 }
 
 .top-song-artist {
-  font-size: 11px;
+  font-size: 12px;
   color: #888;
 }
 
 .top-song-plays {
-  font-size: 11px;
-  color: #555;
+  font-size: 12px;
+  color: #777;
   flex-shrink: 0;
 }
 
@@ -190,18 +207,21 @@
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 16px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .flashback-label {
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 600;
   color: #9b6fc2;
   letter-spacing: 0.08em;
   margin-bottom: 6px;
 }
 
 .flashback-subtitle {
-  font-size: 13px;
-  color: #666;
+  font-size: 14px;
+  color: #888;
   margin-bottom: 14px;
 }
 
@@ -225,7 +245,7 @@
 }
 
 .flashback-title {
-  font-size: 11px;
+  font-size: 12px;
   color: #f0f0f0;
   white-space: nowrap;
   overflow: hidden;
@@ -234,8 +254,8 @@
 }
 
 .flashback-plays {
-  font-size: 10px;
-  color: #555;
+  font-size: 11px;
+  color: #777;
 }
 
 /* === MOOD GRAPH === */
@@ -244,19 +264,8 @@
   margin-bottom: 16px;
 }
 
-/* === MOBILE === */
-
-@media (max-width: 768px) {
-  .stats-summary {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
 /* === MOOD CALENDAR === */
-/* each day is filled with the colour of that day's main mood; stronger colour = more plays */
+
 .mood-cal {
   margin-bottom: 16px;
 }
@@ -330,7 +339,7 @@
 
 .mc-wd {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted, #666);
   padding-bottom: 2px;
 }
@@ -421,7 +430,7 @@
   flex-wrap: wrap;
   gap: 8px 14px;
   margin-top: 14px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary, #aaa);
 }
 
@@ -445,7 +454,7 @@
 .mc-none,
 .mc-hint {
   color: var(--text-muted, #666);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .mc-detail {
@@ -547,6 +556,132 @@
   background: color-mix(in srgb, var(--mc) 12%, transparent);
 }
 
+/* Calendar album artwork */
+.mc-filled.mc-art {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 45%),
+    var(--mc-art) center / cover no-repeat,
+    color-mix(in srgb, var(--mc) 60%, #22133d) !important;
+}
+
+.mc-filled.mc-art::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--mc);
+}
+
+.mc-filled.mc-art .mc-dots {
+  bottom: 9px;
+}
+
+/* === STATS PAGE WIDTH === */
+
+main.container.stats-page {
+  width: 100%;
+  max-width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 40px;
+  padding-right: 40px;
+  box-sizing: border-box;
+}
+
+#stats-content {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+/* === FINAL STATS LAYOUT === */
+
+.stats-layout {
+  display: grid !important;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "summary summary"
+    "flashback flashback"
+    "moods time"
+    "graph graph"
+    "top calendar";
+  gap: 16px;
+  align-items: start;
+}
+
+.stats-flashback {
+  grid-area: flashback;
+}
+
+.stats-moods {
+  grid-area: moods;
+}
+
+.stats-time {
+  grid-area: time;
+}
+
+.stats-graph {
+  grid-area: graph;
+}
+
+.stats-top {
+  grid-area: top;
+}
+
+.stats-calendar {
+  grid-area: calendar;
+}
+
+.stats-layout > .stats-card,
+.stats-layout > .flashback-card {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  box-sizing: border-box;
+  align-self: start;
+}
+
+.stats-top,
+.stats-calendar {
+  align-self: start !important;
+  margin-top: 0 !important;
+  transform: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  main.container.stats-page {
+    max-width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .stats-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "summary"
+      "flashback"
+      "moods"
+      "time"
+      "graph"
+      "top"
+      "calendar";
+  }
+
+  .stats-page .stats-sentence {
+    font-size: 22px !important;
+  }
+}
+
 @media (max-width: 520px) {
   .mc-grid {
     gap: 4px;
@@ -585,271 +720,4 @@
   .mc-pop {
     animation: none;
   }
-}
-/* calendar days show the album cover of that day's top song; a thin bar in the
-   mood colour along the bottom keeps the mood visible (days without a cover keep the colour fill) */
-.mc-filled.mc-art {
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 45%),
-    var(--mc-art) center / cover no-repeat,
-    color-mix(in srgb, var(--mc) 60%, #22133d) !important;
-}
-
-.mc-filled.mc-art::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: var(--mc);
-}
-
-.mc-filled.mc-art .mc-dots {
-  bottom: 9px;
-}
-
-/* === STATS PAGE WIDTH === */
-main.container.stats-page {
-  width: 100%;
-  max-width: 1020px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 40px;
-  padding-right: 40px;
-}
-
-#stats-content {
-  width: 100%;
-  max-width: none;
-}
-
-@media (max-width: 768px) {
-  main.container.stats-page {
-    max-width: 100%;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-/* =================================
-   FINAL STATS PAGE LAYOUT
-================================= */
-
-/* Main page width */
-main.container.stats-page {
-    width: 100%;
-    max-width: 1020px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 40px;
-    padding-right: 40px;
-    box-sizing: border-box;
-}
-
-#stats-content {
-    width: 100%;
-    min-width: 0;
-}
-
-/* Dashboard grid */
-.stats-layout {
-    display: grid !important;
-    width: 100%;
-    min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-        "summary summary"
-        "flashback flashback"
-        "moods time"
-        "graph graph"
-        "top calendar";
-    gap: 16px;
-    align-items: start;
-}
-
-/* Summary/title: full width and restored size */
-.stats-summary {
-    grid-area: summary;
-    display: block;
-    width: 100%;
-    min-width: 0;
-    margin: 0 0 12px;
-    font-size: 18px;
-}
-
-.stats-sentence {
-    display: block;
-    width: 100%;
-    margin: 0;
-    font-size: 20px;
-    line-height: 1.5;
-}
-
-/* Card positions */
-.stats-flashback {
-    grid-area: flashback;
-}
-
-.stats-moods {
-    grid-area: moods;
-}
-
-.stats-time {
-    grid-area: time;
-}
-
-.stats-graph {
-    grid-area: graph;
-}
-
-.stats-top {
-    grid-area: top;
-}
-
-.stats-calendar {
-    grid-area: calendar;
-}
-
-/* Consistent card sizing */
-.stats-layout > .stats-card,
-.stats-layout > .flashback-card {
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    min-height: 0;
-    margin: 0;
-    box-sizing: border-box;
-    align-self: start;
-}
-
-/* Keep the bottom two cards aligned at the top */
-.stats-top,
-.stats-calendar {
-    align-self: start !important;
-    margin-top: 0 !important;
-    transform: none;
-}
-
-/* Prevent content from stretching the columns */
-.stats-card,
-.flashback-card {
-    min-width: 0;
-    box-sizing: border-box;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-    main.container.stats-page {
-        max-width: 100%;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-
-    .stats-layout {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-areas:
-            "summary"
-            "flashback"
-            "moods"
-            "time"
-            "graph"
-            "top"
-            "calendar";
-    }
-
-    .stats-sentence {
-        font-size: 18px;
-    }
-}
-
-/* =================================
-   STATS TYPOGRAPHY — MATCH HISTORY
-================================= */
-
-/* Main Stats page title */
-.stats-page h1 {
-    font-size: 32px !important;
-    line-height: 1.2;
-    font-weight: 700;
-    margin-bottom: 24px;
-}
-
-/* Stats summary sentence */
-.stats-sentence {
-    font-size: 18px !important;
-    line-height: 1.6;
-    font-weight: 500;
-}
-
-/* Card headings */
-.stats-card-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 16px;
-}
-
-/* Mood and listening labels */
-.mood-bar-name,
-.time-bar-label {
-    font-size: 13px;
-}
-
-.mood-bar-count {
-    font-size: 12px;
-}
-
-/* Top songs */
-.top-song-title {
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.top-song-artist,
-.top-song-plays {
-    font-size: 12px;
-}
-
-/* Flashback */
-.flashback-label {
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.flashback-subtitle {
-    font-size: 14px;
-}
-
-.flashback-title {
-    font-size: 12px;
-}
-
-.flashback-plays {
-    font-size: 11px;
-}
-
-/* Calendar */
-.mc-wd {
-    font-size: 12px;
-}
-
-.mc-legend {
-    font-size: 13px;
-}
-
-.mc-none,
-.mc-hint {
-    font-size: 13px;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-    .stats-page h1 {
-        font-size: 28px !important;
-    }
-
-    .stats-sentence {
-        font-size: 16px !important;
-    }
 }
