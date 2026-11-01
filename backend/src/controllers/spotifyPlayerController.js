@@ -8,7 +8,8 @@ function reasonOf(e) {
     const status = e.status || (e.response && e.response.status);
     const r = e.response && e.response.data && e.response.data.error && e.response.data.error.reason;
     if (status === 401) return 'not_connected';
-    if (status === 403 || r === 'PREMIUM_REQUIRED') return 'premium_required';
+    if (r === 'PREMIUM_REQUIRED') return 'premium_required';
+    if (status === 403) return 'forbidden';
     if (status === 404 || r === 'NO_ACTIVE_DEVICE') return 'no_active_device';
     return 'failed';
 }

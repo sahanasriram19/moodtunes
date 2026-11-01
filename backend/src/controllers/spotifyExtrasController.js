@@ -1,7 +1,7 @@
-const axios   = require('axios');
+const axios = require('axios');
 const spotify = require('./spotifyController');
-const lists   = require('./spotifyPlaylistController');
-const logs    = require('../models/logModel');
+const lists = require('./spotifyPlaylistController');
+const logs = require('../models/logModel');
 const playlists = require('./playlistOrderController');
 
 const { call, uriOf, query } = lists;
@@ -15,7 +15,8 @@ function reasonOf(e) {
     const r = e.response && e.response.data && e.response.data.error && e.response.data.error.reason;
     if (status === 401) return 'not_connected';
     if (lists.needsReconnect(e)) return 'reconnect';
-    if (status === 403 || r === 'PREMIUM_REQUIRED') return 'premium_required';
+    if (r === 'PREMIUM_REQUIRED') return 'premium_required';
+    if (status === 403) return 'forbidden';
     if (status === 404 || r === 'NO_ACTIVE_DEVICE') return 'no_active_device';
     return 'failed';
 }
@@ -64,7 +65,7 @@ function lru(max) {
     };
 }
 const trackArtists = lru(3000);       // track id  → [artist id, …]
-const artistInfo   = lru(3000);       // artist id → { name, genres }
+const artistInfo = lru(3000);       // artist id → { name, genres }
 
 // ── the heart: save to / remove from your spotify liked songs ───────────────
 // (spotify's february 2026 /me/library endpoints, falling back to the older ones)
@@ -210,9 +211,9 @@ module.exports.logFromSpotify = async (req, res) => {
 
     logs.recordPlay({
         user_id: userId, song_id: songId, mood,
-        title:       t ? t.title : String(b.title || '').slice(0, 255),
-        artist:      t ? t.artist : String(b.artist || '').slice(0, 255),
-        album_art:   t ? t.albumArt : b.album_art,
+        title: t ? t.title : String(b.title || '').slice(0, 255),
+        artist: t ? t.artist : String(b.artist || '').slice(0, 255),
+        album_art: t ? t.albumArt : b.album_art,
         spotify_url: t ? t.spotifyUrl : b.spotify_url,
         note: '', plays, log_date: day,
         first_ms: g ? g.first_ms : now, last_ms: g ? g.last_ms : now
@@ -356,13 +357,13 @@ async function searchTracks(q, offset, limit) {
 // what each built-in mood sounds like: spotify genre names (for genre: search)
 // and last.fm mood tags (for "songs tagged chill/sad/..."). custom moods use their own name as the tag
 const MOOD_PROFILE = {
-    happy:      { genres: ['dance pop', 'funk', 'indie pop', 'disco', 'afrobeats'],        tags: ['happy', 'feel good', 'upbeat'] },
-    sad:        { genres: ['indie folk', 'acoustic', 'singer-songwriter', 'sad', 'piano'],  tags: ['sad', 'melancholy', 'melancholic'] },
-    hype:       { genres: ['trap', 'hip hop', 'edm', 'drill', 'phonk'],                    tags: ['energetic', 'hype', 'party'] },
-    heartbreak: { genres: ['r&b', 'soul', 'sad', 'pop', 'alt r&b'],                         tags: ['heartbreak', 'breakup', 'sad'] },
-    nostalgic:  { genres: ['2000s', '90s', 'classic rock', 'motown', 'synthpop'],            tags: ['nostalgic', 'nostalgia', '00s'] },
-    focused:    { genres: ['lo-fi', 'ambient', 'classical', 'post-rock', 'chillhop'],         tags: ['instrumental', 'study', 'focus'] },
-    chill:      { genres: ['lo-fi', 'chillhop', 'bedroom pop', 'neo soul', 'chillwave'],      tags: ['chill', 'mellow', 'chillout'] }
+    happy: { genres: ['dance pop', 'funk', 'indie pop', 'disco', 'afrobeats'], tags: ['happy', 'feel good', 'upbeat'] },
+    sad: { genres: ['indie folk', 'acoustic', 'singer-songwriter', 'sad', 'piano'], tags: ['sad', 'melancholy', 'melancholic'] },
+    hype: { genres: ['trap', 'hip hop', 'edm', 'drill', 'phonk'], tags: ['energetic', 'hype', 'party'] },
+    heartbreak: { genres: ['r&b', 'soul', 'sad', 'pop', 'alt r&b'], tags: ['heartbreak', 'breakup', 'sad'] },
+    nostalgic: { genres: ['2000s', '90s', 'classic rock', 'motown', 'synthpop'], tags: ['nostalgic', 'nostalgia', '00s'] },
+    focused: { genres: ['lo-fi', 'ambient', 'classical', 'post-rock', 'chillhop'], tags: ['instrumental', 'study', 'focus'] },
+    chill: { genres: ['lo-fi', 'chillhop', 'bedroom pop', 'neo soul', 'chillwave'], tags: ['chill', 'mellow', 'chillout'] }
 };
 function moodProfile(mood) {
     const m = String(mood || '').toLowerCase();
@@ -467,7 +468,7 @@ async function buildRecommendations(userId, mood, max) {
         }
         return out;
     };
-    const moodWhy  = mood;
+    const moodWhy = mood;
     const moodPool = moodHits.concat(moodGenreHits);
     let picks = [
         ...take(moodPool, 'mood', Math.round(max * 0.4)),

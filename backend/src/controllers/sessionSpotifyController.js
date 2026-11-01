@@ -39,40 +39,73 @@ function reasonOf(e) {
     const r = e.response && e.response.data && e.response.data.error && e.response.data.error.reason;
     if (status === 401) return 'not_connected';
     if (lists.needsReconnect(e)) return 'reconnect';
-    if (status === 403 || r === 'PREMIUM_REQUIRED') return 'premium_required';
+    if (r === 'PREMIUM_REQUIRED') return 'premium_required'; 
+    if (status === 403) return 'forbidden';
     if (status === 404 || r === 'NO_ACTIVE_DEVICE') return 'no_active_device';
     if (status === 429) return 'rate_limited';
     return 'failed';
 }
 
-// the device spotify is playing on right now (null if spotify isn't open anywhere)
 async function activeDevice(userId) {
     try {
-        const p = await call(userId, 'get', '/me/player');
-        return p && p.device && p.device.id ? p.device : null;
+        const playback = await call(userId, 'get', '/me/player');
+
+        if (playback && playback.device &&
+            playback.device.id && !playback.device.is_restricted) {
+            return playback.device;
+        }
     } catch (e) {
-        if (reasonOf(e) === 'no_active_device') return null;
-        throw e;
+        if (reasonOf(e) !== 'no_active_device') throw e;
     }
+
+    // Fallback: ask Spotify which Connect devices are available
+    const result = await call(userId, 'get', '/me/player/devices');
+    const devices = result && Array.isArray(result.devices)
+        ? result.devices
+        : [];
+
+    return devices.find(function(device) {
+        return device.is_active && device.id && !device.is_restricted;
+    }) || null;
 }
 
-// add songs to the queue one by one, in order (spotify has no "add many" call).
-// stops at the first failure and says which songs are still left
 async function queueAll(userId, uris) {
     const device = await activeDevice(userId);
-    if (!device) return { queued: 0, left: uris, reason: 'no_active_device' };
+
+    if (!device) {
+        return {
+            queued: 0,
+            left: uris,
+            reason: 'no_active_device'
+        };
+    }
     let queued = 0;
     for (const uri of uris) {
         try {
-            await call(userId, 'post', '/me/player/queue?uri=' + encodeURIComponent(uri));
+            const path =
+                '/me/player/queue?uri=' +
+                encodeURIComponent(uri) +
+                '&device_id=' +
+                encodeURIComponent(device.id);
+
+            await call(userId, 'post', path);
             queued++;
+
         } catch (e) {
-            return { queued, left: uris.slice(queued), reason: reasonOf(e), device: device.name };
+            return {
+                queued,
+                left: uris.slice(queued),
+                reason: reasonOf(e),
+                device: device.name
+            };
         }
     }
-    return { queued, left: [], device: device.name };
+    return {
+        queued,
+        left: [],
+        device: device.name
+    };
 }
-
 // POST /api/sessions/:session_id/spotify/start   body: { mix_mine?: bool }
 // → { tracks, genres, source, uris, queued, left, reason?, device? }
 module.exports.start = async (req, res) => {
