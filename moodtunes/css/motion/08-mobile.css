@@ -2,12 +2,13 @@
 
 @media (max-width: 600px) {
 
-  /* ── stats sentence (history + stats pages): bigger so it stands out ── */
+  /* ── stats sentence (history + stats pages): bigger, stays on one line ── */
   html body .stats-sentence,
   #stats-grid .stats-sentence,
   .stats-sentence-wrap .stats-sentence {
     font-size: clamp(21px, 6.4vw, 26px) !important;
     line-height: 1.3 !important;
+    white-space: nowrap !important;
   }
 
   /* ── filter dropdown + dates + clear: compact, rounded-square dropdown ── */
