@@ -406,3 +406,146 @@
   color: #555;
   flex-shrink: 0;
 }
+
+
+/* === HISTORY: MOBILE RESPONSIVENESS === */
+
+@media (max-width: 600px) {
+
+  /* Stats cards: songs, moods and total plays */
+  .stats-section {
+    margin-bottom: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 16px 6px;
+    border-radius: 12px;
+    min-width: 0;
+  }
+
+  .stat-num {
+    font-size: clamp(25px, 7vw, 30px);
+    line-height: 1.15;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    margin-top: 6px;
+  }
+
+  /* History view tabs */
+  .history-tabs {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .history-tab {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 10px;
+    font-size: 14px;
+    text-align: center;
+    white-space: nowrap;
+    min-height: 44px;
+  }
+
+  /* Search section */
+  .song-search-section {
+    margin-bottom: 24px;
+  }
+
+  #song-history-search {
+    box-sizing: border-box;
+    min-height: 46px;
+    font-size: 16px;
+  }
+
+  /* Session cards */
+  .session-history-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .session-history-header {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .session-history-mood {
+    font-size: 16px;
+  }
+
+  .session-history-meta {
+    font-size: 12px;
+  }
+
+  .session-history-songs {
+    gap: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Song history cards */
+  .song-history-card {
+    padding: 14px;
+  }
+
+  .song-history-header {
+    gap: 12px;
+  }
+
+  .song-history-title {
+    font-size: 15px;
+  }
+
+  .song-history-artist {
+    font-size: 13px;
+  }
+
+  .song-history-total {
+    font-size: 13px;
+  }
+
+  /* Timeline dates */
+  .timeline-date {
+    font-size: 16px;
+  }
+
+  /* Flashback card */
+  .flashback-card {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 360px) {
+  .stats-grid {
+    gap: 6px;
+  }
+
+  .stat-card {
+    padding: 14px 4px;
+  }
+
+  .stat-num {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .history-tab {
+    padding-inline: 6px;
+    font-size: 13px;
+  }
+}
