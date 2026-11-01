@@ -144,6 +144,12 @@
   border-bottom-color: #9b6fc2;
 }
 
+/* timeline + sessions tab text in white, mobile and laptop (the clean light theme is left alone) */
+html:not([data-theme="light"]) .history-tabs .history-tab,
+html:not([data-theme="light"]) .history-tabs .history-tab.active {
+  color: #fff !important;
+}
+
 /* === SESSION CARDS IN HISTORY === */
 .session-history-card {
   background: #141414;
@@ -524,4 +530,15 @@
     padding: 16px;
     gap: 12px;
   }
+}
+
+/* filter dropdown: arrow sits inside the box on every screen size */
+html body .hist-filter .hf-range {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 10px;
 }
