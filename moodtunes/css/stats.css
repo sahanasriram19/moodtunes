@@ -715,3 +715,62 @@ main.container.stats-page {
             "calendar";
     }
 }
+
+/* === STATS DASHBOARD === */
+
+#stats-content {
+    width: 100%;
+}
+
+.stats-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-areas:
+        "summary summary"
+        "flashback flashback"
+        "moods time"
+        "graph graph"
+        "top calendar";
+    gap: 16px;
+    align-items: stretch;
+    width: 100%;
+}
+
+.stats-summary {
+    grid-area: summary;
+    grid-column: 1 / -1;
+}
+
+.stats-flashback {
+    grid-area: flashback;
+    grid-column: 1 / -1;
+}
+
+.stats-moods { grid-area: moods; }
+.stats-time { grid-area: time; }
+.stats-graph { grid-area: graph; grid-column: 1 / -1; }
+.stats-top { grid-area: top; }
+.stats-calendar { grid-area: calendar; }
+
+.stats-layout > .stats-card,
+.stats-layout > .flashback-card {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .stats-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "summary"
+            "flashback"
+            "moods"
+            "time"
+            "graph"
+            "top"
+            "calendar";
+    }
+}
