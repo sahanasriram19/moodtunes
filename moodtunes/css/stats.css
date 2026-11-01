@@ -765,12 +765,12 @@ main.container.stats-page {
 }
 
 /* =================================
-   STATS TYPOGRAPHY IMPROVEMENTS
+   STATS TYPOGRAPHY — MATCH HISTORY
 ================================= */
 
-/* Main stats heading */
+/* Main Stats page title */
 .stats-page h1 {
-    font-size: 36px !important;
+    font-size: 32px !important;
     line-height: 1.2;
     font-weight: 700;
     margin-bottom: 24px;
@@ -780,11 +780,13 @@ main.container.stats-page {
 .stats-sentence {
     font-size: 18px !important;
     line-height: 1.6;
+    font-weight: 500;
 }
 
 /* Card headings */
 .stats-card-title {
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 600;
     margin-bottom: 16px;
 }
 
@@ -800,7 +802,8 @@ main.container.stats-page {
 
 /* Top songs */
 .top-song-title {
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
 }
 
 .top-song-artist,
@@ -808,9 +811,10 @@ main.container.stats-page {
     font-size: 12px;
 }
 
-/* Flashback text */
+/* Flashback */
 .flashback-label {
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .flashback-subtitle {
@@ -825,10 +829,8 @@ main.container.stats-page {
     font-size: 11px;
 }
 
-/* Calendar supporting text */
-.mc-wd,
-.mc-none,
-.mc-hint {
+/* Calendar */
+.mc-wd {
     font-size: 12px;
 }
 
@@ -836,9 +838,15 @@ main.container.stats-page {
     font-size: 13px;
 }
 
+.mc-none,
+.mc-hint {
+    font-size: 13px;
+}
+
+/* Mobile */
 @media (max-width: 768px) {
     .stats-page h1 {
-        font-size: 30px !important;
+        font-size: 28px !important;
     }
 
     .stats-sentence {
