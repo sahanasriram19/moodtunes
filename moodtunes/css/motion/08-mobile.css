@@ -5,7 +5,7 @@
   /* ── stats sentence: bigger so it stands out ── */
   #stats-grid .stats-sentence,
   .stats-sentence-wrap .stats-sentence {
-    font-size: clamp(24px, 7.2vw, 30px) !important;
+    font-size: clamp(21px, 6.4vw, 26px) !important;
     line-height: 1.3 !important;
   }
 
