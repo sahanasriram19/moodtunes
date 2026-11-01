@@ -633,9 +633,11 @@ main.container.stats-page {
   }
 }
 
+/* =================================
+   FINAL STATS PAGE LAYOUT FIX
+================================= */
 
-/* === STATS DASHBOARD LAYOUT === */
-
+/* Main dashboard width */
 main.container.stats-page {
     width: 100%;
     max-width: 1020px;
@@ -643,11 +645,20 @@ main.container.stats-page {
     margin-right: auto;
     padding-left: 40px;
     padding-right: 40px;
+    box-sizing: border-box;
 }
 
+#stats-content {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Main dashboard grid */
 .stats-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
         "summary summary"
         "flashback flashback"
@@ -655,14 +666,27 @@ main.container.stats-page {
         "graph graph"
         "top calendar";
     gap: 16px;
-    align-items: start;
-    width: 100%;
+    align-items: stretch;
 }
 
+/* Summary: one full-width line, not four narrow columns */
 .stats-summary {
     grid-area: summary;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
 }
 
+.stats-sentence {
+    display: block;
+    width: 100%;
+    margin: 0 0 8px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* Dashboard card positions */
 .stats-flashback {
     grid-area: flashback;
 }
@@ -687,15 +711,25 @@ main.container.stats-page {
     grid-area: calendar;
 }
 
-/* Cards should fill their grid column */
+/* Make all cards fill their grid cells evenly */
 .stats-layout > .stats-card,
 .stats-layout > .flashback-card {
     width: 100%;
     min-width: 0;
-    margin-bottom: 0;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+    box-sizing: border-box;
 }
 
-/* Mobile: stack everything */
+/* Stop content forcing cards wider */
+.stats-card,
+.flashback-card {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Mobile layout */
 @media (max-width: 768px) {
     main.container.stats-page {
         max-width: 100%;
@@ -714,63 +748,8 @@ main.container.stats-page {
             "top"
             "calendar";
     }
-}
 
-/* === STATS DASHBOARD === */
-
-#stats-content {
-    width: 100%;
-}
-
-.stats-layout {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-    grid-template-areas:
-        "summary summary"
-        "flashback flashback"
-        "moods time"
-        "graph graph"
-        "top calendar";
-    gap: 16px;
-    align-items: stretch;
-    width: 100%;
-}
-
-.stats-summary {
-    grid-area: summary;
-    grid-column: 1 / -1;
-}
-
-.stats-flashback {
-    grid-area: flashback;
-    grid-column: 1 / -1;
-}
-
-.stats-moods { grid-area: moods; }
-.stats-time { grid-area: time; }
-.stats-graph { grid-area: graph; grid-column: 1 / -1; }
-.stats-top { grid-area: top; }
-.stats-calendar { grid-area: calendar; }
-
-.stats-layout > .stats-card,
-.stats-layout > .flashback-card {
-    width: 100%;
-    min-width: 0;
-    height: 100%;
-    margin: 0;
-    box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-    .stats-layout {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-areas:
-            "summary"
-            "flashback"
-            "moods"
-            "time"
-            "graph"
-            "top"
-            "calendar";
+    .stats-sentence {
+        font-size: 13px;
     }
 }
