@@ -2,11 +2,11 @@
 
 @media (max-width: 600px) {
 
-  /* ── stats sentence (history + stats pages): bigger, stays on one line ── */
+  /* ── stats sentence (history + stats pages): smaller, stays on one line ── */
   html body .stats-sentence,
   #stats-grid .stats-sentence,
   .stats-sentence-wrap .stats-sentence {
-    font-size: clamp(21px, 6.4vw, 26px) !important;
+    font-size: clamp(18px, 5.2vw, 22px) !important;
     line-height: 1.3 !important;
     white-space: nowrap !important;
   }
