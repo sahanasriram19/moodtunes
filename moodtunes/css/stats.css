@@ -632,3 +632,86 @@ main.container.stats-page {
     padding-right: 20px;
   }
 }
+
+
+/* === STATS DASHBOARD LAYOUT === */
+
+main.container.stats-page {
+    width: 100%;
+    max-width: 1020px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+.stats-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-areas:
+        "summary summary"
+        "flashback flashback"
+        "moods time"
+        "graph graph"
+        "top calendar";
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+}
+
+.stats-summary {
+    grid-area: summary;
+}
+
+.stats-flashback {
+    grid-area: flashback;
+}
+
+.stats-moods {
+    grid-area: moods;
+}
+
+.stats-time {
+    grid-area: time;
+}
+
+.stats-graph {
+    grid-area: graph;
+}
+
+.stats-top {
+    grid-area: top;
+}
+
+.stats-calendar {
+    grid-area: calendar;
+}
+
+/* Cards should fill their grid column */
+.stats-layout > .stats-card,
+.stats-layout > .flashback-card {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+/* Mobile: stack everything */
+@media (max-width: 768px) {
+    main.container.stats-page {
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .stats-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "summary"
+            "flashback"
+            "moods"
+            "time"
+            "graph"
+            "top"
+            "calendar";
+    }
+}

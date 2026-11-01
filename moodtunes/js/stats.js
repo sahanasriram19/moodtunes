@@ -41,20 +41,22 @@ function render(data) {
     var maxTime = Math.max(tod.morning || 0, tod.afternoon || 0, tod.evening || 0, tod.late_night || 0) || 1;
     var peakTime = getPeakTime(tod);
 
-    var html =
-        // summary: one sentence, like a journal entry, instead of a row of number boxes
-        statsSentence(stats, moods);
+    var html = '<div class="stats-layout">';
+
+    // summary
+    html += '<div class="stats-summary">' + statsSentence(stats, moods) + '</div>';
 
     // flashback
     if (flashback.length > 0) {
         var fbMood = flashback[0].mood;
-        html += '<div class="flashback-card">' +
+        html += '<div class="flashback-card stats-flashback">' +
             '<div class="flashback-label">' + MoodFX.icon('calendar') + 'a month ago</div>' +
-            '<div class="flashback-subtitle">you were feeling ' + fbMood + ' and listening to these</div>' +
+            '<div class="flashback-subtitle">you were feeling ' + MoodFX.esc(fbMood) + ' and listening to these</div>' +
             '<div class="flashback-songs">' +
             flashback.map(function(s) {
                 return '<div class="flashback-song">' +
-                    (s.album_art ? '<img class="flashback-art" src="' + MoodFX.esc(s.album_art) + '" alt="' + MoodFX.esc(s.title) + '" />' : '<div class="flashback-art"></div>') +
+                    (s.album_art ? '<img class="flashback-art" src="' + MoodFX.esc(s.album_art) + '" alt="' 
+                    + MoodFX.esc(s.title) + '" />' : '<div class="flashback-art"></div>') +
                     '<div class="flashback-title">' + MoodFX.esc(s.title) + '</div>' +
                     '<div class="flashback-plays">' + s.total_plays + ' plays</div>' +
                 '</div>';
@@ -62,10 +64,8 @@ function render(data) {
             '</div></div>';
     }
 
-    html += '<div class="stats-grid">';
-
-    // mood breakdown
-    html += '<div class="stats-card"><div class="stats-card-title">moods</div>';
+    // mood breakdown - main column
+    html += '<div class="stats-card stats-moods"><div class="stats-card-title">moods</div>';
     moods.forEach(function(m) {
         var pct = Math.round((m.total_plays / maxMoodPlays) * 100);
         html += '<div class="mood-bar-row">' +
@@ -76,36 +76,48 @@ function render(data) {
     });
     html += '</div>';
 
-    // time of day
-    html += '<div class="stats-card"><div class="stats-card-title">when you listen</div>' +
-        '<div class="time-bar-row"><div class="time-bar-label">morning</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.morning||0)/maxTime)*100) + '%;"></div></div></div>' +
-        '<div class="time-bar-row"><div class="time-bar-label">afternoon</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.afternoon||0)/maxTime)*100) + '%;"></div></div></div>' +
-        '<div class="time-bar-row"><div class="time-bar-label">evening</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.evening||0)/maxTime)*100) + '%;"></div></div></div>' +
-        '<div class="time-bar-row"><div class="time-bar-label">late night</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' + Math.round(((tod.late_night||0)/maxTime)*100) + '%;"></div></div></div>' +
+    // time of day - sidebar
+    html += '<div class="stats-card stats-time"><div class="stats-card-title">when you listen</div>' +
+        '<div class="time-bar-row"><div class="time-bar-label">morning</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' 
+        + Math.round(((tod.morning||0)/maxTime)*100) + '%;"></div></div></div>' +
+        '<div class="time-bar-row"><div class="time-bar-label">afternoon</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' 
+        + Math.round(((tod.afternoon||0)/maxTime)*100) + '%;"></div></div></div>' +
+        '<div class="time-bar-row"><div class="time-bar-label">evening</div><div class="time-bar-track"><div class="time-bar-fill" style="width:'
+         + Math.round(((tod.evening||0)/maxTime)*100) + '%;"></div></div></div>' +
+        '<div class="time-bar-row"><div class="time-bar-label">late night</div><div class="time-bar-track"><div class="time-bar-fill" style="width:' 
+        + Math.round(((tod.late_night||0)/maxTime)*100) + '%;"></div></div></div>' +
         '<div style="font-size:11px;color:var(--text-muted,#9384b8);margin-top:10px;">you\'re mostly a ' + peakTime + ' listener</div>' +
     '</div>';
 
-    html += '</div>'; // close stats-grid
+    // two-week graph - full width
+    html += '<div class="stats-card stats-graph" id="mood-graph-container">' +
+        '<div class="stats-card-title">the last two weeks</div>' +
+        MoodFX.skeleton('block') +
+    '</div>';
 
-    // mood activity graph placeholder
-    html += '<div class="stats-card" id="mood-graph-container" style="margin-bottom:16px;"><div class="stats-card-title">the last two weeks</div>' + MoodFX.skeleton('block') + '</div>';
-
-    // top songs
+    // top songs - main column
     if (topSongs.length > 0) {
-        html += '<div class="stats-card"><div class="stats-card-title">most played</div>';
+        html += '<div class="stats-card stats-top"><div class="stats-card-title">most played</div>';
         topSongs.forEach(function(s, i) {
             html += '<div class="top-song-row">' +
                 '<div class="top-song-num">' + (i + 1) + '</div>' +
-                (s.album_art ? '<img class="top-song-art" src="' + MoodFX.esc(s.album_art) + '" alt="' + MoodFX.esc(s.title) + '" />' : '<div class="top-song-art"></div>') +
-                '<div class="top-song-info"><div class="top-song-title">' + MoodFX.esc(s.title) + '</div><div class="top-song-artist">' + MoodFX.esc(s.artist) + '</div></div>' +
+                (s.album_art ? '<img class="top-song-art" src="' + MoodFX.esc(s.album_art) + '" alt="' + MoodFX.esc(s.title) + '" />' :
+                 '<div class="top-song-art"></div>') +
+                '<div class="top-song-info"><div class="top-song-title">' + MoodFX.esc(s.title) + '</div><div class="top-song-artist">' 
+                + MoodFX.esc(s.artist) + '</div></div>' +
                 '<div class="top-song-plays">' + s.total_plays + ' plays</div>' +
             '</div>';
         });
         html += '</div>';
     }
 
-    // mood calendar, at the bottom (filled in once the per-day logs arrive)
-    html += '<div class="stats-card mood-cal" id="mood-calendar"><div class="stats-card-title">your month in moods</div>' + MoodFX.skeleton('block') + '</div>';
+    // mood calendar - sidebar
+    html += '<div class="stats-card mood-cal stats-calendar" id="mood-calendar">' +
+        '<div class="stats-card-title">your month in moods</div>' +
+        MoodFX.skeleton('block') +
+    '</div>';
+
+    html += '</div>'; // close stats-layout
 
     document.getElementById('stats-content').innerHTML = html;
 }
