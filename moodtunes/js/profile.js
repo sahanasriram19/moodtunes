@@ -356,7 +356,7 @@ function buildDropdown() {
 
 // ── daily check-in reminder ────────────────────────────
 // "remind me at 9:00 pm": a notification ("how are you feeling?") once a day at
-// that time, sent by the server, skipped on days you've already logged a song
+// that time, sent by the server every day
 // (see backend reminderController.js and the push handler in sw.js). each device
 // is set up separately. on iPhone it needs moodtunes added to the home screen.
 var REMINDER_KEY = 'moodtunes_reminder_' + (localStorage.getItem('moodtunes_username') || '');
@@ -529,7 +529,7 @@ function enableReminder(time, test) {
                 }
                 return r;
             }).then(function(r) {
-                if (r && r.status === 200) return { ok: true, tested: !!(r.data && r.data.test === 'sent') };
+                if (r && r.status === 200) return { ok: true, tested: !!(r.data && r.data.test === 'sent'), first: r.data && r.data.first };
                 if (r && r.status === 503) return { ok: false, msg: 'reminders aren’t switched on on the server yet' };
                 if (r && r.status === 409) return { ok: false, msg: 'tap the switch once more to finish setting up' };
                 return { ok: false, msg: (r && r.data && r.data.message) || 'couldn’t save your reminder, try again' };
@@ -601,7 +601,7 @@ function buildReminderSection() {
     function show(on, msg) {
         sw.setAttribute('aria-checked', String(on));
         timeRow.style.display = on ? 'flex' : 'none';
-        note.textContent = msg || (on ? 'you’ll get a nudge at ' + timeLabel(input.value) + ' on days you haven’t logged a song yet' : '');
+        note.textContent = msg || (on ? 'you’ll get a nudge every day at ' + timeLabel(input.value) + '.' : '');
     }
     show(st.on);
     preparePush();
@@ -612,6 +612,11 @@ function buildReminderSection() {
         else swReady().then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
             if (!sub && sw.getAttribute('aria-checked') === 'true' && !sw.disabled) { st.on = false; saveReminderState(st); show(false); }
         }).catch(function() {});
+    }
+    // "you'll get a nudge every day at 9:00 pm. the first one is today."
+    function nextLine(first) {
+        return 'you’ll get a nudge every day at ' + timeLabel(input.value) + '.' +
+            (first === 'today' ? ' the first one is today.' : first === 'tomorrow' ? ' the first one is tomorrow (today’s time has passed or it was already sent).' : '');
     }
     function explain(res) {
         if (res.html) note.innerHTML = res.html; else note.textContent = res.msg || '';
@@ -638,7 +643,7 @@ function buildReminderSection() {
             }
             st.on = true; st.time = input.value; saveReminderState(st);
             var phone = isIOS() || /Android/i.test(navigator.userAgent);
-            show(true, 'you’ll get a nudge at ' + timeLabel(input.value) + ' on days you haven’t logged a song yet.' +
+            show(true, nextLine(res.first) +
                 (res.tested ? ' a test notification is on its way. didn’t get it? make sure notifications are on for ' +
                     (isStandalone() ? 'moodtunes' : 'your browser') + ' in your ' + (phone ? 'phone' : 'computer') + '’s settings.' : ''));
         });
@@ -658,7 +663,7 @@ function buildReminderSection() {
         st.time = input.value; saveReminderState(st);
         if (sw.getAttribute('aria-checked') !== 'true') return;
         note.textContent = 'saving…';
-        enableReminder(input.value, false).then(function(res) { show(true); if (!res.ok) explain(res); });
+        enableReminder(input.value, false).then(function(res) { if (res.ok) show(true, 'saved. ' + nextLine(res.first)); else { show(true); explain(res); } });
     });
     return box;
 }

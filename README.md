@@ -43,7 +43,7 @@ Built as a personal portfolio project to explore full-stack development with rea
 
 ### Daily check-in
 - Turn on a daily reminder in the profile menu and pick a time
-- It's skipped on days you've already logged a song
+- It comes every day at that time (if you've already logged songs that day, it says how many)
 
 ### Spotify integration
 - OAuth login connects your real Spotify account

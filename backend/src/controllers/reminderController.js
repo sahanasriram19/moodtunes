@@ -3,8 +3,8 @@
 // people pick a time ("remind me at 9pm") in the profile menu. their browser gives
 // us a push subscription (an address to send a notification to, one per device),
 // saved here with the time and their timezone. sendDue() sends "how are you
-// feeling?" to everyone whose time has come today and who hasn't logged a song yet
-// today, at most once a day. it runs every 5 minutes while the server is awake,
+// feeling?" to everyone whose time has come today, once a day (if you've already
+// logged songs that day, it mentions how many). it runs every 5 minutes while the server is awake,
 // and whenever /api/reminders/tick is called (the GitHub Action in
 // .github/workflows/keep-awake.yml calls it, and that also wakes the server).
 //
@@ -113,7 +113,7 @@ async function sendWelcome(sub, time) {
     try {
         await webpush.sendNotification(sub, JSON.stringify({
             title: 'reminders are on',
-            body: 'you’ll get a nudge at ' + label + ' on days you haven’t logged a song yet',
+            body: 'you’ll get a nudge at ' + label + ' every day',
             url: '/index.html',
             tag: 'moodtunes-welcome'
         }), { TTL: 600 });
@@ -148,13 +148,17 @@ module.exports.save = async (req, res) => {
         [res.locals.userId, sub.endpoint, String(sub.keys.p256dh), String(sub.keys.auth), time, Number(tz), skipToday, today.day],
         async (err) => {
             if (err) { console.error('save reminder failed:', err.message); return res.status(500).json({ message: 'Internal server error' }); }
-            if (!req.body.test) return res.status(200).json({ message: 'reminder saved', time: time });
+            // when the next one comes: today, unless the time has passed or today's was already sent
+            const row = await q('SELECT last_sent_day FROM ReminderSub WHERE endpoint = ?', [sub.endpoint]).catch(() => []);
+            const first = row[0] && row[0].last_sent_day === today.day ? 'tomorrow' : 'today';
+            kick();
+            if (!req.body.test) return res.status(200).json({ message: 'reminder saved', time: time, first: first });
             const result = await sendWelcome({ endpoint: sub.endpoint, keys: { p256dh: String(sub.keys.p256dh), auth: String(sub.keys.auth) } }, time);
             if (result === 'resubscribe') {
                 pool.query('DELETE FROM ReminderSub WHERE endpoint = ?', [sub.endpoint], () => {});
                 return res.status(409).json({ message: 'this device needs to sign up for notifications again', reason: 'resubscribe' });
             }
-            res.status(200).json({ message: 'reminder saved', time: time, test: result || 'sent' });
+            res.status(200).json({ message: 'reminder saved', time: time, first: first, test: result || 'sent' });
         }
     );
 };
@@ -189,12 +193,15 @@ async function sendDue() {
             // claim it first, so two checks at once can't both send
             const claim = await q('UPDATE ReminderSub SET last_sent_day = ? WHERE id = ? AND (last_sent_day IS NULL OR last_sent_day <> ?)', [local.day, s.id, local.day]);
             if (claim.affectedRows !== 1) continue;
-            // already logged something today? no need to nudge
-            const logged = await q('SELECT 1 FROM Log WHERE user_id = ? AND log_date = ? LIMIT 1', [s.user_id, local.day]).catch(() => []);
-            if (logged.length) continue;
+            // sent every day at your time. if you've already logged songs today it says so
+            // (plays counted automatically count as logged too, so skipping those days meant
+            // the reminder almost never came)
+            const logged = await q('SELECT COUNT(*) AS n FROM Log WHERE user_id = ? AND log_date = ?', [s.user_id, local.day]).catch(() => [{ n: 0 }]);
+            const n = Number(logged[0] && logged[0].n) || 0;
             const payload = JSON.stringify({
                 title: 'how are you feeling?',
-                body: 'pick a mood and log what you’re listening to today',
+                body: n ? 'you’ve logged ' + n + ' song' + (n === 1 ? '' : 's') + ' today. listening to anything else? log it with a mood'
+                        : 'pick a mood and log what you’re listening to today',
                 url: '/index.html',
                 tag: 'moodtunes-checkin'
             });
@@ -204,7 +211,11 @@ async function sendDue() {
             } catch (e) {
                 // the device unsubscribed or the app was removed: forget it
                 if (e.statusCode === 404 || e.statusCode === 410) await q('DELETE FROM ReminderSub WHERE id = ?', [s.id]).catch(() => {});
-                else console.error('reminder send failed:', e.statusCode || '', e.message);
+                else {
+                    console.error('reminder send failed:', e.statusCode || '', e.message);
+                    // let the next check (a few minutes later) try again
+                    await q('UPDATE ReminderSub SET last_sent_day = ? WHERE id = ?', [s.last_sent_day || null, s.id]).catch(() => {});
+                }
             }
         }
     } catch (e) {
@@ -222,5 +233,19 @@ module.exports.tick = async (req, res) => {
     res.status(200).json({ ok: true, sent: sent });
 };
 
+
+// a check soon after any visit (app.js calls this on /api/health, which the GitHub
+// Action opens every 10 minutes), at most once a minute. so a reminder goes out
+// within a few minutes of its time even with no CRON_SECRET, and right after a
+// sleeping server wakes up
+let lastKick = 0;
+function kick() {
+    if (Date.now() - lastKick < 60 * 1000) return;
+    lastKick = Date.now();
+    keysReady.then(() => setTimeout(() => { sendDue(); }, 2000));
+}
+module.exports.kick = kick;
+// and once when the server starts
+kick();
 
 module.exports._localNow = localNow;   // for tests

@@ -33,6 +33,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/api/health', (req, res) => {
+    require('./controllers/reminderController').kick();   // send any daily reminders that are due
     res.json({ ok: true, dailyLogs: require('./models/logModel').dailyLogsStatus });
 });
 
