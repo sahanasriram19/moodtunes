@@ -16,7 +16,7 @@ var FONT_CACHE = 'moodtunes-fonts';
 var APP_SHELL = [
   'index.html', 'playlists.html', 'session.html', 'history.html', 'stats.html', 'login.html', 'reset.html', 'offline.html',
   'manifest.json',
-  'css/style.css', 'css/mobile.css',
+  'css/style.css',
   'css/motion/01-foundation.css', 'css/motion/02-app-shell.css', 'css/motion/03-themes.css', 'css/motion/04-pages.css', 'css/motion/05-phone-layouts.css', 'css/motion/06-polish.css', 'css/motion/07-features.css', 'css/motion/08-mobile.css', 'css/session.css', 'css/history.css',
   'css/playlists.css', 'css/stats.css', 'css/auth.css',
   'js/config.js', 'js/api.js', 'js/mood.js', 'js/app.js', 'js/session.js', 'js/history.js',

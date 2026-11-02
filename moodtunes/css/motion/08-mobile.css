@@ -10,33 +10,35 @@
 
 
 /* ==================================================================
-   from css/history.css
+   from css/history.css (only on the history page: these rules sit under
+   :where([data-page="history"]), which matches <body data-page="history"> and adds no
+   specificity, so they work exactly as they did inside history.css)
    ================================================================== */
 
 @media (max-width: 600px) {
 
   /* Stats cards: songs, moods and total plays */
-  .stats-section {
+  :where([data-page="history"]) .stats-section {
     margin-bottom: 24px;
   }
 
-  .stats-grid {
+  :where([data-page="history"]) .stats-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .stat-card {
+  :where([data-page="history"]) .stat-card {
     padding: 16px 6px;
     border-radius: 12px;
     min-width: 0;
   }
 
-  .stat-num {
+  :where([data-page="history"]) .stat-num {
     font-size: clamp(25px, 7vw, 30px);
     line-height: 1.15;
   }
 
-  .stat-label {
+  :where([data-page="history"]) .stat-label {
     font-size: 10px;
     line-height: 1.35;
     letter-spacing: 0.04em;
@@ -44,14 +46,14 @@
   }
 
   /* History view tabs */
-  .history-tabs {
+  :where([data-page="history"]) .history-tabs {
     display: flex;
     width: 100%;
     gap: 8px;
     margin-bottom: 20px;
   }
 
-  .history-tab {
+  :where([data-page="history"]) .history-tab {
     flex: 1;
     min-width: 0;
     padding: 12px 10px;
@@ -62,68 +64,68 @@
   }
 
   /* Search section */
-  .song-search-section {
+  :where([data-page="history"]) .song-search-section {
     margin-bottom: 24px;
   }
 
-  #song-history-search {
+  :where([data-page="history"]) #song-history-search {
     box-sizing: border-box;
     min-height: 46px;
     font-size: 16px;
   }
 
   /* Session cards */
-  .session-history-card {
+  :where([data-page="history"]) .session-history-card {
     padding: 16px;
     border-radius: 12px;
   }
 
-  .session-history-header {
+  :where([data-page="history"]) .session-history-header {
     gap: 10px;
     flex-wrap: wrap;
   }
 
-  .session-history-mood {
+  :where([data-page="history"]) .session-history-mood {
     font-size: 16px;
   }
 
-  .session-history-meta {
+  :where([data-page="history"]) .session-history-meta {
     font-size: 12px;
   }
 
-  .session-history-songs {
+  :where([data-page="history"]) .session-history-songs {
     gap: 12px;
     -webkit-overflow-scrolling: touch;
   }
 
   /* Song history cards */
-  .song-history-card {
+  :where([data-page="history"]) .song-history-card {
     padding: 14px;
   }
 
-  .song-history-header {
+  :where([data-page="history"]) .song-history-header {
     gap: 12px;
   }
 
-  .song-history-title {
+  :where([data-page="history"]) .song-history-title {
     font-size: 15px;
   }
 
-  .song-history-artist {
+  :where([data-page="history"]) .song-history-artist {
     font-size: 13px;
   }
 
-  .song-history-total {
+  :where([data-page="history"]) .song-history-total {
     font-size: 13px;
   }
 
   /* Timeline dates */
-  .timeline-date {
+  :where([data-page="history"]) .timeline-date {
     font-size: 16px;
   }
 
   /* Flashback card */
-  .flashback-card {
+  :where([data-page="history"]) .flashback-card {
     padding: 16px;
     gap: 12px;
   }
@@ -431,17 +433,19 @@
 
 
 /* ==================================================================
-   from css/session.css
+   from css/session.css (only on the session page: these rules sit under
+   :where([data-page="session"]), which matches <body data-page="session"> and adds no
+   specificity, so they work exactly as they did inside session.css)
    ================================================================== */
 
 @media (max-width: 768px) {
-  .session-hero-actions { flex-wrap: wrap; }
-  #session-open-spotify-btn { min-height: 44px; }
+  :where([data-page="session"]) .session-hero-actions { flex-wrap: wrap; }
+  :where([data-page="session"]) #session-open-spotify-btn { min-height: 44px; }
 }
 
 @media (max-width: 640px) {
-  .session-how-grid { grid-template-columns: 1fr; }
-  #session-save-playlist-btn { min-height: 44px; }
+  :where([data-page="session"]) .session-how-grid { grid-template-columns: 1fr; }
+  :where([data-page="session"]) #session-save-playlist-btn { min-height: 44px; }
 }
 
 
@@ -1848,17 +1852,19 @@
 
 
 /* ==================================================================
-   from css/stats.css
+   from css/stats.css (only on the stats page: these rules sit under
+   :where([data-page="stats"]), which matches <body data-page="stats"> and adds no
+   specificity, so they work exactly as they did inside stats.css)
    ================================================================== */
 
 @media (max-width: 768px) {
-  main.container.stats-page {
+  :where([data-page="stats"]) main.container.stats-page {
     max-width: 100%;
     padding-left: 20px;
     padding-right: 20px;
   }
 
-  .stats-layout {
+  :where([data-page="stats"]) .stats-layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "summary"
@@ -1870,38 +1876,38 @@
       "calendar";
   }
 
-  .stats-page .stats-sentence {
+  :where([data-page="stats"]) .stats-page .stats-sentence {
     font-size: 22px !important;
   }
 }
 
 @media (max-width: 520px) {
-  .mc-grid {
+  :where([data-page="stats"]) .mc-grid {
     gap: 4px;
   }
 
-  .mc-cell {
+  :where([data-page="stats"]) .mc-cell {
     border-radius: 8px;
   }
 
-  .mc-num {
+  :where([data-page="stats"]) .mc-num {
     top: 4px;
     left: 5px;
     font-size: 10px;
   }
 
-  .mc-dots {
+  :where([data-page="stats"]) .mc-dots {
     right: 4px;
     bottom: 4px;
     gap: 2px;
   }
 
-  .mc-dots i {
+  :where([data-page="stats"]) .mc-dots i {
     width: 4px;
     height: 4px;
   }
 
-  .mc-month {
+  :where([data-page="stats"]) .mc-month {
     min-width: 104px;
     font-size: 13px;
   }
@@ -1951,5 +1957,17 @@
   .session-song-thumb p,
   .session-song-thumb .thumb-artist {
     width: 100%;
+  }
+}
+
+/* ==================================================================
+   stats page: no extra gap under "what we noticed"
+   ==================================================================
+   the grid already puts a gap between the boxes, so the summary's own
+   20px bottom margin (above, from 05-phone-layouts.css) doubled it. */
+
+@media (max-width: 768px) {
+  .stats-layout > .stats-summary {
+    margin-bottom: 0 !important;
   }
 }

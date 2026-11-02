@@ -389,6 +389,33 @@ function swReady() {
     ]);
 }
 
+// iPhone / Safari only allow pushManager.subscribe() straight after a tap. waiting
+// on the server for the key first (it can take a while to wake up) used up that
+// tap, so subscribing failed and the switch stayed off. so the key and the service
+// worker are fetched ahead of time, when the menu opens, and remembered.
+var PUSH_KEY_STORE = 'moodtunes_push_key';
+var pushKey = null, pushReg = null, pushKeyStatus = 0;
+try { pushKey = localStorage.getItem(PUSH_KEY_STORE) || null; } catch (e) {}
+function preparePush() {
+    if (!pushSupported()) return;
+    if (!pushReg) swReady().then(function(reg) { pushReg = reg; }).catch(function() {});
+    api('/reminders/key', 'GET', null).then(function(res) {
+        pushKeyStatus = res ? res.status : 0;
+        if (res && res.status === 200 && res.data && res.data.publicKey) {
+            pushKey = res.data.publicKey;
+            try { localStorage.setItem(PUSH_KEY_STORE, pushKey); } catch (e) {}
+        }
+    });
+}
+// works with both the promise and the older callback version (older Safari)
+function askPermission() {
+    if (Notification.permission === 'granted') return Promise.resolve('granted');
+    return new Promise(function(resolve) {
+        var p = Notification.requestPermission(resolve);
+        if (p && p.then) p.then(resolve);
+    });
+}
+
 // turns the reminder on (or changes its time) for this device. resolves to an error message or ''
 function enableReminder(time) {
     if (!pushSupported()) {
@@ -396,23 +423,45 @@ function enableReminder(time) {
             ? 'on iPhone, add moodtunes to your home screen first (share → add to home screen), then turn this on from there'
             : 'this browser can’t show notifications');
     }
-    return Notification.requestPermission().then(function(perm) {
-        if (perm !== 'granted') return 'notifications are blocked. allow them for this site in your browser settings, then try again';
-        return api('/reminders/key', 'GET', null).then(function(res) {
-            if (!res || res.status !== 200 || !res.data || !res.data.publicKey) {
-                return res && res.status === 503 ? 'reminders aren’t switched on on the server yet' : 'couldn’t reach the server, try again';
-            }
-            return swReady().then(function(reg) {
-                return reg.pushManager.getSubscription().then(function(sub) {
-                    return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(res.data.publicKey) });
-                });
+    // the key and service worker should already be here (see preparePush). if they
+    // aren't yet, fetch them now; that still works on android and computers
+    var keyReady = pushKey ? Promise.resolve(pushKey) : api('/reminders/key', 'GET', null).then(function(res) {
+        pushKeyStatus = res ? res.status : 0;
+        if (!res || res.status !== 200 || !res.data || !res.data.publicKey) return null;
+        pushKey = res.data.publicKey;
+        try { localStorage.setItem(PUSH_KEY_STORE, pushKey); } catch (e) {}
+        return pushKey;
+    });
+    var regReady = pushReg ? Promise.resolve(pushReg) : swReady();
+    // no waiting on the network between the tap and subscribing when everything is ready
+    return askPermission().then(function(perm) {
+        if (perm !== 'granted') return 'notifications are blocked. allow them for moodtunes in your phone or browser settings, then try again';
+        return Promise.all([keyReady, regReady]).then(function(both) {
+            var key = both[0], reg = both[1];
+            pushReg = reg;
+            if (!key) return pushKeyStatus === 503 ? 'reminders aren’t switched on on the server yet' : 'couldn’t reach the server, try again';
+            return reg.pushManager.getSubscription().then(function(sub) {
+                return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
+            }).catch(function(e) {
+                // the server's key changed since this device subscribed: start over with the new one
+                if (e && e.name === 'InvalidStateError') {
+                    return reg.pushManager.getSubscription().then(function(old) { return old && old.unsubscribe(); }).then(function() {
+                        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
+                    });
+                }
+                throw e;
             }).then(function(sub) {
                 return api('/reminders', 'POST', { subscription: sub.toJSON(), time: time, tz_offset: new Date().getTimezoneOffset() });
             }).then(function(r) {
-                return r && r.status === 200 ? '' : ((r && r.data && r.data.message) || 'couldn’t save your reminder, try again');
+                if (r && r.status === 200) return '';
+                if (r && r.status === 503) return 'reminders aren’t switched on on the server yet';
+                return (r && r.data && r.data.message) || 'couldn’t save your reminder, try again';
             });
         });
-    }).catch(function() { return 'couldn’t set up notifications on this device'; });
+    }).catch(function(e) {
+        if (e && e.name === 'NotAllowedError') return 'your phone didn’t allow it that time. tap the switch again';
+        return 'couldn’t set up notifications on this device';
+    });
 }
 
 function disableReminder() {
@@ -422,6 +471,9 @@ function disableReminder() {
         return api('/reminders', 'DELETE', { endpoint: sub.endpoint }).then(function() { return sub.unsubscribe(); });
     }).catch(function() {});
 }
+
+// first visit on this device: get the key in the background, so it's ready before the switch is tapped
+if (!pushKey && pushSupported() && localStorage.getItem('moodtunes_token')) setTimeout(preparePush, 4000);
 
 function timeLabel(t) {
     var h = Number(t.slice(0, 2)), m = t.slice(3, 5);
@@ -450,6 +502,15 @@ function buildReminderSection() {
         note.textContent = msg || (on ? 'you’ll get a nudge at ' + timeLabel(input.value) + ' on days you haven’t logged a song yet' : '');
     }
     show(st.on);
+    preparePush();
+    // the switch shows what's really set up on this device: if notifications were
+    // turned off in settings, or the subscription is gone, it shows off
+    if (st.on && pushSupported()) {
+        if (Notification.permission !== 'granted') { st.on = false; saveReminderState(st); show(false); }
+        else swReady().then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+            if (!sub && sw.getAttribute('aria-checked') === 'true' && !sw.disabled) { st.on = false; saveReminderState(st); show(false); }
+        }).catch(function() {});
+    }
     sw.addEventListener('click', function() {
         if (sw.disabled) return;
         sw.disabled = true;

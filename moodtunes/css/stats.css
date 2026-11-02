@@ -665,3 +665,36 @@ main.container.stats-page {
     animation: none;
   }
 }
+
+/* === THE TOP OF THE PAGE: FULL WIDTH === */
+/* the sentence, "your month" and "what we noticed" live in .stats-summary, which
+   never got its "summary" spot in the grid. so it squeezed into the left column,
+   left the right half empty and pushed everything else down. it now spans the
+   whole row, and on wide screens "your month" and "what we noticed" sit side by side */
+.stats-layout > .stats-summary {
+  grid-area: summary;
+  margin-bottom: 0;
+}
+
+.stats-summary > .insights-card:last-child,
+.stats-summary > .recap-card:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 900px) {
+  .stats-layout > .stats-summary:has(> .insights-card) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .stats-summary > .stats-sentence {
+    grid-column: 1 / -1;
+  }
+
+  .stats-summary > .recap-card,
+  .stats-summary > .insights-card {
+    margin: 0;
+  }
+}
