@@ -1431,3 +1431,43 @@
 :root:not([data-theme="light"]) .log-note {
   color: #ddd2ff;
 }
+
+/* "not in your journal yet": the mood row also uses the space under the ✕ on the
+   right, so one more mood fits on each line instead of dropping to a new one */
+.inbox-moods {
+  margin-right: -40px;
+}
+
+/* now playing in the narrow side column: slightly smaller mood buttons, so they
+   take two lines instead of three */
+@media (min-width: 1100px) {
+  .journal-side .np-moods {
+    gap: 5px;
+  }
+
+  .journal-side .np-moods .np-mood {
+    font-size: 11.5px;
+    padding: 3px 9px 3px 7px;
+    gap: 4px;
+  }
+
+  .journal-side .np-moods .np-mood .mt-icon,
+  .journal-side .inbox-moods .np-mood .mt-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* "not in your journal yet" in the side column: the same smaller buttons, and the
+     row starts under the cover instead of beside it */
+  .journal-side .inbox-moods {
+    gap: 5px;
+    margin-left: -58px;
+    width: calc(100% + 58px + 40px);
+  }
+
+  .journal-side .inbox-moods .np-mood {
+    font-size: 11.5px;
+    padding: 3px 9px 3px 7px;
+    gap: 4px;
+  }
+}

@@ -1206,7 +1206,7 @@
   .inbox-moods {
     gap: 5px !important;
     margin-left: -58px;
-    width: calc(100% + 58px);
+    width: calc(100% + 58px + 40px);
   }
 
   .inbox-moods .np-mood,
