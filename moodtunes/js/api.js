@@ -364,8 +364,10 @@ function titleRowHTML(title, note, noteId) {
 
 // the song title on its own, and the note on its own line under the artist,
 // with "edit note" right beside it (areaHTML = the edit / add note button area)
-function songTitleHTML(title) {
-    return '<div class="title-row"><div class="song-title">' + MoodFX.esc(title) + '</div></div>';
+// context: the optional "what were you doing" tag, shown as a pill right of the title
+function songTitleHTML(title, context) {
+    return '<div class="title-row"><div class="song-title">' + MoodFX.esc(title) + '</div>' +
+        (context && MoodFX.ctxBadge ? MoodFX.ctxBadge(context) : '') + '</div>';
 }
 function noteLineHTML(note, noteId, areaHTML) {
     var esc = MoodFX.esc;

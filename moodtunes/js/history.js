@@ -251,7 +251,7 @@ function renderTimeline(logs, filtered) {
                 card.innerHTML =
                     '<img class="song-art" src="' + MoodFX.esc(log.album_art) + '" alt="" />' +
                     '<div class="song-info">' +
-                        songTitleHTML(log.title) +
+                        songTitleHTML(log.title, log.context) +
                         '<div class="song-artist">' + MoodFX.esc(log.artist) + '</div>' +
                         noteLineHTML(log.note, 'note-text-' + log.id,
                             '<div class="log-note-area" id="note-area-' + log.id + '">' +
@@ -263,7 +263,6 @@ function renderTimeline(logs, filtered) {
                             '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                             '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
                             '<span class="date-text">' + formatPlayRange(log.first_logged, log.last_logged) + '</span>' +
-                            MoodFX.ctxBadge(log.context) +
                         '</div>' +
                     '</div>' +
                     // the buttons sit in one column on phones (see motion.css); on wider screens the wrapper is invisible

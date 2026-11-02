@@ -994,6 +994,12 @@ summary:focus-visible {
   height: 12px;
 }
 
+/* beside the song title (it keeps its size; a long title is cut off first) */
+.title-row .ctx-badge {
+  flex-shrink: 0;
+  align-self: center;
+}
+
 /* the tags to pick from (logging and now playing) */
 .ctx-label {
   font-size: 12px;
