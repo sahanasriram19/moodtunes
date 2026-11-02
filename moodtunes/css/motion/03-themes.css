@@ -399,7 +399,7 @@
 }
 
 /* now playing: the album art behind the card is washed out pale instead of
-   darkened, so the dark text and the heart / skip buttons stay readable */
+   darkened, so the dark text and the play / skip buttons stay readable */
 :root[data-theme="light"] .np-card {
   background: linear-gradient(120deg,
       color-mix(in srgb, var(--np-color) 14%, #fff) 0%,

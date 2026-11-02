@@ -201,7 +201,7 @@ function orderedSongs(mood, songs) {
 var playlistsList = document.getElementById('playlists-list');
 
 // ── songs removed from a playlist ──────────────────────
-// ✕ takes a song out of this playlist only: its logs (journal history, stats)
+// the trash can takes a song out of this playlist only: its logs (journal history, stats)
 // are kept. logging the song again with the same mood puts it back. a playlist
 // whose songs are all removed stays, showing its mood icon on all four squares.
 var removedSongs = {};                      // { mood: { songId: true } }
@@ -412,7 +412,7 @@ function openPlaylist(mood) {
             '<div class="playlist-view-info">' +
                 '<div class="playlist-view-title">' + MoodFX.esc(mood) + '</div>' +
                 '<div class="playlist-view-count" id="pl-count">' + listSongs.length + ' song' + (listSongs.length !== 1 ? 's' : '') + ' from your journal</div>' +
-                '<div class="playlist-view-hint">new songs go to the top, and you can drag to reorder. the cover shows the top 4. ✕ takes a song out of this playlist but keeps it in your history.</div>' +
+                '<div class="playlist-view-hint">new songs go to the top, and you can drag to reorder. the cover shows the top 4. the trash can takes a song out of this playlist but keeps it in your history.</div>' +
                 '<button type="button" class="pl-save-btn" id="pl-save-btn"></button>' +
                 '<button type="button" class="pl-delete-btn" id="pl-delete-btn" title="deletes this mood and its playlist. your songs stay in your history and stats">delete playlist</button>' +
             '</div>' +
@@ -448,7 +448,7 @@ function openPlaylist(mood) {
                 '</div>' +
             '</div>' +
             '<button class="play-btn song-play-btn" data-url="' + MoodFX.esc(song.spotify_url) + '" data-song-id="' + MoodFX.esc(song.song_id) + '" data-mood="' + MoodFX.esc(mood) + '">▶</button>' +
-            '<button class="delete-btn playlist-remove-btn" data-songid="' + MoodFX.esc(song.song_id) + '" data-mood="' + MoodFX.esc(mood) + '" title="remove from this playlist (stays in your history)" aria-label="remove from this playlist">✕</button>';
+            '<button class="delete-btn trash-btn playlist-remove-btn" data-songid="' + MoodFX.esc(song.song_id) + '" data-mood="' + MoodFX.esc(mood) + '" title="remove from this playlist (stays in your history)" aria-label="remove from this playlist">' + MoodFX.icon('trash') + '</button>';
         block.appendChild(card);
     });
 
@@ -720,7 +720,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ── ✕ remove a song from the playlist ──────────────────
+// ── trash can: remove a song from the playlist ──────────────────
 // the card slides away and the songs below move up; "undo" brings it back.
 // after 5 seconds it's saved. the song's logs and history aren't touched.
 function hideCard(card, block) {

@@ -3,7 +3,10 @@
 // how the month split between moods, your top songs, when you listened most and
 // your busiest day. arrows step back through earlier months. "save image" draws
 // the same recap as a 1080 × 1350 picture you can share (or download).
-// stats.js calls MoodRecap.show(logs) once the per-day logs have loaded.
+// stats.js calls MoodRecap.show(logs) once the per-day logs have loaded: that puts a
+// "your monthly recap" button on the stats page, which opens the recap in a pop-up.
+// the only time it opens by itself is on the 1st of each month (last month's recap,
+// once per month; see the bottom of this file and mood.js).
 
 (function() {
 
@@ -114,33 +117,85 @@ function draw() {
 
 function thisMonthKey() { var t = new Date(); return t.getFullYear() + '-' + pad2(t.getMonth() + 1); }
 
-function show(logs) {
+function setLogs(logs) {
     allLogs = Array.isArray(logs) ? logs : [];
     var keys = {};
     allLogs.forEach(function(l) { var d = dayOf(l); if (d) keys[d.slice(0, 7)] = true; });
     monthKeys = Object.keys(keys).sort().reverse();      // newest first
     if (!current || monthKeys.indexOf(current) === -1) current = monthKeys[0] || null;
-    var host = document.getElementById('recap-card');
-    if (!host) {
-        host = document.createElement('section');
-        host.id = 'recap-card';
-        host.className = 'recap-card';
-        host.setAttribute('aria-labelledby', 'recap-title');
+}
+
+function lastMonthKey() { var t = new Date(); var d = new Date(t.getFullYear(), t.getMonth() - 1, 1); return d.getFullYear() + '-' + pad2(d.getMonth() + 1); }
+
+// the button on the stats page
+function show(logs) {
+    setLogs(logs);
+    var btn = document.getElementById('recap-open');
+    if (!monthKeys.length) { if (btn) btn.remove(); return; }
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'recap-open';
+        btn.className = 'recap-open-btn';
+        btn.setAttribute('aria-haspopup', 'dialog');
         var content = document.getElementById('stats-content');
         var sentence = content && content.querySelector('.stats-sentence');
-        if (sentence) sentence.insertAdjacentElement('afterend', host);
-        else if (content) content.insertBefore(host, content.firstChild);
-        host.addEventListener('click', function(e) {
-            var a = e.target.closest('.rc-arrow');
-            if (a && !a.disabled) {
-                var i = monthKeys.indexOf(current) + Number(a.dataset.step);
-                if (monthKeys[i]) { current = monthKeys[i]; draw(); host.querySelector('.rc-arrow[data-step="' + a.dataset.step + '"]').focus(); }
-                return;
-            }
-            if (e.target.closest('.rc-save')) saveImage(e.target.closest('.rc-save'));
-        });
+        if (sentence) sentence.insertAdjacentElement('afterend', btn);
+        else if (content) content.insertBefore(btn, content.firstChild);
+        btn.addEventListener('click', function() { open(monthKeys[0]); });
     }
+    btn.innerHTML = MoodFX.icon('sparkles') + '<span>your monthly recap</span>';
+}
+
+// the recap in a pop-up. monthKey: which month to open on (defaults to the newest)
+var lastFocus = null;
+function open(monthKey) {
+    if (!monthKeys.length) return;
+    if (document.getElementById('recap-modal')) return;
+    current = monthKeys.indexOf(monthKey) !== -1 ? monthKey : monthKeys[0];
+    lastFocus = document.activeElement;
+    var modal = document.createElement('div');
+    modal.id = 'recap-modal';
+    modal.innerHTML =
+        '<div class="recap-dialog" role="dialog" aria-modal="true" aria-labelledby="recap-title">' +
+            '<button type="button" class="recap-close" aria-label="close the recap">' + MoodFX.icon('close') + '</button>' +
+            '<section id="recap-card" class="recap-card"></section>' +
+        '</div>';
+    document.body.appendChild(modal);
+    document.documentElement.classList.add('recap-open');
+    var host = modal.querySelector('#recap-card');
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal || e.target.closest('.recap-close')) return close();
+        var a = e.target.closest('.rc-arrow');
+        if (a && !a.disabled) {
+            var i = monthKeys.indexOf(current) + Number(a.dataset.step);
+            if (monthKeys[i]) { current = monthKeys[i]; draw(); host.querySelector('.rc-arrow[data-step="' + a.dataset.step + '"]').focus(); }
+            return;
+        }
+        if (e.target.closest('.rc-save')) saveImage(e.target.closest('.rc-save'));
+    });
+    document.addEventListener('keydown', onKey, true);
     draw();
+    modal.querySelector('.recap-close').focus();
+}
+function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
+function close() {
+    var modal = document.getElementById('recap-modal');
+    if (!modal) return;
+    document.removeEventListener('keydown', onKey, true);
+    document.documentElement.classList.remove('recap-open');
+    modal.classList.add('closing');
+    setTimeout(function() { modal.remove(); }, 160);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+
+// the 1st of the month: last month's recap opens by itself (mood.js asks)
+function popup(logs) {
+    setLogs(logs);
+    var key = lastMonthKey();
+    if (monthKeys.indexOf(key) === -1) return false;     // nothing logged last month
+    open(key);
+    return true;
 }
 
 // ── the picture ────────────────────────────────────────
@@ -396,8 +451,8 @@ function drawInsights() {
         host.id = 'insights-card';
         host.className = 'insights-card';
         host.setAttribute('aria-labelledby', 'insights-title');
-        var recap = document.getElementById('recap-card');
-        if (recap) recap.insertAdjacentElement('afterend', host);
+        var btn = document.getElementById('recap-open');
+        if (btn) btn.insertAdjacentElement('afterend', host);
         else return;
     }
     host.innerHTML = '<h2 class="ins-title" id="insights-title">what we noticed</h2><ul class="ins-list">' +
@@ -407,6 +462,6 @@ function drawInsights() {
 var _show = show;
 show = function(logs) { _show(logs); drawInsights(); };
 
-window.MoodRecap = { show: show, _summarise: summarise, _render: renderImage, _insights: insights };
+window.MoodRecap = { show: show, open: open, popup: popup, _summarise: summarise, _render: renderImage, _insights: insights };
 
 })();

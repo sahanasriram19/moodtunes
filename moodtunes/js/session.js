@@ -304,7 +304,8 @@ function afterQueue(session, d, manual) {
     var mood = session.mood;
     if (d.queued && session.account !== 'premium') { session.account = 'premium'; saveSessionLocal(); setSpotifyButton(); }
     if (d.queued && !pendingUris.length) {
-        MoodFX.toast(d.queued + ' ' + mood + ' songs added to your spotify queue' + (d.device ? ' on ' + d.device : ''), mood);
+        MoodFX.toast(d.queued + ' ' + mood + ' songs added to your spotify queue' + (d.device ? ' on ' + d.device : '') +
+            (d.skipped ? ' (' + d.skipped + ' not available on spotify, skipped)' : ''), mood);
         return;
     }
     if (d.reason === 'premium_required') {
@@ -322,11 +323,16 @@ function afterQueue(session, d, manual) {
     }
     if (d.queued) MoodFX.toast(d.queued + ' songs queued, ' + pendingUris.length + ' still to add', mood);
     else if (manual) MoodFX.toast('spotify didn’t take the songs, try again in a moment', mood);
+    // spotify was busy (or a hiccup): keep going with the rest in a moment
+    if (pendingUris.length && d.reason !== 'not_connected' && d.reason !== 'reconnect') waitForSpotify(session.id);
 }
 
+var queueBusy = false;      // one queue request at a time, so no song is added twice
 function queuePending(sessionId, manual) {
-    if (!pendingUris.length) return;
+    if (!pendingUris.length || queueBusy) return;
+    queueBusy = true;
     apiCall('/sessions/' + sessionId + '/spotify/queue', 'POST', { uris: pendingUris }, function(err, res) {
+        queueBusy = false;
         if (!activeSession || activeSession.id !== sessionId) return;
         var d = (res && res.data) || { queued: 0, reason: 'failed' };
         if (Array.isArray(d.left)) pendingUris = d.left;
@@ -336,14 +342,29 @@ function queuePending(sessionId, manual) {
     });
 }
 
-// keep checking (every 5s, for up to 3 minutes) until spotify is playing somewhere
+// keep checking until spotify is playing somewhere - on this device or any other
+// (your computer, phone or a speaker). every 5s for the first 3 minutes, then every
+// 20s for as long as the session runs. the now-playing card also tries straight
+// away when it sees a song start (see onTrack below)
 function waitForSpotify(sessionId) {
     clearTimeout(queueRetry);
     var s = activeSession;
     if (!s || s.id !== sessionId) return;
     s.waitTries = (s.waitTries || 0) + 1;
-    if (s.waitTries > 36) return;   // the button stays, so you can still add them yourself
-    queueRetry = setTimeout(function() { queuePending(sessionId, false); }, 5000);
+    queueRetry = setTimeout(function() {
+        if (document.hidden) { waitForSpotify(sessionId); return; }
+        queuePending(sessionId, false);
+    }, s.waitTries > 36 ? 20000 : 5000);
+}
+
+// spotify just started playing (here or on another device): queue the waiting songs now
+var queueKick = null;
+function queueWhenPlaying() {
+    if (!activeSession || !activeSession.queueMode || !pendingUris.length) return;
+    clearTimeout(queueKick);
+    queueKick = setTimeout(function() {
+        if (activeSession && pendingUris.length) queuePending(activeSession.id, false);
+    }, 800);
 }
 
 sessionEndBtn.addEventListener('click', endSession);
@@ -575,6 +596,7 @@ var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('session-now-play
     quickLog: false,             // no "log as" moods here — songs go into the session by themselves
     getSession: function() { return activeSession; },
     onTrack: function(track) {
+        queueWhenPlaying();
         if (track.albumArt) {
             ringArt.style.backgroundImage = 'url("' + String(track.albumArt).replace(/["\\]/g, '') + '")';
             ringArt.classList.add('show');

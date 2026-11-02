@@ -818,3 +818,150 @@ summary:focus-visible {
 :root[data-theme="warm"] .ins-list li {
   color: #f3dcc2;
 }
+
+/* === REMOVE BUTTONS: A RED TRASH CAN, LIKE DELETING A MOOD === */
+/* every "remove" / "delete" on a song or session is the same red trash can as the
+   one for deleting a mood. (:not(#_) only adds weight, so the themes that recolour
+   .delete-btn can't turn it grey again) */
+:root:not(#_) .trash-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0 !important;
+  border-radius: 8px;
+  background: none !important;
+  color: #e05c5c !important;
+  line-height: 0;
+  cursor: pointer;
+}
+
+:root:not(#_) .trash-btn:hover {
+  background: rgba(224, 92, 92, 0.12) !important;
+  color: #ff7b7b !important;
+}
+
+:root[data-theme="light"]:not(#_) .trash-btn {
+  color: #c0392b !important;
+}
+
+.trash-btn .mt-icon {
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+}
+
+/* under a song in a history session: centred below the title */
+:root:not(#_) .session-song-delete.trash-btn {
+  display: flex;
+  margin: 2px auto 0;
+}
+
+/* === MONTHLY RECAP: A BUTTON AND A POP-UP === */
+/* the stats page has a button; the recap opens over the page (recap.js). it only
+   opens by itself on the 1st of each month */
+.recap-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 18px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(135deg, #ff9fcf, #ffb98f);
+  color: #2a1038;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.recap-open-btn .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.recap-open-btn:hover {
+  filter: brightness(1.05);
+}
+
+:root[data-theme="ocean"] .recap-open-btn {
+  background: linear-gradient(135deg, #ff9e80, #ffd27a);
+  color: #2a1408;
+}
+
+#recap-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(8, 4, 18, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: recap-fade 0.2s ease;
+}
+
+#recap-modal.closing {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+#recap-modal .recap-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 18px;
+  animation: recap-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#recap-modal .recap-card {
+  margin: 0;
+  padding-top: 50px;
+}
+
+.recap-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--text-primary, #fff) 25%, transparent);
+  background: color-mix(in srgb, var(--text-primary, #fff) 8%, transparent);
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+}
+
+.recap-close .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+:root.recap-open body {
+  overflow: hidden;
+}
+
+@keyframes recap-fade {
+  from { opacity: 0; }
+}
+
+@keyframes recap-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #recap-modal,
+  #recap-modal .recap-dialog {
+    animation: none;
+  }
+}

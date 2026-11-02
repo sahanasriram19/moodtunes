@@ -268,7 +268,7 @@ function renderTimeline(logs, filtered) {
                     // the buttons sit in one column on phones (see motion.css); on wider screens the wrapper is invisible
                     '<div class="log-actions">' +
                         '<button class="play-btn timeline-play-btn" data-url="' + MoodFX.esc(log.spotify_url) + '" data-song-id="' + MoodFX.esc(log.song_id) + '" data-mood="' + MoodFX.esc(log.mood) + '">▶</button>' +
-                        '<button class="delete-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry">✕</button>' +
+                        '<button class="delete-btn trash-btn history-delete-btn" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-log-id="' + log.id + '" title="delete this entry" aria-label="delete this entry">' + MoodFX.icon('trash') + '</button>' +
                     '</div>';
                 dayBox.appendChild(card);
             });
@@ -353,7 +353,7 @@ function renderSessions() {
                                 '<p>' + MoodFX.esc(s.title) + '</p>' +
                                 '<p class="thumb-artist">' + MoodFX.esc(s.artist) + '</p>' +
                                 '<div class="thumb-actions">' +
-                                    '<button class="session-song-delete" data-session-id="' + session.id + '" data-song-id="' + s.id + '">✕ remove</button>' +
+                                    '<button class="session-song-delete trash-btn" data-session-id="' + session.id + '" data-song-id="' + s.id + '" title="remove from this session" aria-label="remove ' + MoodFX.esc(s.title) + ' from this session">' + MoodFX.icon('trash') + '</button>' +
                                 '</div>' +
                             '</div>';
                         }).join('') +
@@ -364,7 +364,7 @@ function renderSessions() {
                         '<div class="session-history-mood">' + MoodFX.esc(session.mood) + ' session</div>' +
                         '<div class="session-history-meta">' + startStr + duration + '</div>' +
                         (songs.length ? '<button type="button" class="session-spotify-btn" data-session-id="' + session.id + '"></button>' : '') +
-                        '<button class="session-delete-btn" data-session-id="' + session.id + '">delete session</button>' +
+                        '<button class="session-delete-btn trash-btn" data-session-id="' + session.id + '" title="delete this session" aria-label="delete this session">' + MoodFX.icon('trash') + '</button>' +
                     '</div>' +
                     songsHTML;
 

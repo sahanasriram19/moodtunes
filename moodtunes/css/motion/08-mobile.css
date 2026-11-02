@@ -8,7 +8,6 @@
    auth.css, because those two pages don't load this file.)
 */
 
-
 /* ==================================================================
    from css/history.css (only on the history page: these rules sit under
    :where([data-page="history"]), which matches <body data-page="history"> and adds no
@@ -130,7 +129,6 @@
     gap: 12px;
   }
 }
-
 
 /* ==================================================================
    from css/mobile.css
@@ -431,7 +429,6 @@
   }
 }
 
-
 /* ==================================================================
    from css/session.css (only on the session page: these rules sit under
    :where([data-page="session"]), which matches <body data-page="session"> and adds no
@@ -447,7 +444,6 @@
   :where([data-page="session"]) .session-how-grid { grid-template-columns: 1fr; }
   :where([data-page="session"]) #session-save-playlist-btn { min-height: 44px; }
 }
-
 
 /* ==================================================================
    from css/motion/01-foundation.css
@@ -487,7 +483,6 @@
     gap: 12px;
   }
 }
-
 
 /* ==================================================================
    from css/motion/02-app-shell.css
@@ -845,13 +840,6 @@
   }
 }
 
-@media (max-width: 420px) {
-  .np-compact .np-prev {
-    display: none;
-  }
-}
-
-
 /* ==================================================================
    from css/motion/04-pages.css
    ================================================================== */
@@ -874,12 +862,7 @@
 
 @media (max-width: 768px) {
 
-  /* phones: the heart takes the "previous" button's spot so the song title has room */
-  .np-nolog .np-prev {
-    display: none;
-  }
-
-  /* and the card uses the full width of the screen */
+  /* the now playing card uses the full width of the screen */
   .session-hero {
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -907,7 +890,6 @@
     padding: 8px 12px;
   }
 }
-
 
 /* ==================================================================
    from css/motion/05-phone-layouts.css
@@ -1112,10 +1094,6 @@
   }
 
   /* the negative margins let these two overlap the artist line instead of making it taller */
-  :is(#timeline, #logs-list, #playlist-block) .log-card .like-btn {
-    grid-area: heart;
-    margin: -6px 0 !important;
-  }
 
   :is(#timeline, #logs-list, #playlist-block) .log-card .queue-btn {
     grid-area: queue;
@@ -1166,7 +1144,6 @@
     margin-bottom: 20px;
   }
 }
-
 
 /* ==================================================================
    from css/motion/06-polish.css
@@ -1469,20 +1446,6 @@
     gap: 4px !important;
   }
 
-  .np-controls .like-btn,
-  .np-like-slot .like-btn {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    min-height: 28px !important;
-  }
-
-  .np-controls .like-btn .mt-icon,
-  .np-like-slot .like-btn .mt-icon {
-    width: 15px !important;
-    height: 15px !important;
-  }
-
   .np-art-wrap,
   .np-art {
     width: 44px !important;
@@ -1715,7 +1678,6 @@
   }
 }
 
-
 /* ==================================================================
    from css/motion/07-features.css
    ================================================================== */
@@ -1796,7 +1758,6 @@
   }
 }
 
-
 /* ==================================================================
    from css/motion/08-mobile.css (was already here)
    ================================================================== */
@@ -1849,7 +1810,6 @@
     border-radius: 20px;
   }
 }
-
 
 /* ==================================================================
    from css/stats.css (only on the stats page: these rules sit under
@@ -1913,7 +1873,6 @@
   }
 }
 
-
 /* ==================================================================
    keep the desktop values that already won on phones
    ==================================================================
@@ -1969,5 +1928,32 @@
 @media (max-width: 768px) {
   .stats-layout > .stats-summary {
     margin-bottom: 0 !important;
+  }
+}
+
+/* ==================================================================
+   history page: the date filter is the same size as the mood chips
+   ==================================================================
+   the "no zoom" rule above keeps every dropdown at 16px so iPhones don't zoom
+   in when you tap it, which made this one much bigger than the chips. it stays
+   16px underneath (so still no zoom) and is drawn at 72%: the text comes out at
+   11.5px and the box 24px tall, like the chips beside it. the negative margins
+   hand back the space the full-size box would have taken. */
+
+@media (max-width: 768px) {
+  html body .hist-filter select.hf-range {
+    height: 33px;
+    padding: 0 33px 0 14px;
+    border-radius: 11px;
+    background-position: right 13px center;
+    background-size: 10px;
+    transform: scale(0.72);
+    transform-origin: left center;
+    margin: -4.5px var(--hf-shrink, -40px) -4.5px 0;
+  }
+
+  /* custom dates: the dropdown takes the whole row */
+  html body .hist-filter .hf-row:has(.hf-date) select.hf-range {
+    flex: 0 0 auto;
   }
 }

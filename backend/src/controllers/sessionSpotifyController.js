@@ -36,75 +36,85 @@ function mix(recs, mine) {
 
 function reasonOf(e) {
     const status = e.status || (e.response && e.response.status);
-    const r = e.response && e.response.data && e.response.data.error && e.response.data.error.reason;
+    const err = (e.response && e.response.data && e.response.data.error) || {};
+    const r = err.reason;
+    const msg = String(err.message || '');
     if (status === 401) return 'not_connected';
     if (lists.needsReconnect(e)) return 'reconnect';
-    if (r === 'PREMIUM_REQUIRED') return 'premium_required'; 
+    if (r === 'PREMIUM_REQUIRED') return 'premium_required';
+    if (r === 'NO_ACTIVE_DEVICE' || /device/i.test(msg)) return 'no_active_device';
     if (status === 403) return 'forbidden';
-    if (status === 404 || r === 'NO_ACTIVE_DEVICE') return 'no_active_device';
+    // a 404 that isn't about the device means that one song couldn't be found
+    // (e.g. not available in your country) - skip it, don't stop the whole queue
+    if (status === 404) return 'song_unavailable';
+    if (status === 400) return 'song_unavailable';
     if (status === 429) return 'rate_limited';
     return 'failed';
 }
 
+// these mean nothing more can be queued right now, so stop and report it
+const STOP_REASONS = ['not_connected', 'reconnect', 'premium_required', 'no_active_device', 'forbidden'];
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// the device spotify is playing (or paused) on right now - the computer, phone or
+// speaker you're listening on, which doesn't have to be the one moodtunes is open on.
+// some devices (cast speakers, some phones) don't share their id: then the songs
+// are queued without one, and spotify puts them on whatever is playing.
 async function activeDevice(userId) {
     try {
         const playback = await call(userId, 'get', '/me/player');
-
-        if (playback && playback.device &&
-            playback.device.id && !playback.device.is_restricted) {
-            return playback.device;
+        if (playback && playback.device) {
+            if (playback.device.is_restricted) return null;
+            return { id: playback.device.id || null, name: playback.device.name || null };
         }
     } catch (e) {
         if (reasonOf(e) !== 'no_active_device') throw e;
     }
-
-    // Fallback: ask Spotify which Connect devices are available
+    // nothing in /me/player: ask which spotify devices are active
     const result = await call(userId, 'get', '/me/player/devices');
-    const devices = result && Array.isArray(result.devices)
-        ? result.devices
-        : [];
-
-    return devices.find(function(device) {
-        return device.is_active && device.id && !device.is_restricted;
-    }) || null;
+    const devices = result && Array.isArray(result.devices) ? result.devices : [];
+    const d = devices.find((x) => x.is_active && !x.is_restricted);
+    return d ? { id: d.id || null, name: d.name || null } : null;
 }
 
 async function queueAll(userId, uris) {
     const device = await activeDevice(userId);
+    if (!device) return { queued: 0, left: uris, reason: 'no_active_device' };
 
-    if (!device) {
-        return {
-            queued: 0,
-            left: uris,
-            reason: 'no_active_device'
-        };
-    }
-    let queued = 0;
-    for (const uri of uris) {
-        try {
-            const path =
-                '/me/player/queue?uri=' +
-                encodeURIComponent(uri) +
-                '&device_id=' +
-                encodeURIComponent(device.id);
+    const queueOne = (uri, withDevice) => call(userId, 'post',
+        '/me/player/queue?uri=' + encodeURIComponent(uri) +
+        (withDevice && device.id ? '&device_id=' + encodeURIComponent(device.id) : ''));
 
-            await call(userId, 'post', path);
-            queued++;
-
-        } catch (e) {
-            return {
-                queued,
-                left: uris.slice(queued),
-                reason: reasonOf(e),
-                device: device.name
-            };
+    let queued = 0, skipped = 0;
+    for (let i = 0; i < uris.length; i++) {
+        const uri = uris[i];
+        let done = false;
+        for (let attempt = 0; attempt < 3 && !done; attempt++) {
+            try {
+                // first try the device that's playing; if spotify says it can't find
+                // that device (it changed a moment ago), try once more without it
+                await queueOne(uri, attempt === 0);
+                queued++; done = true;
+            } catch (e) {
+                const reason = reasonOf(e);
+                if (reason === 'rate_limited') {
+                    const after = Number(e.response && e.response.headers && e.response.headers['retry-after']) || 1;
+                    await wait(Math.min(after, 5) * 1000);
+                    continue;
+                }
+                if (reason === 'no_active_device' && attempt === 0 && device.id) continue;
+                if (reason === 'song_unavailable') { skipped++; done = true; break; }
+                if (STOP_REASONS.includes(reason) || attempt === 2) {
+                    return { queued, skipped, left: uris.slice(i), reason, device: device.name };
+                }
+            }
         }
+        if (!done) return { queued, skipped, left: uris.slice(i), reason: 'rate_limited', device: device.name };
+        // a short gap: phones and speakers can drop songs that arrive all at once
+        if (i < uris.length - 1) await wait(150);
     }
-    return {
-        queued,
-        left: [],
-        device: device.name
-    };
+    return { queued, skipped, left: [], device: device.name };
 }
 // POST /api/sessions/:session_id/spotify/start   body: { mix_mine?: bool }
 // → { tracks, genres, source, uris, queued, left, reason?, device? }

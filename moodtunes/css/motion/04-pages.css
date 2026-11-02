@@ -1,83 +1,8 @@
 /* motion/04-pages.css (part 4 of 7)
    page by page: spotify bits, now playing, the journal, sessions, mood chip colours, manage moods, notes, playlist covers, "not in your journal yet", day boxes and the session summary.
 
-   sections: spotify: the heart (liked songs), now playing: log in one tap, journal: played on spotify, not logged yet, sessions: this session so far . why these recs . save to spotify, mood chips in their own colours, "manage moods" up by the heading, on the right, notes beside song titles: easier to read, now playing: layout, playlist covers: no strip underneath, now playing: a little more room at the top, less in the middle, not in your journal yet: in a box that scrolls, the note on its own line, with "edit note" beside it, headings in outfit, each day's songs in a box, notes: nostalgic on every theme
+   sections: now playing: log in one tap, journal: played on spotify, not logged yet, sessions: this session so far . why these recs . save to spotify, mood chips in their own colours, "manage moods" up by the heading, on the right, notes beside song titles: easier to read, now playing: layout, playlist covers: no strip underneath, now playing: a little more room at the top, less in the middle, not in your journal yet: in a box that scrolls, the note on its own line, with "edit note" beside it, headings in outfit, each day's songs in a box, notes: nostalgic on every theme
 */
-
-/* === SPOTIFY: THE HEART (LIKED SONGS) === */
-/* sits before "play next" on every song; filled green when the song is in your liked songs */
-.like-btn {
-  flex-shrink: 0;
-  display: inline-grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  margin-right: 8px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-secondary, #ccc);
-  cursor: pointer;
-  vertical-align: middle;
-  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
-}
-
-.like-btn .mt-icon {
-  width: 16px;
-  height: 16px;
-  transition: fill 0.2s;
-}
-
-.like-btn:hover {
-  color: #fff;
-  border-color: rgba(29, 185, 84, 0.55);
-  transform: translateY(-1px);
-}
-
-.like-btn.liked {
-  color: #1ed760;
-  border-color: rgba(30, 215, 96, 0.55);
-  background: rgba(30, 215, 96, 0.12);
-}
-
-.like-btn.liked .mt-icon {
-  fill: currentColor;
-}
-
-.like-btn.pop {
-  animation: like-pop 0.45s var(--ease-spring, ease);
-}
-
-@keyframes like-pop {
-  40% {
-    transform: scale(1.28);
-  }
-}
-
-.like-btn-sm {
-  width: 28px;
-  height: 28px;
-  margin-right: 6px;
-}
-
-.like-btn-sm .mt-icon {
-  width: 13px;
-  height: 13px;
-}
-
-/* spotify not connected: no hearts */
-.likes-off .like-btn {
-  display: none;
-}
-
-.result-item .like-btn {
-  margin-left: auto;
-}
-
-.result-item .like-btn+.queue-btn {
-  margin-left: 0;
-}
 
 /* === NOW PLAYING: LOG IN ONE TAP === */
 .np-card {
@@ -93,13 +18,9 @@
   padding-top: 2px;
 }
 
-/* session page: no "log as" row, so nothing under the song; the heart sits with the controls */
+/* session page: no "log as" row, so nothing under the song */
 .np-nolog .np-extra {
   display: none;
-}
-
-.np-controls .np-like-slot .like-btn {
-  margin-right: 4px;
 }
 
 .np-idle .np-extra {
@@ -179,10 +100,6 @@
 .np-mood.usual {
   border-color: var(--mc);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--mc) 45%, transparent);
-}
-
-.np-like-slot .like-btn {
-  margin-right: 0;
 }
 
 /* === JOURNAL: PLAYED ON SPOTIFY, NOT LOGGED YET === */
@@ -426,11 +343,6 @@
   color: #128a3e;
 }
 
-:root[data-theme="light"] .like-btn {
-  border-color: rgba(0, 0, 0, 0.14);
-  background: rgba(0, 0, 0, 0.03);
-}
-
 /* === MOOD CHIPS IN THEIR OWN COLOURS === */
 /* every mood button on the page is tinted with its mood colour (like the
    "log as" chips); the picked one is filled in */
@@ -539,21 +451,6 @@
   white-space: nowrap;
 }
 
-.np-controls .np-like-slot {
-  display: inline-flex;
-  margin-right: 4px;
-}
-
-.np-controls .like-btn {
-  width: 34px;
-  height: 34px;
-  margin: 0;
-}
-
-.np-idle .np-like-slot {
-  display: none;
-}
-
 .np-body>.np-progress {
   margin-top: 8px;
 }
@@ -587,7 +484,6 @@
 .stats-card:hover,
 .session-history-card:hover,
 .queue-btn:hover,
-.like-btn:hover,
 .np-mood:hover,
 .session-spotify-btn:hover,
 .chip:hover {
@@ -748,14 +644,10 @@
   gap: 14px;
 }
 
-/* quieter row buttons: the heart and play next are plain icons, > stays green */
-#logs-list .like-btn,
+/* quieter row buttons: play next is a plain icon, > stays green */
 #logs-list .queue-btn,
-#timeline .like-btn,
 #timeline .queue-btn,
-.song-history-card .like-btn,
 .song-history-card .queue-btn,
-.result-item .like-btn,
 .result-item .queue-btn {
   background: transparent;
   border-color: transparent;

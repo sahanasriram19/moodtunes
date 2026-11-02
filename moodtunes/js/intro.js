@@ -63,7 +63,7 @@ var STEPS = {
           title: 'your mood playlists', text: 'every mood you log songs under becomes a playlist. the cover shows its top 4 songs.' },
         { target: '.playlist-card', title: 'open a playlist', text: 'tap a cover to see every song in it, with your notes and play counts.', skipIf: has('.playlist-card') },
         { target: '.playlist-card', title: 'put them in order', text: 'inside, drag songs up and down (hold the ⠿ handle on a phone). the top 4 become the cover.', skipIf: has('.playlist-card') },
-        { target: '.playlist-card', title: 'take a song out', text: '✕ removes a song from the playlist but keeps it in your history. log it with this mood again and it comes back.', skipIf: has('.playlist-card') },
+        { target: '.playlist-card', title: 'take a song out', text: 'the trash can removes a song from the playlist but keeps it in your history. log it with this mood again and it comes back.', skipIf: has('.playlist-card') },
         { target: '.playlist-card', title: 'take it to spotify', text: '“save to spotify” adds the playlist to your library with the same cover, and keeps it updated as you log. ▶ plays the whole thing.', skipIf: has('.playlist-card') }
     ],
     session: [
@@ -84,7 +84,7 @@ var STEPS = {
     ],
     stats: [
         { target: '.stats-sentence', title: 'your listening at a glance', text: 'plays, songs, days and your top mood, all in one line.' },
-        { target: '#recap-card', title: 'your month, wrapped', text: 'a recap of each month: your main mood, top songs and busiest day. the arrows go back through earlier months, and save as image makes a picture to share.', skipIf: has('#recap-card') },
+        { target: '#recap-open', title: 'your month, wrapped', text: 'tap for a recap of each month: your main mood, top songs and busiest day. the arrows go back through earlier months, and save as image makes a picture to share. it also opens by itself on the 1st of every month.', skipIf: has('#recap-open') },
         { target: '.flashback-card', title: 'a month ago', text: 'what you were listening to about a month ago, and how you were feeling.', skipIf: has('.flashback-card') },
         { target: '.stats-grid', title: 'moods and timing', text: 'which moods you play most, and when in your day you listen (in your own timezone).', skipIf: has('.stats-grid') },
         { target: '#mood-graph-container', title: 'the last two weeks', text: 'how each mood has risen and fallen day by day.', skipIf: has('#mood-graph-container') },

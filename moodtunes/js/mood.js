@@ -62,6 +62,7 @@ var ICON_PATHS = {
     stats:      '<path d="M5 20v-8M12 20V5M19 20v-5"/>',
     calendar:   '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h.01M12 13.5h.01M16.5 13.5h.01M7.5 17h.01M12 17h.01"/>',
     trash:      '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M5.5 7l1 13h11l1-13"/><path d="M9 7V4h6v3"/>',
+    close:      '<path d="M6 6l12 12M18 6L6 18"/>',
     user:       '<circle cx="12" cy="8" r="4"/><path d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7"/>',
     keyboard:   '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
     // playback (filled)
@@ -432,9 +433,6 @@ function decorate(node) {
         q.innerHTML = icon('queue');
         b.parentNode.insertBefore(q, b);
     });
- 
-    // (the heart for liked songs lives only on the now-playing card now, not on
-    // every song box; see likeButton below)
  
     // cards you click (a playlist, a search result, a recommendation) can be reached
     // with tab and opened with enter or space too. ones with their own buttons inside
@@ -1237,9 +1235,9 @@ function nowPlaying(container, opts) {
                 '<button class="np-btn np-toggle" aria-label="pause">' + icon('pause') + '</button>' +
                 '<button class="np-btn np-next" aria-label="next song">' + icon('next') + '</button>' +
             '</div>' +
-            // log what's playing with one tap . the heart
+            // log what's playing with one tap
             '<div class="np-extra">' +
-                '<div class="np-logrow"><span class="np-logas">log as</span><div class="np-moods" role="group" aria-label="log this song as"></div><span class="np-like-slot"></span></div>' +
+                '<div class="np-logrow"><span class="np-logas">log as</span><div class="np-moods" role="group" aria-label="log this song as"></div></div>' +
             '</div>' +
         '</div>';
  
@@ -1257,15 +1255,13 @@ function nowPlaying(container, opts) {
     var toggle = container.querySelector('.np-toggle');
     if (opts.hideWhenIdle) container.classList.add('np-hidden');
  
-    // layout: the heart and play / skip on the right above the progress bar
+    // layout: previous / play / next on the right above the progress bar
     var npBody = container.querySelector('.np-body');
-    var likeSlot = container.querySelector('.np-like-slot');
     var titleRow = document.createElement('div');
     titleRow.className = 'np-titlerow';
     title.parentNode.insertBefore(titleRow, title);
     titleRow.appendChild(title);
     var npControls = container.querySelector('.np-controls');
-    npControls.insertBefore(likeSlot, npControls.firstChild);     // the heart, just left of \u23ee \u23ef \u23ed
     npBody.appendChild(npControls);
  
     // -- one-tap logging --
@@ -1418,8 +1414,6 @@ function nowPlaying(container, opts) {
             });
             if (opts.onTrack) opts.onTrack(t);
             drawMoods();
-            likeSlot.innerHTML = '';
-            if (t.id) likeSlot.appendChild(likeButton(t.id));
         }
         if (state.playing) autoLog(t);
         if (!raf) raf = requestAnimationFrame(tick);
@@ -1551,86 +1545,6 @@ function trackIdOf(u) {
     var m = String(u || '').match(/track[\/:]([A-Za-z0-9]{10,40})/);
     return m ? m[1] : null;
 }
- 
-// -- the heart: save songs to your spotify liked songs --
-// every song with a > gets one. the filled/empty state is checked with spotify
-// in batches (up to 40 songs per request)
-var liked = {};                  // track id \u2192 true / false
-var likedWanted = {}, likedTimer = null, likesOff = false;
- 
-function likeButton(id, small) {
-    var h = document.createElement('button');
-    h.type = 'button';
-    h.className = 'like-btn' + (small ? ' like-btn-sm' : '');
-    h.dataset.id = id;
-    h.setAttribute('aria-pressed', 'false');
-    h.title = 'save to your liked songs';
-    h.setAttribute('aria-label', 'like');
-    h.innerHTML = icon('heart');
-    paintLike(h);
-    if (!(id in liked)) wantLiked(id);
-    return h;
-}
- 
-function paintLike(b) {
-    var on = liked[b.dataset.id] === true;
-    b.classList.toggle('liked', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.title = on ? 'in your liked songs, tap to remove' : 'save to your liked songs';
-    b.setAttribute('aria-label', on ? 'unlike' : 'like');
-}
-function paintLikes(id) {
-    document.querySelectorAll('.like-btn[data-id="' + id + '"]').forEach(paintLike);
-}
- 
-function wantLiked(id) {
-    if (likesOff || !id) return;
-    likedWanted[id] = true;
-    clearTimeout(likedTimer);
-    likedTimer = setTimeout(fetchLiked, 250);
-}
- 
-function fetchLiked() {
-    if (typeof apiCall !== 'function') return;
-    var ids = Object.keys(likedWanted);
-    likedWanted = {};
-    for (var i = 0; i < ids.length; i += 40) {
-        (function(chunk) {
-            apiCall('/spotify/liked?ids=' + chunk.join(','), 'GET', null, function(err, res) {
-                if (err || !res) return;
-                // spotify not connected: no hearts at all
-                if (res.status === 401) { likesOff = true; root.classList.add('likes-off'); return; }
-                if (res.status !== 200 || !res.data) return;    // e.g. needs reconnecting: hearts stay empty until tapped
-                chunk.forEach(function(id) { liked[id] = !!res.data[id]; paintLikes(id); });
-            });
-        })(ids.slice(i, i + 40));
-    }
-}
- 
-document.addEventListener('click', function(e) {
-    var h = e.target.closest && e.target.closest('.like-btn');
-    if (!h) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (h.disabled) return;
-    var id = h.dataset.id;
-    var was = liked[id] === true;
-    liked[id] = !was;
-    paintLikes(id);
-    if (!was) { h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop'); }
-    h.disabled = true;
-    apiCall('/spotify/liked/' + encodeURIComponent(id), was ? 'DELETE' : 'PUT', null, function(err, res) {
-        h.disabled = false;
-        if (!err && res && res.status === 200) {
-            toast(was ? 'removed from your liked songs' : 'saved to your liked songs');
-            return;
-        }
-        liked[id] = was;                              // spotify said no: put it back
-        paintLikes(id);
-        var reason = res && res.data && res.data.reason;
-        if (!spotifyProblem(reason, 'the heart button')) toast('couldn\u2019t reach spotify, try again');
-    });
-}, true);
  
 // -- a playlist cover like the app's: the top 4 album covers in a 2x2 grid --
 // empty spots get the mood's icon, in the same colours as the covers on the
@@ -2194,8 +2108,42 @@ window.MoodFX = {
     undoable: undoable, nudgeMoods: nudgeMoods,
     hideMood: hideMood, unhideMood: unhideMood, isHidden: isHidden, visibleMoods: visibleMoods,
     DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive,
-    composeCover: composeCover, spotifyProblem: spotifyProblem, likeButton: likeButton,
+    composeCover: composeCover, spotifyProblem: spotifyProblem,
     saveSessionToSpotify: saveSessionToSpotify, sessionSpotifyButton: sessionSpotifyButton, reconnectSpotify: reconnectSpotify, trackIdOf: trackIdOf
 };
+
+// -- monthly recap: opens by itself on the 1st ----------
+// the recap is behind a button on the stats page. the one time it shows up by
+// itself is the 1st of each month: last month's recap, once (on whichever page
+// you open first that day). recap.js is loaded only when it's needed
+(function() {
+    if (typeof getToken !== 'function' || !getToken() || typeof apiCall !== 'function') return;
+    var t = new Date();
+    if (t.getDate() !== 1) return;
+    var key = 'moodtunes_recap_auto_' + (localStorage.getItem('moodtunes_username') || '') + '_' + t.getFullYear() + '-' + (t.getMonth() + 1);
+    try { if (localStorage.getItem(key)) return; } catch (e) { return; }
+    function withRecap(cb) {
+        if (window.MoodRecap) return cb();
+        var sc = document.createElement('script');
+        sc.src = 'js/recap.js';
+        sc.onload = cb;
+        document.head.appendChild(sc);
+    }
+    function tryShow(tries) {
+        // wait for the first-visit tour or another pop-up to finish
+        if (document.getElementById('mt-tour') || document.getElementById('help-modal') || document.querySelector('.mt-summary')) {
+            if (tries < 40) setTimeout(function() { tryShow(tries + 1); }, 3000);
+            return;
+        }
+        apiCall('/logs/perday', 'GET', null, function(err, res) {
+            if (err || !res || res.status !== 200 || !Array.isArray(res.data)) return;
+            withRecap(function() {
+                try { localStorage.setItem(key, '1'); } catch (e) {}
+                if (window.MoodRecap && MoodRecap.popup) MoodRecap.popup(res.data);
+            });
+        });
+    }
+    setTimeout(function() { tryShow(0); }, 2500);
+})();
  
 })();
