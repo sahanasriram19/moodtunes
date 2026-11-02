@@ -1,7 +1,7 @@
 /* motion/03-themes.css (part 3 of 7)
-   the default violet-glass theme, play next, the album art behind the page, the sound waves, and the clean light theme.
+   the default violet-glass theme, play next, the album art behind the page, and the clean light theme.
 
-   sections: default theme: violet glass, play next (spotify queue), album art background, keep the sound waves behind the page, history tabs follow the background, clean light theme
+   sections: default theme: violet glass, play next (spotify queue), album art background, keep the background behind the page, history tabs follow the background, clean light theme
 */
 
 /* === DEFAULT THEME: VIOLET GLASS === */
@@ -300,11 +300,10 @@
   transition: opacity 1.2s ease;
 }
 
-/* === KEEP THE SOUND WAVES BEHIND THE PAGE === */
-/* boxes, pills and inputs are solid enough that the waves (and the album-art
-   background) only show in the gaps between them, never through them */
+/* === KEEP THE BACKGROUND BEHIND THE PAGE === */
+/* boxes, pills and inputs are solid enough that the album-art background
+   only shows in the gaps between them, never through them */
 .chip:not(.selected),
-.np-sync,
 .restore-chip {
   background-color: rgba(30, 18, 54, 0.88);
 }
@@ -384,4 +383,48 @@
   background: linear-gradient(180deg,
       color-mix(in srgb, var(--mood) 12%, rgba(248, 248, 246, 0.8)) 0%,
       color-mix(in srgb, var(--mood-2) 16%, rgba(248, 248, 246, 0.86)) 100%);
+}
+
+/* the ? and profile buttons are a white ring everywhere else (set in help.js and
+   profile.js); on the light page that's invisible, so they go dark here */
+:root[data-theme="light"] #help-btn,
+:root[data-theme="light"] #profile-btn {
+  border-color: #3a3a3a !important;
+  color: #3a3a3a !important;
+}
+
+:root[data-theme="light"] #help-btn:hover,
+:root[data-theme="light"] #profile-btn:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* now playing: the album art behind the card is washed out pale instead of
+   darkened, so the dark text and the heart / skip buttons stay readable */
+:root[data-theme="light"] .np-card {
+  background: linear-gradient(120deg,
+      color-mix(in srgb, var(--np-color) 14%, #fff) 0%,
+      #fff 70%);
+}
+
+:root[data-theme="light"] .np-backdrop::after {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.8) 55%, rgba(255, 255, 255, 0.86) 100%);
+}
+
+/* playlist page: "update it" in the saved pill and the note buttons on songs
+   were pale greys / mint, too light to see on white */
+:root[data-theme="light"] .pl-save-btn.saved u {
+  color: #0f5f2d !important;
+}
+
+:root[data-theme="light"] #playlist-block .log-card:not(.mood-card) :is(.edit-note-btn, .add-note-btn) {
+  color: #5a5a5a !important;
+}
+
+/* history page, sessions: the song names under each cover were a pale grey */
+:root[data-theme="light"] .session-song-thumb p {
+  color: #222;
+}
+
+:root[data-theme="light"] .session-song-thumb .thumb-artist {
+  color: #666;
 }

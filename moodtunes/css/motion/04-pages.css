@@ -1,7 +1,7 @@
 /* motion/04-pages.css (part 4 of 7)
    page by page: spotify bits, now playing, the journal, sessions, mood chip colours, manage moods, notes, playlist covers, "not in your journal yet", day boxes and the session summary.
 
-   sections: spotify: the heart (liked songs), now playing: log in one tap + up next, journal: played on spotify, not logged yet, sessions: this session so far . why these recs . save to spotify, mood chips in their own colours, "manage moods" up by the heading, on the right, notes beside song titles: easier to read, now playing: layout, "sync waves" as a switch, up next on one line in the side column, "sync waves": just the words and the switch, playlist covers: no strip underneath, now playing: a little more room at the top, less in the middle, not in your journal yet: in a box that scrolls, the note on its own line, with "edit note" beside it, headings in outfit, each day's songs in a box, notes: nostalgic on every theme
+   sections: spotify: the heart (liked songs), now playing: log in one tap, journal: played on spotify, not logged yet, sessions: this session so far . why these recs . save to spotify, mood chips in their own colours, "manage moods" up by the heading, on the right, notes beside song titles: easier to read, now playing: layout, playlist covers: no strip underneath, now playing: a little more room at the top, less in the middle, not in your journal yet: in a box that scrolls, the note on its own line, with "edit note" beside it, headings in outfit, each day's songs in a box, notes: nostalgic on every theme
 */
 
 /* === SPOTIFY: THE HEART (LIKED SONGS) === */
@@ -79,7 +79,7 @@
   margin-left: 0;
 }
 
-/* === NOW PLAYING: LOG IN ONE TAP + UP NEXT === */
+/* === NOW PLAYING: LOG IN ONE TAP === */
 .np-card {
   flex-wrap: wrap;
 }
@@ -93,8 +93,8 @@
   padding-top: 2px;
 }
 
-/* session page: just "up next" under the song, the heart sits with the controls */
-.np-nolog .np-extra:has(.np-upnext[hidden]) {
+/* session page: no "log as" row, so nothing under the song; the heart sits with the controls */
+.np-nolog .np-extra {
   display: none;
 }
 
@@ -113,8 +113,7 @@
   min-width: 0;
 }
 
-.np-logas,
-.np-upnext-label {
+.np-logas {
   flex-shrink: 0;
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -184,66 +183,6 @@
 
 .np-like-slot .like-btn {
   margin-right: 0;
-}
-
-.np-upnext {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.np-upnext[hidden] {
-  display: none;
-}
-
-.np-upnext-list {
-  display: flex;
-  gap: 14px;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow: hidden;
-}
-
-.np-upnext-list li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: 220px;
-  font-size: 12px;
-  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 80%, transparent);
-}
-
-.np-upnext-list img {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  object-fit: cover;
-}
-
-.np-upnext-title,
-.np-upnext-artist {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.np-upnext-artist {
-  color: color-mix(in srgb, var(--text-primary, #f0f0f0) 50%, transparent);
-}
-
-.np-upnext-artist::before {
-  content: "\00B7 ";
-}
-
-@media (max-width: 768px) {
-  .np-upnext-list li:nth-child(n + 2) {
-    display: none;
-  }
 }
 
 /* === JOURNAL: PLAYED ON SPOTIFY, NOT LOGGED YET === */
@@ -477,14 +416,6 @@
   margin-left: auto;
 }
 
-@media (max-width: 768px) {
-  .session-history-header .session-spotify-btn {
-    grid-column: 1 / -1;
-    justify-self: start;
-    margin: 6px 0 0;
-  }
-}
-
 /* light theme: the new pills and chips on a pale background */
 :root[data-theme="light"] .np-mood {
   background: color-mix(in srgb, var(--mc) 10%, #fff);
@@ -537,33 +468,6 @@
   margin-top: 0 !important;
 }
 
-@media (max-width: 768px) {
-
-  /* leave room for the button beside the heading */
-  .mood-section>.section-label {
-    padding-right: 104px;
-  }
-}
-
-/* the session page's card is narrower: two songs up next, so the titles fit */
-.np-nolog .np-upnext-list li:nth-child(n + 3) {
-  display: none;
-}
-
-@media (max-width: 768px) {
-
-  /* phones: the heart takes the "previous" button's spot so the song title has room */
-  .np-nolog .np-prev {
-    display: none;
-  }
-
-  /* and the card uses the full width of the screen */
-  .session-hero {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-}
-
 /* === NOTES BESIDE SONG TITLES: EASIER TO READ === */
 /* a light tint of the mood instead of the full colour, so grey and dark moods
    (chill, hype) are as readable as the bright ones */
@@ -594,7 +498,7 @@
 }
 
 /* === NOW PLAYING: LAYOUT === */
-/*  [art]  NOW PLAYING                      (sync waves)
+/*  [art]  NOW PLAYING
            Title                         <3  |<<  >||  >>|
            artist
            -----------------------------------  1:02 / 3:20   */
@@ -656,7 +560,7 @@
 
 /* =====================================================================
    QUIETER AND MORE PERSONAL
-   one bold thing (the album art behind the page and the waves); everything
+   one bold thing (the album art behind the page); everything
    else reads like a diary: a soft serif for songs and headings, rows instead
    of glowing boxes, normal-case headings, no decorative glows or lifts
    ===================================================================== */
@@ -732,7 +636,6 @@
 .ssf-head,
 .np-label,
 .np-logas,
-.np-upnext-label,
 .flashback-label,
 .stat-box-label,
 .stat-label,
@@ -764,7 +667,6 @@
 
 .np-label,
 .np-logas,
-.np-upnext-label,
 .ssf-head {
   font-size: 12.5px !important;
 }
@@ -904,8 +806,9 @@
 
 /* -- playlists look like record sleeves: the mood name on the cover -- */
 .playlist-card {
-  border-radius: 3px !important;
+  border-radius: 16px !important;
   overflow: hidden;
+  isolation: isolate;
   padding: 0 !important;
   background: #000 !important;
   border: 0 !important;
@@ -1048,21 +951,6 @@
     align-items: flex-start;
     gap: 6px;
   }
-
-  .journal-side .np-upnext {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .journal-side .np-upnext-list {
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  .journal-side .np-upnext-list li {
-    max-width: 100%;
-  }
 }
 
 /* the mood calendar sits at the bottom of the stats page */
@@ -1079,91 +967,6 @@
 
 .np-card .np-label .np-status {
   opacity: 0.85;
-}
-
-/* === "SYNC WAVES" AS A SWITCH === */
-.np-sync {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 10px 3px 4px;
-  color: color-mix(in srgb, var(--text-primary, #fff) 80%, transparent);
-  background: rgba(10, 4, 22, 0.45);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.np-switch {
-  position: relative;
-  flex-shrink: 0;
-  width: 26px;
-  height: 15px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  transition: background 0.2s;
-}
-
-.np-switch i {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 0.2s var(--ease-out, ease);
-}
-
-.np-sync.on {
-  color: var(--text-primary, #fff);
-  background: rgba(10, 4, 22, 0.45);
-  border-color: rgba(30, 215, 96, 0.5);
-}
-
-.np-sync.on .np-switch {
-  background: #1ed760;
-}
-
-.np-sync.on .np-switch i {
-  transform: translateX(11px);
-}
-
-/* === UP NEXT ON ONE LINE IN THE SIDE COLUMN === */
-@media (min-width: 1100px) {
-  .journal-side .np-upnext {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .journal-side .np-upnext-list {
-    flex-direction: row;
-    gap: 10px;
-    min-width: 0;
-  }
-
-  .journal-side .np-upnext-list li {
-    flex: 1 1 0;
-    min-width: 0;
-    max-width: none;
-  }
-
-  /* titles only here, the artist would not fit */
-  .journal-side .np-upnext-artist {
-    display: none;
-  }
-}
-
-/* === "SYNC WAVES": JUST THE WORDS AND THE SWITCH === */
-.np-sync,
-.np-sync.on,
-.np-sync:hover {
-  background: transparent !important;
-  border: 0 !important;
-  padding: 2px 0 !important;
-}
-
-.np-sync .np-sync-text {
-  font-size: 12.5px;
 }
 
 /* === PLAYLIST COVERS: NO STRIP UNDERNEATH === */
@@ -1401,12 +1204,6 @@
 :root[data-theme="light"] .day-box {
   background: #fff;
   border-color: rgba(0, 0, 0, 0.08);
-}
-
-@media (max-width: 768px) {
-  .day-box {
-    padding: 2px 12px;
-  }
 }
 
 .log-meta .date-text {
@@ -1689,22 +1486,6 @@
 
 :root[data-theme="light"] .sx-close {
   color: #4a4652;
-}
-
-@media (max-width: 768px) {
-  .mt-summary .sx-box {
-    width: calc(100% - 32px);
-    padding: 20px 18px 14px;
-  }
-
-  .sx-title {
-    font-size: 23px;
-  }
-
-  .sx-close {
-    min-height: 44px;
-    padding: 8px 12px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

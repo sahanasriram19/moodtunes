@@ -53,12 +53,8 @@ function showHelpModal() {
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div class="help-heading">' + helpIcon('note') + 'now playing &amp; sound waves</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. tap a mood under it to log the song in one tap, and see what\'s <b style="color:#fff;">up next</b> in your spotify queue. while a song plays, its album cover fills the page background (tinted with your mood colour) and sound waves drift across it in the colour of the art. both fade away when you pause.' +
-                    (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches
-                        ? ' to make the waves follow the drums and volume, tap <b style="color:#fff;">sync waves to sound</b> on the card. in the pop-up, pick <b style="color:#fff;">entire screen</b> (or any window), switch on <b style="color:#fff;">share with system audio</b> and press share. it works with headphones too. the browser asks again on each page, so tap <b style="color:#fff;">▶ resume sync</b> after switching pages, and tap the button again to stop. moodtunes only reads the beat and loudness. nothing is recorded or seen.'
-                        : ' when spotify\'s beat map is available for a song, the waves hit on its beats and follow its volume automatically.') +
-                '</div>' +
+                '<div class="help-heading">' + helpIcon('note') + 'now playing</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">the now playing card shows what\'s on spotify right now, with play, pause and skip. tap a mood under it to log the song in one tap. while a song plays, its album cover fills the page background (tinted with your mood colour). it fades away when you pause.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
@@ -75,7 +71,7 @@ function showHelpModal() {
                         '<li>journal, history, stats and the mood calendar</li>' +
                         '<li>mood playlists, saving them to spotify and ▶ opening them in spotify</li>' +
                         '<li>sessions and song recommendations</li>' +
-                        '<li>seeing what\'s playing, the sound waves and sync to sound</li>' +
+                        '<li>seeing what\'s playing</li>' +
                         '<li>the heart on now playing (liked songs), one-tap logging, not logged yet and saving sessions</li>' +
                     '</ul>' +
                     '<b style="color:#fff;">needs spotify premium</b>' +

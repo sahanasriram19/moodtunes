@@ -112,11 +112,6 @@
 }
 .session-mix-toggle input { accent-color: #1DB954; width: 14px; height: 14px; cursor: pointer; }
 
-@media (max-width: 768px) {
-  .session-hero-actions { flex-wrap: wrap; }
-  #session-open-spotify-btn { min-height: 44px; }
-}
-
 /* ── save as playlist ───────────────────────────────── */
 #session-save-playlist-btn {
   background: none;
@@ -229,11 +224,6 @@ body[data-spotify-account="free"] .session-how-card[data-plan="premium"] { opaci
 :root[data-theme="light"] .session-how-card ol { color: #2f2540; }
 :root[data-theme="light"] .session-how-card b { color: #b8336f; }
 :root[data-theme="light"] .session-how-note { color: #6f6585; }
-
-@media (max-width: 640px) {
-  .session-how-grid { grid-template-columns: 1fr; }
-  #session-save-playlist-btn { min-height: 44px; }
-}
 
 /* why a recommendation is there: the mood, your genres or your artists */
 .rec-tile-why {

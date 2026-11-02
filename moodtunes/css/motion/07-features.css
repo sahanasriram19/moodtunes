@@ -169,38 +169,6 @@ img.mt-noart {
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
-  .hf-mood {
-    font-size: 11.5px;
-    padding: 4px 10px;
-  }
-
-  /* phones: text boxes stay 16px so iPhones don't zoom in */
-  .hf-range,
-  .hf-date input {
-    font-size: 16px !important;
-    padding: 5px 8px;
-  }
-}
-
-@media (max-width: 768px) {
-  /* custom dates: "from" and "to" share a row, each half the width */
-  .hf-row:has(.hf-date) .hf-range {
-    flex: 1 1 100%;
-  }
-
-  .hf-date {
-    flex: 1 1 calc(50% - 6px);
-    min-width: 0;
-  }
-
-  .hf-date input {
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-  }
-}
-
 /* === MONTHLY RECAP (stats page) === */
 /* one month at a glance, glowing in that month's main mood (recap.js) */
 .recap-card {
@@ -447,20 +415,6 @@ img.mt-noart {
   color: color-mix(in srgb, var(--mc) 70%, #1a1a1a);
 }
 
-@media (max-width: 768px) {
-  .recap-card {
-    padding: 18px 16px 16px;
-  }
-
-  .rc-title {
-    font-size: 18px;
-  }
-
-  .rc-mood-name {
-    font-size: 21px;
-  }
-}
-
 /* === DAILY CHECK-IN SWITCH (profile menu) === */
 .pd-switch {
   position: relative;
@@ -513,12 +467,6 @@ img.mt-noart {
 
 :root[data-theme="light"] .pd-time input {
   color-scheme: light;
-}
-
-@media (max-width: 768px) {
-  .pd-time input {
-    font-size: 16px;
-  }
 }
 
 /* === ACCESSIBILITY === */
@@ -802,20 +750,6 @@ summary:focus-visible {
   color: #c0392b;
 }
 
-@media (max-width: 768px) {
-  .pl-delete-btn {
-    font-size: 12px;
-  }
-}
-
-/* phones: ▶ stays level with "save to spotify" (delete playlist sits under them) */
-@media (max-width: 768px) {
-  .playlist-view-header #sync-btn,
-  .playlist-view-header .playlist-play-btn {
-    bottom: 54px;
-  }
-}
-
 /* === INSIGHTS (stats page, under the recap) === */
 .insights-card {
   margin: 0 0 18px;
@@ -883,14 +817,4 @@ summary:focus-visible {
 
 :root[data-theme="warm"] .ins-list li {
   color: #f3dcc2;
-}
-
-@media (max-width: 768px) {
-  .insights-card {
-    padding: 16px;
-  }
-
-  .ins-list li {
-    font-size: 13px;
-  }
 }

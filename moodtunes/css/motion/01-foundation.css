@@ -349,20 +349,6 @@
   margin-bottom: 16px;
 }
 
-@media (max-width: 768px) {
-  .sk-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .sk-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .sk-row {
-    padding: 12px;
-  }
-}
-
 /* === TOAST === */
 .mt-toast {
   position: fixed;
@@ -402,7 +388,7 @@
 .np-mount {
   transition: opacity 0.4s, max-height 0.5s var(--ease-out), margin 0.4s;
   max-height: 420px;
-  /* room for the "log as" and "up next" rows */
+  /* room for the "log as" row */
 }
 
 .np-mount.np-hidden {
@@ -1112,20 +1098,6 @@
   }
 }
 
-@media (max-width: 768px) {
-
-  .np-card {
-    gap: 12px;
-    padding: 12px;
-  }
-
-  .np-art-wrap {
-    width: 52px;
-    height: 52px;
-  }
-
-}
-
 /* labels sit on top of the stronger mood glow - keep them readable in every mood */
 body .section-label,
 body .section-subtitle {
@@ -1251,13 +1223,6 @@ body .section-subtitle {
   gap: 10px;
   align-items: start;
   width: 100%;
-}
-
-@media (max-width: 768px) {
-  .rec-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-  }
 }
 
 .mt-toast-action,
