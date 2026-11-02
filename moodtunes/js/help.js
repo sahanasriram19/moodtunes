@@ -58,8 +58,8 @@ function showHelpModal() {
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +
-                '<div class="help-heading">' + helpIcon('calendar') + 'on this day, song stories &amp; tags</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;"><b style="color:#fff;">on this day</b> on your journal shows what you were playing and feeling a year ago today (or 6 months, a month or a week ago, until you\'ve been logging that long). tap any song\'s <b style="color:#fff;">cover</b> to open its <b style="color:#fff;">story</b>: every day you logged it, the moods, your notes and what you were doing. when you log a song you can also tag <b style="color:#fff;">what you\'re doing</b> (studying, commuting, late night…), change it later in the song\'s story, and see what you play during each one on the stats page.</div>' +
+                '<div class="help-heading">' + helpIcon('calendar') + 'on this day &amp; tags</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;"><b style="color:#fff;">on this day</b> on your journal shows what you were playing and feeling a year ago today (or 6 months, a month or a week ago, until you\'ve been logging that long). when you log a song you can also tag <b style="color:#fff;">what you\'re doing</b> (studying, commuting, late night…), and see what you play during each one on the stats page.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +

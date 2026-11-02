@@ -994,7 +994,7 @@ summary:focus-visible {
   height: 12px;
 }
 
-/* the tags to pick from (logging, now playing, a song's story) */
+/* the tags to pick from (logging and now playing) */
 .ctx-label {
   font-size: 12px;
   color: #888;
@@ -1140,240 +1140,6 @@ summary:focus-visible {
   color: color-mix(in srgb, var(--mc) 50%, #1a1a1a);
 }
 
-/* === SONG STORIES === */
-/* tap a cover to see every mood, note and tag a song has had */
-.log-card .song-art,
-.otd-art {
-  cursor: pointer;
-}
-
-#story-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 100002;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
-  background: rgba(8, 4, 18, 0.72);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: recap-fade 0.2s ease;
-}
-
-#story-modal.closing {
-  opacity: 0;
-  transition: opacity 0.16s ease;
-}
-
-.story-dialog {
-  position: relative;
-  width: 100%;
-  max-width: 460px;
-  max-height: 100%;
-  overflow-y: auto;
-  border-radius: 18px;
-  padding: 22px 22px 18px;
-  background: var(--glass, var(--bg-card, #1d1233));
-  border: 1px solid var(--glass-edge, var(--border, rgba(255, 255, 255, 0.1)));
-  color: var(--text-primary, #fff);
-  animation: recap-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-:root[data-theme="light"] .story-dialog {
-  background: #fff;
-  border-color: #e6e3ea;
-}
-
-:root[data-theme="warm"] .story-dialog {
-  background: var(--warm-box, #1a1410);
-}
-
-.story-loading,
-.story-empty {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 24px 0;
-  color: var(--text-muted, #a99cc9);
-  font-size: 13px;
-}
-
-.story-loading .mt-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.story-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-right: 40px;
-}
-
-.story-art {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  object-fit: cover;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--text-primary, #fff) 8%, transparent);
-}
-
-.story-headtext {
-  flex: 1;
-  min-width: 0;
-}
-
-.story-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.story-artist {
-  font-size: 13px;
-  color: var(--text-secondary, #c9bde6);
-}
-
-.story-sub {
-  margin-top: 4px;
-  font-size: 11.5px;
-  color: var(--text-muted, #a99cc9);
-}
-
-.story-play {
-  flex-shrink: 0;
-}
-
-/* just ▶ here (the "play next" button added beside every ▶ would squeeze the title) */
-.story-head .queue-btn {
-  display: none !important;
-}
-
-.story-split {
-  display: flex;
-  height: 8px;
-  gap: 2px;
-  margin: 16px 0 8px;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.story-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  font-size: 11.5px;
-  color: var(--text-secondary, #c9bde6);
-}
-
-.story-legend i {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 5px;
-  border-radius: 50%;
-}
-
-.story-line {
-  margin: 10px 0 0;
-  font-size: 13px;
-  color: var(--text-secondary, #c9bde6);
-}
-
-.story-list {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 0;
-  border-left: 2px solid color-mix(in srgb, var(--text-primary, #fff) 12%, transparent);
-}
-
-.story-entry {
-  position: relative;
-  padding: 0 0 14px 16px;
-}
-
-.story-entry::before {
-  content: "";
-  position: absolute;
-  left: -6px;
-  top: 5px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--mc);
-}
-
-.story-entry-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  font-size: 12.5px;
-}
-
-.story-date {
-  font-weight: 600;
-}
-
-.story-mood {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: color-mix(in srgb, var(--mc) 65%, var(--text-primary, #fff));
-}
-
-.story-mood .mt-icon {
-  width: 13px;
-  height: 13px;
-}
-
-:root[data-theme="light"] .story-mood {
-  color: color-mix(in srgb, var(--mc) 50%, #1a1a1a);
-}
-
-.story-plays {
-  color: var(--text-muted, #a99cc9);
-  font-size: 11.5px;
-}
-
-.story-note {
-  margin: 5px 0 0;
-  font-size: 13px;
-  font-style: italic;
-  color: var(--text-secondary, #c9bde6);
-  overflow-wrap: anywhere;
-}
-
-.story-ctx {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.story-ctx-edit {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-muted, #a99cc9);
-  font: inherit;
-  font-size: 11.5px;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.story-entry .ctx-picker {
-  margin: 8px 0 0;
-}
-
 /* === ON THIS DAY (journal) === */
 .otd-card {
   --mc: var(--mood, #9b6fc2);
@@ -1460,16 +1226,13 @@ summary:focus-visible {
 .otd-art {
   width: 100%;
   aspect-ratio: 1;
-  padding: 0;
   margin-bottom: 4px;
-  border: 0;
   border-radius: 10px;
   overflow: hidden;
   display: grid;
   place-items: center;
   background: color-mix(in srgb, var(--text-primary, #fff) 8%, transparent);
   color: var(--text-muted, #a99cc9);
-  transition: transform 0.2s;
 }
 
 .otd-art img {
@@ -1477,10 +1240,6 @@ summary:focus-visible {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.otd-art:hover {
-  transform: translateY(-2px);
 }
 
 .otd-title,

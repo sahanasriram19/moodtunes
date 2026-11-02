@@ -1577,7 +1577,7 @@ function trackIdOf(u) {
  
 // -- context tags: what you were doing when you logged a song --
 // one optional tag per log (saved on the server). shown as a small pill on the
-// song, picked when you log, editable in the song's story, and summed up on stats
+// song, picked when you log, and summed up on stats
 var CONTEXTS = [
     ['studying', 'brain'], ['working', 'keyboard'], ['commuting', 'headphones'], ['working out', 'dumbbell'],
     ['chilling', 'coffee'], ['with friends', 'party'], ['getting ready', 'sparkles'], ['outside', 'leaf'],
@@ -1609,147 +1609,14 @@ function ctxPickerToggle(picker, chip) {
     return was ? '' : chip.dataset.ctx;
 }
 
-// -- song stories: everything you've felt about one song --
-// tap a song's cover anywhere (journal, history, playlists, "on this day") and a
-// pop-up shows every day you logged it: the mood, the plays, your note and what
-// you were doing, newest first, with how its moods add up overall
-var storyLogs = null, storyLoading = null;
-function loadStoryLogs(cb, fresh) {
-    if (storyLogs && !fresh) return cb(storyLogs);
-    if (typeof apiCall !== 'function') return cb([]);
-    apiCall('/logs/perday', 'GET', null, function(err, res) {
-        storyLogs = (!err && res && res.status === 200 && Array.isArray(res.data)) ? res.data : (storyLogs || []);
-        cb(storyLogs);
-    });
-}
-// any change to logs (a play, a note, a tag) makes the saved copy stale
-['moodtunes:plays-updated', 'moodtunes:logs-changed'].forEach(function(ev) {
-    window.addEventListener(ev, function() { storyLogs = null; });
-});
-
-function storyDay(log) {
-    var d = String(log.log_date || log.last_logged || '').slice(0, 10);
-    var t = d ? new Date(d + 'T12:00:00') : null;
-    if (!t || isNaN(t)) return '';
-    var months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-    var days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    return days[t.getDay()] + ' ' + t.getDate() + ' ' + months[t.getMonth()] + (t.getFullYear() !== new Date().getFullYear() ? ' ' + t.getFullYear() : '');
-}
-
-var storyReturnFocus = null;
-function openSongStory(songId) {
-    if (!songId || document.getElementById('story-modal')) return;
-    storyReturnFocus = document.activeElement;
-    var modal = document.createElement('div');
-    modal.id = 'story-modal';
-    modal.innerHTML = '<div class="story-dialog" role="dialog" aria-modal="true" aria-labelledby="story-title">' +
-        '<button type="button" class="recap-close story-close" aria-label="close">' + icon('close') + '</button>' +
-        '<div class="story-body"><div class="story-loading">' + icon('note') + '<span>finding this song’s story…</span></div></div></div>';
-    document.body.appendChild(modal);
-    root.classList.add('recap-open');
-    modal.querySelector('.story-close').focus();
-    function close() {
-        document.removeEventListener('keydown', onKey, true);
-        root.classList.remove('recap-open');
-        modal.classList.add('closing');
-        setTimeout(function() { modal.remove(); }, 160);
-        if (storyReturnFocus && storyReturnFocus.focus) storyReturnFocus.focus();
-    }
-    function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
-    document.addEventListener('keydown', onKey, true);
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal || e.target.closest('.story-close')) return close();
-        // change a day's tag
-        var edit = e.target.closest('.story-ctx-edit');
-        if (edit) {
-            var row = edit.closest('.story-entry');
-            var open = row.querySelector('.ctx-picker');
-            if (open) { open.remove(); return; }
-            row.insertAdjacentHTML('beforeend', ctxPickerHTML(row.dataset.ctx || ''));
-            return;
-        }
-        var chip = e.target.closest('.ctx-chip');
-        if (chip) {
-            var entry = chip.closest('.story-entry');
-            var picker = chip.closest('.ctx-picker');
-            var val = ctxPickerToggle(picker, chip);
-            apiCall('/logs/' + entry.dataset.id + '/context', 'PUT', { context: val }, function(err, res) {
-                if (err || !res || res.status !== 200) return toast('couldn’t save that, try again');
-                entry.dataset.ctx = val;
-                storyLogs && storyLogs.forEach(function(l) { if (String(l.id) === entry.dataset.id) l.context = val || null; });
-                var slot = entry.querySelector('.story-ctx');
-                slot.innerHTML = (val ? ctxBadge(val) : '') + '<button type="button" class="story-ctx-edit">' + (val ? 'change' : '+ what were you doing?') + '</button>';
-                picker.remove();
-                window.dispatchEvent(new CustomEvent('moodtunes:logs-changed', { detail: { id: entry.dataset.id, context: val } }));
-            });
-            return;
-        }
-        var play = e.target.closest('.story-play');
-        if (play && typeof openSpotify === 'function') openSpotify(play.dataset.url);
-    });
-
-    loadStoryLogs(function(logs) {
-        var mine = logs.filter(function(l) { return l.song_id === songId; });
-        var body = modal.querySelector('.story-body');
-        if (!mine.length) { body.innerHTML = '<p class="story-empty">you haven’t logged this song yet</p>'; return; }
-        mine.sort(function(a, b) { return String(b.log_date || b.last_logged).localeCompare(String(a.log_date || a.last_logged)); });
-        var s = mine[0];
-        var total = 0, byMood = {};
-        mine.forEach(function(l) { var p = Math.max(1, Number(l.play_count) || 0); total += p; byMood[l.mood] = (byMood[l.mood] || 0) + p; });
-        var moods = Object.keys(byMood).sort(function(a, b) { return byMood[b] - byMood[a]; });
-        var first = mine[mine.length - 1];
-        var days = {};
-        mine.forEach(function(l) { days[String(l.log_date || l.last_logged).slice(0, 10)] = true; });
-        var dayCount = Object.keys(days).length;
-        body.innerHTML =
-            '<div class="story-head">' +
-                (s.album_art ? '<img class="story-art" src="' + esc(s.album_art) + '" alt="" />' : '<div class="story-art">' + icon('note') + '</div>') +
-                '<div class="story-headtext"><h2 class="story-title" id="story-title">' + esc(s.title) + '</h2>' +
-                '<div class="story-artist">' + esc(s.artist) + '</div>' +
-                '<div class="story-sub">' + total + ' play' + (total === 1 ? '' : 's') + ' over ' + dayCount + ' day' + (dayCount === 1 ? '' : 's') + ' · first logged ' + esc(storyDay(first)) + '</div></div>' +
-                (s.spotify_url ? '<button type="button" class="play-btn story-play" data-url="' + esc(s.spotify_url) + '" aria-label="play in spotify">▶</button>' : '') +
-            '</div>' +
-            '<div class="story-split" role="img" aria-label="' + esc(moods.map(function(m) { return m + ' ' + Math.round(byMood[m] / total * 100) + '%'; }).join(', ')) + '">' +
-                moods.map(function(m) { return '<span style="flex:' + byMood[m] + ';background:' + color(m) + '"></span>'; }).join('') + '</div>' +
-            '<div class="story-legend">' + moods.map(function(m) {
-                return '<span><i style="background:' + color(m) + '"></i>' + esc(m) + ' ' + Math.round(byMood[m] / total * 100) + '%</span>';
-            }).join('') + '</div>' +
-            (moods.length > 1 ? '<p class="story-line">it’s been ' + moods.slice(0, 3).map(esc).join(', ').replace(/, ([^,]*)$/, ' and $1') + ' for you</p>' : '') +
-            '<ol class="story-list">' + mine.map(function(l) {
-                var p = Math.max(1, Number(l.play_count) || 0);
-                return '<li class="story-entry" data-id="' + esc(l.id) + '" data-ctx="' + esc(l.context || '') + '" style="--mc:' + color(l.mood) + '">' +
-                    '<div class="story-entry-top"><span class="story-date">' + esc(storyDay(l)) + '</span>' +
-                    '<span class="story-mood">' + icon(moodIcon(l.mood)) + esc(l.mood) + '</span>' +
-                    '<span class="story-plays">' + p + ' play' + (p === 1 ? '' : 's') + '</span></div>' +
-                    (l.note ? '<p class="story-note">“' + esc(l.note) + '”</p>' : '') +
-                    '<div class="story-ctx">' + ctxBadge(l.context) + '<button type="button" class="story-ctx-edit">' + (l.context ? 'change' : '+ what were you doing?') + '</button></div>' +
-                '</li>';
-            }).join('') + '</ol>';
-    });
-}
-
-// tap a cover to open its story. the song id comes from the card's play button
-document.addEventListener('click', function(e) {
-    var art = e.target.closest && e.target.closest('.log-card .song-art, .otd-song .otd-art, .story-open');
-    if (!art) return;
-    var card = art.closest('.log-card, .otd-song') || art;
-    var idEl = art.dataset.songId ? art : card.querySelector('[data-song-id]');
-    var id = idEl && idEl.dataset.songId;
-    if (!id) return;
-    e.preventDefault();
-    e.stopPropagation();
-    openSongStory(id);
-}, true);
-
 // -- on this day: what you were playing a year ago (or a while ago) --
 // a card at the top of the journal. it looks back a year first; if there's
 // nothing that far back yet it tries 6 months, a month and a week ago, so it's
-// useful from the first weeks. tap a cover for that song's story
+// useful from the first weeks
 function onThisDay(host) {
     if (!host || typeof apiCallCached !== 'function') return;
     apiCallCached('/logs/perday', function(err, res) {
         if (err || !res || !Array.isArray(res.data)) return;
-        storyLogs = res.data;
         var now = new Date();
         function key(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
         var backs = [
@@ -1782,8 +1649,7 @@ function onThisDay(host) {
                 (songs[0] && songs[0].context ? ', ' + esc(songs[0].context) : '') + ', and playing</p>' +
             '<div class="otd-songs">' + list.slice(0, 4).map(function(l) {
                 return '<div class="otd-song">' +
-                    '<button type="button" class="otd-art story-open" data-song-id="' + esc(l.song_id) + '" aria-label="the story of ' + esc(l.title) + '">' +
-                        (l.album_art ? '<img src="' + esc(l.album_art) + '" alt="" />' : icon('note')) + '</button>' +
+                    '<div class="otd-art">' + (l.album_art ? '<img src="' + esc(l.album_art) + '" alt="" />' : icon('note')) + '</div>' +
                     '<span class="otd-title">' + esc(l.title) + '</span><span class="otd-artist">' + esc(l.artist) + '</span></div>';
             }).join('') + '</div>' +
             (note ? '<p class="otd-note">you wrote: “' + esc(note.note) + '”</p>' : '');
@@ -2354,7 +2220,7 @@ window.MoodFX = {
     DEFAULT_MOODS: DEFAULT_MOODS, emptyState: emptyState, setSessionLive: setSessionLive, whenActive: whenActive,
     composeCover: composeCover, spotifyProblem: spotifyProblem,
     CONTEXTS: CONTEXTS, ctxBadge: ctxBadge, ctxPickerHTML: ctxPickerHTML, ctxPickerToggle: ctxPickerToggle,
-    openSongStory: openSongStory, onThisDay: onThisDay,
+    onThisDay: onThisDay,
     saveSessionToSpotify: saveSessionToSpotify, sessionSpotifyButton: sessionSpotifyButton, reconnectSpotify: reconnectSpotify, trackIdOf: trackIdOf
 };
 

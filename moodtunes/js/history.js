@@ -479,7 +479,7 @@ function refreshHistory() {
 
 // repeats from a loop were just counted
 window.addEventListener('moodtunes:plays-updated', refreshHistory);
-// a tag changed in a song's story
+// a tag was added from the now playing card
 window.addEventListener('moodtunes:logs-changed', refreshHistory);
 
 apiCallCached('/logs/perday', function(err, result) {

@@ -691,7 +691,7 @@ MoodFX.whenActive(function() { loadInbox(true); });
 // but if YOU started one this browser session, restore it across tab switches
 loadLogs();
 MoodFX.onThisDay(document.getElementById('on-this-day'));
-// a tag changed in a song's story: show it on the journal too
+// a tag was added from the now playing card: show it on the journal too
 window.addEventListener('moodtunes:logs-changed', function(e) { if (e.detail) loadLogs(); });
 
 var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('now-playing'), {
