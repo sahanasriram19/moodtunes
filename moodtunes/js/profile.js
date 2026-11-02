@@ -408,12 +408,29 @@ function preparePush() {
     });
 }
 // works with both the promise and the older callback version (older Safari)
+// always asks the browser itself, even if Notification.permission says "denied":
+// that value can be out of date (e.g. right after you allow notifications in your
+// phone's settings, until the page reloads). if the browser can still ask, this shows
+// its "allow notifications?" pop-up; if it's really blocked it answers "denied" at once
 function askPermission() {
-    if (Notification.permission === 'granted') return Promise.resolve('granted');
     return new Promise(function(resolve) {
-        var p = Notification.requestPermission(resolve);
-        if (p && p.then) p.then(resolve);
+        var done = false;
+        function finish(v) { if (!done) { done = true; resolve(v || Notification.permission); } }
+        try {
+            var p = Notification.requestPermission(finish);
+            if (p && p.then) p.then(finish, function() { finish(Notification.permission); });
+        } catch (e) { finish(Notification.permission); }
     });
+}
+// the freshest answer we can get without asking: the permissions api is updated
+// straight away when you change it in settings, Notification.permission sometimes isn't
+function currentPermission() {
+    var fallback = ('Notification' in window) ? Notification.permission : 'denied';
+    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(fallback);
+    return navigator.permissions.query({ name: 'notifications' }).then(function(p) {
+        var st = p.state === 'prompt' ? 'default' : p.state;
+        return st === 'granted' || fallback === 'granted' ? 'granted' : st;
+    }).catch(function() { return fallback; });
 }
 
 // how to switch notifications back on for this site, for the device you're on.
@@ -422,12 +439,15 @@ function askPermission() {
 function isStandalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
 function unblockSteps() {
     var ua = navigator.userAgent;
-    if (isIOS()) return 'open your iPhone’s <b>Settings → Notifications → moodtunes</b> and switch on <b>Allow Notifications</b>, then come back here.';
-    if (/Android/i.test(ua)) return isStandalone()
-        ? 'press and hold the moodtunes icon on your home screen → <b>App info → Notifications</b> → allow, then come back here.'
-        : 'tap the icon left of the web address → <b>Permissions → Notifications</b> → allow, then come back here.';
-    if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) return 'in Safari, open <b>Settings → Websites → Notifications</b>, set moodtunes to <b>Allow</b>, then come back here.';
-    return 'click the icon left of the web address → <b>Notifications</b> → <b>Allow</b>, then come back here.';
+    if (isIOS()) return 'open your iPhone’s <b>Settings → Notifications → moodtunes</b> and switch on <b>Allow Notifications</b>, then come back and tap the button below.';
+    // android has three switches, and all of them have to be on
+    if (/Android/i.test(ua)) return 'on android check all three: ' +
+        '<b>1.</b> phone <b>Settings → Apps → Chrome → Notifications</b> on. ' +
+        '<b>2.</b> in Chrome, <b>⋮ → Settings → Site settings → Notifications</b>, find moodtunes and set it to <b>Allow</b>' +
+        (isStandalone() ? '. <b>3.</b> press and hold the moodtunes icon → <b>App info → Notifications</b> on.' : '.') +
+        ' then come back and tap the button below.';
+    if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) return 'in Safari, open <b>Settings → Websites → Notifications</b>, set moodtunes to <b>Allow</b>, then come back and tap the button below.';
+    return 'click the icon left of the web address → <b>Notifications</b> → <b>Allow</b> (and check notifications are on for your browser in your computer’s settings), then come back and tap the button below.';
 }
 
 function b64url(buf) {
@@ -456,7 +476,6 @@ function enableReminder(time, test) {
             ? { ok: false, html: 'on iPhone, notifications only work in the moodtunes app on your home screen: tap <b>share → Add to Home Screen</b>, open moodtunes from there, and turn this on again.' }
             : { ok: false, msg: 'this browser can’t show notifications. try Chrome, Edge, Firefox or Safari.' });
     }
-    if (Notification.permission === 'denied') return Promise.resolve({ ok: false, blocked: true, html: 'notifications are blocked for moodtunes. ' + unblockSteps() });
     // always ask the server for its current key (it may have changed), but if one is
     // already known, don't wait for the answer between the tap and subscribing:
     // iPhones only allow subscribing right after a tap
@@ -474,7 +493,7 @@ function enableReminder(time, test) {
     return askPermission().then(function(perm) {
         if (perm !== 'granted') {
             return perm === 'denied'
-                ? { ok: false, blocked: true, html: 'notifications are blocked for moodtunes. ' + unblockSteps() }
+                ? { ok: false, blocked: true, html: 'your phone or browser isn’t letting moodtunes send notifications yet. ' + unblockSteps() }
                 : { ok: false, msg: 'tap the switch again and choose “Allow” to get reminders.' };
         }
         return Promise.all([keyNow, regReady]).then(function(both) {
@@ -526,11 +545,14 @@ function watchPermission(cb) {
     if (permWatching) return;
     permWatching = true;
     function check() {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        var list = permWatchers; permWatchers = []; permWatching = false;
-        document.removeEventListener('visibilitychange', check);
-        window.removeEventListener('focus', check);
-        list.forEach(function(fn) { try { fn(); } catch (e) {} });
+        if (document.hidden) return;
+        currentPermission().then(function(perm) {
+            if (perm !== 'granted' || !permWatching) return;
+            var list = permWatchers; permWatchers = []; permWatching = false;
+            document.removeEventListener('visibilitychange', check);
+            window.removeEventListener('focus', check);
+            list.forEach(function(fn) { try { fn(); } catch (e) {} });
+        });
     }
     document.addEventListener('visibilitychange', check);
     window.addEventListener('focus', check);
@@ -570,13 +592,24 @@ function buildReminderSection() {
     // the switch shows what's really set up on this device: if notifications were
     // turned off in settings, or the subscription is gone, it shows off
     if (st.on && pushSupported()) {
-        if (Notification.permission !== 'granted') { st.on = false; saveReminderState(st); show(false); }
+        if (Notification.permission === 'denied') currentPermission().then(function(perm) { if (perm !== 'granted') { st.on = false; saveReminderState(st); show(false); } });
         else swReady().then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
             if (!sub && sw.getAttribute('aria-checked') === 'true' && !sw.disabled) { st.on = false; saveReminderState(st); show(false); }
         }).catch(function() {});
     }
     function explain(res) {
         if (res.html) note.innerHTML = res.html; else note.textContent = res.msg || '';
+        // blocked: a button to try again once notifications are allowed (a tap, so the
+        // browser can show its pop-up again and phones allow signing up)
+        if (res.blocked) {
+            var again = document.createElement('button');
+            again.type = 'button';
+            again.className = 'pd-reminder-retry';
+            again.textContent = 'i’ve allowed them, try again';
+            again.addEventListener('click', function(e) { e.stopPropagation(); turnOn(); });
+            note.appendChild(document.createElement('br'));
+            note.appendChild(again);
+        }
     }
     function turnOn() {
         sw.disabled = true;

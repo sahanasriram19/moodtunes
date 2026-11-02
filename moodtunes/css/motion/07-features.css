@@ -965,3 +965,23 @@ summary:focus-visible {
     animation: none;
   }
 }
+
+/* "i've allowed them, try again" under the daily check-in switch */
+.pd-reminder-retry {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #1db95488;
+  background: #1db9541f;
+  color: #4be08a;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:root[data-theme="light"] .pd-reminder-retry {
+  color: #137a3a;
+  border-color: #137a3a88;
+  background: #137a3a14;
+}
