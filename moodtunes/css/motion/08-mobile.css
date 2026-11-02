@@ -2014,3 +2014,25 @@
     display: none;
   }
 }
+
+/* ==================================================================
+   "not in your journal yet" on narrow phones: the moods fit on two lines
+   ================================================================== */
+/* on 360px-wide phones the last mood dropped onto a third line by itself */
+
+@media (max-width: 400px) {
+  html body .inbox-moods {
+    gap: 4px !important;
+  }
+
+  html body .inbox-moods .np-mood {
+    font-size: 10.5px;
+    padding: 3px 7px 3px 5px;
+    gap: 3px;
+  }
+
+  html body .inbox-moods .np-mood .mt-icon {
+    width: 10px;
+    height: 10px;
+  }
+}
