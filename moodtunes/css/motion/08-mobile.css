@@ -1828,12 +1828,17 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "summary"
-      "flashback"
       "moods"
       "time"
-      "graph"
+      "flashback"
       "top"
-      "calendar";
+      "calendar"
+      "graph";
+  }
+
+  /* one list on phones: the desktop columns step aside */
+  :where([data-page="stats"]) .stats-col {
+    display: contents;
   }
 
   :where([data-page="stats"]) .stats-page .stats-sentence {

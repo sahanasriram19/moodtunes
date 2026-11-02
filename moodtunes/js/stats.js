@@ -120,6 +120,22 @@ function render(data) {
     html += '</div>'; // close stats-layout
 
     document.getElementById('stats-content').innerHTML = html;
+
+    // two columns that stack on their own (so a tall box on one side doesn't leave a
+    // gap on the other): moods, a month ago and top songs on the left, when you
+    // listen and the calendar on the right, and the two-week graph across the bottom.
+    // on phones the columns step aside (display: contents) and it's one list again
+    var layout = document.querySelector('#stats-content .stats-layout');
+    var graph = layout && layout.querySelector('.stats-graph');
+    if (layout && graph) {
+        [['stats-col stats-col-a', ['.stats-moods', '.stats-flashback', '.stats-top']],
+         ['stats-col stats-col-b', ['.stats-time', '.stats-calendar']]].forEach(function(c) {
+            var col = document.createElement('div');
+            col.className = c[0];
+            c[1].forEach(function(sel) { var el = layout.querySelector(sel); if (el) col.appendChild(el); });
+            layout.insertBefore(col, graph);
+        });
+    }
 }
 
 
@@ -443,7 +459,14 @@ apiCallCached('/logs/stats', function(err, result) {
     render(result.data);
     // fetch per-day logs for the graph
     apiCallCached('/logs/perday', function(err2, r2) {
-        if (!err2 && r2 && r2.data) { buildLineGraph(r2.data); MoodCalendar.show(r2.data); if (window.MoodRecap) MoodRecap.show(r2.data); }
+        // each part on its own, so one that trips over your data can't stop the others
+        // (before, a problem in the calendar also hid the recap button and "what we noticed")
+        function safely(name, fn) { try { fn(); } catch (e) { if (window.console) console.error('stats: ' + name + ' failed', e); } }
+        if (!err2 && r2 && r2.data) {
+            safely('graph', function() { buildLineGraph(r2.data); });
+            safely('calendar', function() { MoodCalendar.show(r2.data); });
+            safely('recap', function() { if (window.MoodRecap) MoodRecap.show(r2.data); });
+        }
         else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:var(--text-muted,#9384b8);font-size:13px;">not enough data yet</p>'; }
     });
 });

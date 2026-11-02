@@ -604,12 +604,12 @@ main.container.stats-page {
   width: 100%;
   min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* the smaller boxes first, the big one underneath: two columns (stats.js puts
+     the boxes in them), then the two-week graph across the bottom */
   grid-template-areas:
     "summary summary"
-    "flashback flashback"
-    "moods time"
-    "graph graph"
-    "top calendar";
+    "cola colb"
+    "graph graph";
   gap: 16px;
   align-items: start;
 }
@@ -638,8 +638,25 @@ main.container.stats-page {
   grid-area: calendar;
 }
 
+.stats-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.stats-col-a {
+  grid-area: cola;
+}
+
+.stats-col-b {
+  grid-area: colb;
+}
+
 .stats-layout > .stats-card,
-.stats-layout > .flashback-card {
+.stats-layout > .flashback-card,
+.stats-col > .stats-card,
+.stats-col > .flashback-card {
   width: 100%;
   min-width: 0;
   height: auto;
