@@ -416,51 +416,94 @@ function askPermission() {
     });
 }
 
-// turns the reminder on (or changes its time) for this device. resolves to an error message or ''
-function enableReminder(time) {
+// how to switch notifications back on for this site, for the device you're on.
+// (a website can't open those settings itself, and once notifications are blocked
+// the browser won't ask again, so these are the steps)
+function isStandalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+function unblockSteps() {
+    var ua = navigator.userAgent;
+    if (isIOS()) return 'open your iPhone’s <b>Settings → Notifications → moodtunes</b> and switch on <b>Allow Notifications</b>, then come back here.';
+    if (/Android/i.test(ua)) return isStandalone()
+        ? 'press and hold the moodtunes icon on your home screen → <b>App info → Notifications</b> → allow, then come back here.'
+        : 'tap the icon left of the web address → <b>Permissions → Notifications</b> → allow, then come back here.';
+    if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) return 'in Safari, open <b>Settings → Websites → Notifications</b>, set moodtunes to <b>Allow</b>, then come back here.';
+    return 'click the icon left of the web address → <b>Notifications</b> → <b>Allow</b>, then come back here.';
+}
+
+function b64url(buf) {
+    var bytes = new Uint8Array(buf), str = '';
+    for (var i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+// this device's subscription, made with the server's current key (an old one made
+// with another key can't receive anything, so it's replaced)
+function subscribeWith(reg, key) {
+    return reg.pushManager.getSubscription().then(function(sub) {
+        var subKey = sub && sub.options && sub.options.applicationServerKey;
+        if (sub && (!subKey || b64url(subKey) === key)) return sub;
+        return (sub ? sub.unsubscribe() : Promise.resolve()).then(function() {
+            return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
+        });
+    });
+}
+
+// turns the reminder on (or changes its time) for this device.
+// resolves to { ok, msg | html, blocked?, tested? }: msg / html say what to do when it didn't work.
+// test: send a "reminders are on" notification straight away (when switching on)
+function enableReminder(time, test) {
     if (!pushSupported()) {
         return Promise.resolve(isIOS()
-            ? 'on iPhone, add moodtunes to your home screen first (share → add to home screen), then turn this on from there'
-            : 'this browser can’t show notifications');
+            ? { ok: false, html: 'on iPhone, notifications only work in the moodtunes app on your home screen: tap <b>share → Add to Home Screen</b>, open moodtunes from there, and turn this on again.' }
+            : { ok: false, msg: 'this browser can’t show notifications. try Chrome, Edge, Firefox or Safari.' });
     }
-    // the key and service worker should already be here (see preparePush). if they
-    // aren't yet, fetch them now; that still works on android and computers
-    var keyReady = pushKey ? Promise.resolve(pushKey) : api('/reminders/key', 'GET', null).then(function(res) {
+    if (Notification.permission === 'denied') return Promise.resolve({ ok: false, blocked: true, html: 'notifications are blocked for moodtunes. ' + unblockSteps() });
+    // always ask the server for its current key (it may have changed), but if one is
+    // already known, don't wait for the answer between the tap and subscribing:
+    // iPhones only allow subscribing right after a tap
+    var keyReady = api('/reminders/key', 'GET', null).then(function(res) {
         pushKeyStatus = res ? res.status : 0;
-        if (!res || res.status !== 200 || !res.data || !res.data.publicKey) return null;
-        pushKey = res.data.publicKey;
-        try { localStorage.setItem(PUSH_KEY_STORE, pushKey); } catch (e) {}
+        if (res && res.status === 200 && res.data && res.data.publicKey) {
+            pushKey = res.data.publicKey;
+            try { localStorage.setItem(PUSH_KEY_STORE, pushKey); } catch (e) {}
+        }
         return pushKey;
     });
+    var keyNow = pushKey ? Promise.resolve(pushKey) : keyReady;
     var regReady = pushReg ? Promise.resolve(pushReg) : swReady();
-    // no waiting on the network between the tap and subscribing when everything is ready
+    // asks "allow notifications?" (the browser's / phone's own pop-up)
     return askPermission().then(function(perm) {
-        if (perm !== 'granted') return 'notifications are blocked. allow them for moodtunes in your phone or browser settings, then try again';
-        return Promise.all([keyReady, regReady]).then(function(both) {
+        if (perm !== 'granted') {
+            return perm === 'denied'
+                ? { ok: false, blocked: true, html: 'notifications are blocked for moodtunes. ' + unblockSteps() }
+                : { ok: false, msg: 'tap the switch again and choose “Allow” to get reminders.' };
+        }
+        return Promise.all([keyNow, regReady]).then(function(both) {
             var key = both[0], reg = both[1];
             pushReg = reg;
-            if (!key) return pushKeyStatus === 503 ? 'reminders aren’t switched on on the server yet' : 'couldn’t reach the server, try again';
-            return reg.pushManager.getSubscription().then(function(sub) {
-                return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
-            }).catch(function(e) {
-                // the server's key changed since this device subscribed: start over with the new one
-                if (e && e.name === 'InvalidStateError') {
-                    return reg.pushManager.getSubscription().then(function(old) { return old && old.unsubscribe(); }).then(function() {
-                        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
+            if (!key) return { ok: false, msg: pushKeyStatus === 503 ? 'reminders aren’t switched on on the server yet' : 'couldn’t reach the server, try again in a moment' };
+            function save(sub) {
+                return api('/reminders', 'POST', { subscription: sub.toJSON(), time: time, tz_offset: new Date().getTimezoneOffset(), test: !!test });
+            }
+            return subscribeWith(reg, key).then(save).then(function(r) {
+                // the server's key changed: sign this device up again with the new one, once
+                if (r && r.status === 409) {
+                    return keyReady.then(function(fresh) {
+                        return reg.pushManager.getSubscription().then(function(old) { return old && old.unsubscribe(); })
+                            .then(function() { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(fresh || key) }); })
+                            .then(save);
                     });
                 }
-                throw e;
-            }).then(function(sub) {
-                return api('/reminders', 'POST', { subscription: sub.toJSON(), time: time, tz_offset: new Date().getTimezoneOffset() });
+                return r;
             }).then(function(r) {
-                if (r && r.status === 200) return '';
-                if (r && r.status === 503) return 'reminders aren’t switched on on the server yet';
-                return (r && r.data && r.data.message) || 'couldn’t save your reminder, try again';
+                if (r && r.status === 200) return { ok: true, tested: !!(r.data && r.data.test === 'sent') };
+                if (r && r.status === 503) return { ok: false, msg: 'reminders aren’t switched on on the server yet' };
+                if (r && r.status === 409) return { ok: false, msg: 'tap the switch once more to finish setting up' };
+                return { ok: false, msg: (r && r.data && r.data.message) || 'couldn’t save your reminder, try again' };
             });
         });
     }).catch(function(e) {
-        if (e && e.name === 'NotAllowedError') return 'your phone didn’t allow it that time. tap the switch again';
-        return 'couldn’t set up notifications on this device';
+        if (e && e.name === 'NotAllowedError') return { ok: false, msg: 'tap the switch once more to finish setting up' };
+        return { ok: false, msg: 'couldn’t set up notifications on this device, try again' };
     });
 }
 
@@ -474,6 +517,27 @@ function disableReminder() {
 
 // first visit on this device: get the key in the background, so it's ready before the switch is tapped
 if (!pushKey && pushSupported() && localStorage.getItem('moodtunes_token')) setTimeout(preparePush, 4000);
+
+// calls back once notifications are allowed (after you switch them on in settings
+// and come back to moodtunes)
+var permWatchers = [], permWatching = false;
+function watchPermission(cb) {
+    permWatchers.push(cb);
+    if (permWatching) return;
+    permWatching = true;
+    function check() {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        var list = permWatchers; permWatchers = []; permWatching = false;
+        document.removeEventListener('visibilitychange', check);
+        window.removeEventListener('focus', check);
+        list.forEach(function(fn) { try { fn(); } catch (e) {} });
+    }
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('focus', check);
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'notifications' }).then(function(p) { p.onchange = check; }).catch(function() {});
+    }
+}
 
 function timeLabel(t) {
     var h = Number(t.slice(0, 2)), m = t.slice(3, 5);
@@ -511,19 +575,36 @@ function buildReminderSection() {
             if (!sub && sw.getAttribute('aria-checked') === 'true' && !sw.disabled) { st.on = false; saveReminderState(st); show(false); }
         }).catch(function() {});
     }
+    function explain(res) {
+        if (res.html) note.innerHTML = res.html; else note.textContent = res.msg || '';
+    }
+    function turnOn() {
+        sw.disabled = true;
+        note.textContent = ('Notification' in window && Notification.permission === 'default')
+            ? 'choose “Allow” to get reminders…' : 'setting up…';
+        enableReminder(input.value, true).then(function(res) {
+            sw.disabled = false;
+            if (!res.ok) {
+                show(false); explain(res);
+                // blocked: once notifications are allowed in settings and you come back, it finishes by itself
+                if (res.blocked) watchPermission(function() { if (box.isConnected && sw.getAttribute('aria-checked') !== 'true') turnOn(); });
+                return;
+            }
+            st.on = true; st.time = input.value; saveReminderState(st);
+            var phone = isIOS() || /Android/i.test(navigator.userAgent);
+            show(true, 'you’ll get a nudge at ' + timeLabel(input.value) + ' on days you haven’t logged a song yet.' +
+                (res.tested ? ' a test notification is on its way. didn’t get it? make sure notifications are on for ' +
+                    (isStandalone() ? 'moodtunes' : 'your browser') + ' in your ' + (phone ? 'phone' : 'computer') + '’s settings.' : ''));
+        });
+    }
     sw.addEventListener('click', function() {
         if (sw.disabled) return;
-        sw.disabled = true;
         if (sw.getAttribute('aria-checked') === 'true') {
+            sw.disabled = true;
             show(false, 'turning off…');
             disableReminder().then(function() { st.on = false; saveReminderState(st); sw.disabled = false; show(false, 'reminder off'); });
         } else {
-            note.textContent = 'setting up…';
-            enableReminder(input.value).then(function(err) {
-                sw.disabled = false;
-                if (err) { show(false, err); return; }
-                st.on = true; st.time = input.value; saveReminderState(st); show(true);
-            });
+            turnOn();
         }
     });
     input.addEventListener('change', function() {
@@ -531,7 +612,7 @@ function buildReminderSection() {
         st.time = input.value; saveReminderState(st);
         if (sw.getAttribute('aria-checked') !== 'true') return;
         note.textContent = 'saving…';
-        enableReminder(input.value).then(function(err) { show(true, err); });
+        enableReminder(input.value, false).then(function(res) { show(true); if (!res.ok) explain(res); });
     });
     return box;
 }

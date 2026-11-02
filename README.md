@@ -216,15 +216,15 @@ In your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard):
 
 ### 6. Daily check-in reminders (optional)
 
-Reminders are web push notifications sent by the backend.
+Reminders are web push notifications sent by the backend. They work with no setup: if no push keys are set, the backend makes a pair the first time it starts and keeps it in the database (`AppSetting` table). Switching reminders on sends a test notification straight away.
 
-1. Make a key pair: `npx web-push generate-vapid-keys`
-2. On Render (backend → Environment), add:
-   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: the two keys from step 1
-   - `VAPID_SUBJECT`: `mailto:` followed by your email
-   - `CRON_SECRET`: any long random text
+Optional, on Render (backend → Environment):
+   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: your own key pair (`npx web-push generate-vapid-keys`), used instead of the saved one
+   - `VAPID_SUBJECT`: `mailto:` followed by your email (defaults to `APP_URL`)
+   - `CRON_SECRET`: any long random text, so the GitHub Action can also send due reminders
    - `APP_URL`: the frontend address, e.g. `https://moodtunes-main.vercel.app`
-3. On GitHub (repo → Settings → Secrets and variables → Actions), add a secret called `CRON_SECRET` with the same text.
+
+If you set `CRON_SECRET`, add a GitHub secret with the same name and text (repo → Settings → Secrets and variables → Actions).
 
 The workflow in `.github/workflows/keep-awake.yml` runs every 10 minutes. It keeps the Render server awake and sends any reminders that are due. On iPhone, reminders only work after adding moodtunes to the home screen (iOS 16.4+).
 

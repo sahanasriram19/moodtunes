@@ -8,21 +8,66 @@
 // and whenever /api/reminders/tick is called (the GitHub Action in
 // .github/workflows/keep-awake.yml calls it, and that also wakes the server).
 //
-// needs these settings on render (see the README steps):
-//   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY   from `npx web-push generate-vapid-keys`
-//   VAPID_SUBJECT                         mailto:you@example.com
-//   CRON_SECRET                           any long random text, also saved in GitHub
-// without the VAPID keys, reminders are simply switched off (the app says so).
+// the push keys (VAPID): if VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY are set on render
+// they're used. if not, the server makes a pair itself the first time and keeps it
+// in the database (AppSetting table), so reminders work with no setup and the keys
+// stay the same after restarts. optional settings:
+//   VAPID_SUBJECT   mailto:you@example.com (defaults to the app's address)
+//   CRON_SECRET     lets the GitHub Action call /tick (the server also checks every
+//                   5 minutes by itself while it's awake, and that Action keeps it awake)
 
 const pool = require('../services/db');
 let webpush = null;
 try { webpush = require('web-push'); } catch (e) { console.error('web-push is not installed: run npm install'); }
 
-const PUBLIC_KEY  = process.env.VAPID_PUBLIC_KEY || '';
-const PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const SUBJECT     = process.env.VAPID_SUBJECT || 'mailto:moodtunes@example.com';
-const enabled = !!(webpush && PUBLIC_KEY && PRIVATE_KEY);
-if (enabled) webpush.setVapidDetails(SUBJECT, PUBLIC_KEY, PRIVATE_KEY);
+let PUBLIC_KEY  = process.env.VAPID_PUBLIC_KEY || '';
+let PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const SUBJECT   = process.env.VAPID_SUBJECT ||
+    (process.env.APP_URL || 'https://moodtunes-main.vercel.app').replace(/\/+$/, '');
+let enabled = false;
+
+function turnOn() {
+    try {
+        webpush.setVapidDetails(SUBJECT, PUBLIC_KEY, PRIVATE_KEY);
+        enabled = true;
+        // every 5 minutes while the server is up
+        setInterval(() => { sendDue(); }, 5 * 60 * 1000).unref();
+    } catch (e) {
+        console.error('reminder keys are not valid:', e.message);
+    }
+}
+
+const sql = (text, params) => new Promise((resolve, reject) => pool.query(text, params || [], (e, r) => e ? reject(e) : resolve(r)));
+
+// resolves once the keys are known (from the settings, or the database, or made now)
+const keysReady = (async () => {
+    if (!webpush) return;
+    if (PUBLIC_KEY && PRIVATE_KEY) return turnOn();
+    try {
+        await sql('CREATE TABLE IF NOT EXISTS AppSetting (k VARCHAR(64) PRIMARY KEY, v TEXT NOT NULL)');
+        const read = async () => {
+            const rows = await sql("SELECT k, v FROM AppSetting WHERE k IN ('vapid_public', 'vapid_private')");
+            const m = {};
+            rows.forEach((r) => { m[r.k] = r.v; });
+            return m;
+        };
+        let m = await read();
+        if (!m.vapid_public || !m.vapid_private) {
+            const made = webpush.generateVAPIDKeys();
+            // INSERT IGNORE: if two servers start at once, both end up with the same pair
+            await sql("INSERT IGNORE INTO AppSetting (k, v) VALUES ('vapid_public', ?), ('vapid_private', ?)", [made.publicKey, made.privateKey]);
+            m = await read();
+            console.log('reminders: made new push keys and saved them in the database');
+        }
+        if (m.vapid_public && m.vapid_private) {
+            PUBLIC_KEY = m.vapid_public;
+            PRIVATE_KEY = m.vapid_private;
+            turnOn();
+        }
+    } catch (e) {
+        console.error('reminder key setup failed:', e.message);
+    }
+})();
 
 const SEND_WINDOW_MIN = 180;   // a reminder still goes out up to 3 hours late (sleepy server, late cron)
 
@@ -53,13 +98,36 @@ function validTime(t) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(t || ''))
 function validTz(tz) { const n = Number(tz); return Number.isFinite(n) && Math.abs(n) <= 14 * 60; }
 
 // GET /api/reminders/key — the public key the browser needs to subscribe
-module.exports.getKey = (req, res) => {
+module.exports.getKey = async (req, res) => {
+    await keysReady;
     if (!enabled) return res.status(503).json({ message: 'reminders are not set up on the server yet', reason: 'not_configured' });
     res.status(200).json({ publicKey: PUBLIC_KEY });
 };
 
-// POST /api/reminders { subscription, time: "21:00", tz_offset } — turn on / change the time for this device
-module.exports.save = (req, res) => {
+// a notification straight away when reminders are switched on, so you can see they
+// reach this device. resolves to '' (it arrived at the push service), 'resubscribe'
+// (this device's subscription is old or made with other keys) or 'failed'
+async function sendWelcome(sub, time) {
+    const h = Number(time.slice(0, 2)), m = time.slice(3, 5);
+    const label = ((h % 12) || 12) + ':' + m + (h < 12 ? ' am' : ' pm');
+    try {
+        await webpush.sendNotification(sub, JSON.stringify({
+            title: 'reminders are on',
+            body: 'you’ll get a nudge at ' + label + ' on days you haven’t logged a song yet',
+            url: '/index.html',
+            tag: 'moodtunes-welcome'
+        }), { TTL: 600 });
+        return '';
+    } catch (e) {
+        if ([400, 401, 403, 404, 410].includes(e.statusCode)) return 'resubscribe';
+        console.error('welcome push failed:', e.statusCode || '', e.message);
+        return 'failed';
+    }
+}
+
+// POST /api/reminders { subscription, time: "21:00", tz_offset, test? } — turn on / change the time for this device
+module.exports.save = async (req, res) => {
+    await keysReady;
     if (!enabled) return res.status(503).json({ message: 'reminders are not set up on the server yet', reason: 'not_configured' });
     const sub = req.body && req.body.subscription;
     const time = req.body && req.body.time;
@@ -78,9 +146,15 @@ module.exports.save = (req, res) => {
         ' remind_at = VALUES(remind_at), tz_offset = VALUES(tz_offset),' +
         ' last_sent_day = IF(last_sent_day = ?, last_sent_day, VALUES(last_sent_day))',
         [res.locals.userId, sub.endpoint, String(sub.keys.p256dh), String(sub.keys.auth), time, Number(tz), skipToday, today.day],
-        (err) => {
+        async (err) => {
             if (err) { console.error('save reminder failed:', err.message); return res.status(500).json({ message: 'Internal server error' }); }
-            res.status(200).json({ message: 'reminder saved', time: time });
+            if (!req.body.test) return res.status(200).json({ message: 'reminder saved', time: time });
+            const result = await sendWelcome({ endpoint: sub.endpoint, keys: { p256dh: String(sub.keys.p256dh), auth: String(sub.keys.auth) } }, time);
+            if (result === 'resubscribe') {
+                pool.query('DELETE FROM ReminderSub WHERE endpoint = ?', [sub.endpoint], () => {});
+                return res.status(409).json({ message: 'this device needs to sign up for notifications again', reason: 'resubscribe' });
+            }
+            res.status(200).json({ message: 'reminder saved', time: time, test: result || 'sent' });
         }
     );
 };
@@ -97,7 +171,7 @@ module.exports.remove = (req, res) => {
 
 function toMinutes(t) { return Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)); }
 
-const q = (sql, params) => new Promise((resolve, reject) => pool.query(sql, params, (e, r) => e ? reject(e) : resolve(r)));
+const q = sql;
 
 // sends every reminder that's due now. returns how many were sent
 let running = false;
@@ -148,7 +222,5 @@ module.exports.tick = async (req, res) => {
     res.status(200).json({ ok: true, sent: sent });
 };
 
-// every 5 minutes while the server is up
-if (enabled) setInterval(() => { sendDue(); }, 5 * 60 * 1000).unref();
 
 module.exports._localNow = localNow;   // for tests

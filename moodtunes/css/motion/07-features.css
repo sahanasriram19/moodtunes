@@ -442,7 +442,7 @@ img.mt-noart {
 }
 
 .pd-switch[aria-checked="true"] {
-  background: var(--accent, #ff9fcf);
+  background: #1db954;
 }
 
 .pd-switch[aria-checked="true"] i {

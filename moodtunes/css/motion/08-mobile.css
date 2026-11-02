@@ -610,7 +610,7 @@
   }
 
   .logo {
-    width: 118px;
+    width: 132px;
     margin-bottom: 0;
   }
 
@@ -809,7 +809,7 @@
 /* very small phones: help moves into the profile menu so the header fits */
 @media (max-width: 360px) {
   .logo {
-    width: 100px;
+    width: 110px;
   }
 
   #help-btn {
