@@ -29,7 +29,7 @@ function showHelpModal() {
 
             '<div style="margin-bottom:18px;">' +
                 '<div class="help-heading">' + helpIcon('journal') + 'journal</div>' +
-                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by today and yesterday. you can add or edit notes on any log, or delete it. notes sit beside the song title, tap a long one to read it all. play count updates automatically based on what you open from moodtunes in spotify, and each log shows the time you played it (e.g. 1:50 – 2:00 am). <b style="color:#fff;">not in your journal yet</b> lists songs you played in spotify that aren\'t in your journal. tap a mood to log one on the day you played it (with its play count), or ✕ to hide it.</div>' +
+                '<div style="font-size:13px;color:#d9cff0;line-height:1.6;">pick a mood, then search for a song you\'re listening to. click a result to optionally add a note, then hit just play or play + save note. your recently logged songs appear below, grouped by day for the last 3 days. you can add or edit notes on any log, or delete it. notes sit beside the song title, tap a long one to read it all. play count updates automatically based on what you open from moodtunes in spotify, and each log shows the time you played it (e.g. 1:50 – 2:00 am). <b style="color:#fff;">not in your journal yet</b> lists songs you played in spotify that aren\'t in your journal. tap a mood to log one on the day you played it (with its play count), or ✕ to hide it.</div>' +
             '</div>' +
 
             '<div style="margin-bottom:18px;">' +

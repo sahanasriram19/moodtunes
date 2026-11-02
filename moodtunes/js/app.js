@@ -295,16 +295,7 @@ function showResults(tracks) {
             panel.id = 'search-note-panel';
             panel.className = 'search-note-panel';   // colours follow the mood (see motion.css)
 
-            var moodPickerHTML = !selectedMood
-                ? '<div style="margin-bottom:12px;"><div style="font-size:12px;color:#888;margin-bottom:8px;">pick a mood first</div><div class="inline-mood-picker" style="display:flex;flex-wrap:wrap;gap:6px;">' +
-                      MoodFX.visibleMoods().map(function(m) {
-                          var custom = document.querySelector('.mood-chips .custom-chip[data-mood="' + CSS.escape(m) + '"]');
-                          return '<button class="chip inline-mood-chip" data-mood="' + MoodFX.esc(m) + '"' + (custom && custom.dataset.emoji ? ' data-emoji="' + MoodFX.esc(custom.dataset.emoji) + '"' : '') + ' style="font-size:11px;padding:5px 10px;">' + MoodFX.esc(m) + '</button>';
-                      }).join('') + '</div></div>'
-                : '';
-
             panel.innerHTML =
-                moodPickerHTML +
                 '<div class="ctx-label">what are you doing? <span>optional</span></div>' + MoodFX.ctxPickerHTML('') +
                 '<div style="font-size:12px;color:#888;margin-bottom:8px;">add a note to look back on? <span style="color:#555;">— you can always add one later</span></div>' +
                 '<textarea id="search-note-input" class="note-textarea" style="height:64px;" placeholder="e.g. first time hearing this, reminds me of..."></textarea>' +
@@ -315,17 +306,22 @@ function showResults(tracks) {
 
             item.insertAdjacentElement('afterend', panel);
 
-            panel.querySelectorAll('.inline-mood-chip').forEach(function(chip) {
-                chip.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    panel.querySelectorAll('.inline-mood-chip').forEach(function(c) { c.classList.remove('selected'); });
-                    chip.classList.add('selected');
-                    chips.forEach(function(c) { c.classList.remove('selected'); });
-                    document.querySelectorAll('.chip[data-mood="' + CSS.escape(chip.dataset.mood) + '"]').forEach(function(c) { c.classList.add('selected'); });
-                    selectedMood = chip.dataset.mood;
-                    document.getElementById('search-note-input').focus();
-                });
-            });
+            // no mood picked yet: point at the mood chips at the top (they shake, and the
+            // page scrolls up to them on phones). once one is picked, come back to this song
+            if (!selectedMood) {
+                MoodFX.nudgeMoods();
+                var moodRow = document.querySelector('.mood-chips');
+                var backToSong = function() {
+                    setTimeout(function() {
+                        if (!selectedMood || !panel.isConnected) return;
+                        moodRow.removeEventListener('click', backToSong);
+                        item.scrollIntoView({ behavior: MoodFX.reduceMotion ? 'auto' : 'smooth', block: 'center' });
+                        var box = document.getElementById('search-note-input');
+                        if (box) box.focus({ preventScroll: true });
+                    }, 50);
+                };
+                if (moodRow) moodRow.addEventListener('click', backToSong);
+            }
 
             // what you're doing (optional): one tag, tap again to clear
             var context = '';
@@ -390,7 +386,7 @@ function loadLogs(highlightSongId) {
 
         // group by date
         var grouped = {};
-        logs.slice(0, 30).forEach(function(log) {
+        logs.slice(0, 60).forEach(function(log) {
             var key = logDayKey(log);
             if (!grouped[key]) grouped[key] = [];
             grouped[key].push(log);

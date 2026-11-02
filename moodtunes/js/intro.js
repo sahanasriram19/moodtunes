@@ -49,7 +49,7 @@ var STEPS = {
         { target: '#song-search', title: 'find your song', text: 'search for what you’re listening to. tap a result to play it in spotify and log it under your mood, with a note if you like.' },
         { target: '#now-playing', title: 'now playing', text: 'whatever’s on in spotify shows up here, with play, pause and skip. tap a mood under it to log the song in one tap.',
           skipIf: function() { var n = document.getElementById('now-playing'); return !n || n.classList.contains('np-hidden'); } },
-        { target: '#logs-list', title: 'your journal', text: 'songs you log today and yesterday land here. add or edit a note, play a song again, or delete a log.' },
+        { target: '#logs-list', title: 'your journal', text: 'songs you log over the last 3 days land here. add or edit a note, play a song again, or delete a log.' },
         { target: '#logs-list', title: 'play counts', text: 'each time you open a song in spotify from moodtunes, it counts as a play. repeats on loop count too.' },
         { target: pageLink('playlists.html'), title: 'playlists', text: 'every mood becomes a playlist of the songs you logged with it. reorder them, take songs out, and save any playlist to your spotify library.' },
         { target: pageLink('session.html'), title: 'sessions', text: 'pick a mood and start a listening session. moodtunes recommends new songs from the genres you already love in that mood, and keeps track of what you play.' },

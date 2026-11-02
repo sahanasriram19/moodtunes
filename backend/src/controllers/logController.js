@@ -38,9 +38,9 @@ module.exports.getAllLogsPerDay = (req, res, next) => {
     });
 };
 
-// Today + yesterday — for journal recently played
+// the last 3 days (today and the 2 before) — for the journal
 module.exports.getRecentTwoDays = (req, res, next) => {
-    model.selectRecentTwoDays({ user_id: res.locals.userId, since_date: localDate(tzFrom(req), 1) }, (err, results) => {
+    model.selectRecentTwoDays({ user_id: res.locals.userId, since_date: localDate(tzFrom(req), 2) }, (err, results) => {
         if (err) return res.status(500).json({ message: 'Internal server error' });
         res.status(200).json(results);
     });

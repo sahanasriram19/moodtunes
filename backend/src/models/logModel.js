@@ -156,10 +156,10 @@ module.exports.selectRecentTwoDays = (data, callback) => {
         'SELECT * FROM Log WHERE user_id = ? AND log_date >= ? ORDER BY last_logged DESC, id DESC',
         [data.user_id, data.since_date],
         (err, rows) => {
-            // if the upgrade couldn't run, still show the journal (last 48 hours)
+            // if the upgrade couldn't run, still show the journal (last 72 hours)
             if (err && err.code === 'ER_BAD_FIELD_ERROR') {
                 return pool.query(
-                    'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 48 HOUR ORDER BY last_logged DESC, id DESC',
+                    'SELECT * FROM Log WHERE user_id = ? AND last_logged >= NOW() - INTERVAL 72 HOUR ORDER BY last_logged DESC, id DESC',
                     [data.user_id], callback);
             }
             callback(err, rows);
