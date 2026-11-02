@@ -44,7 +44,11 @@ function render(data) {
     var html = '<div class="stats-layout">';
 
     // summary
-    html += '<div class="stats-summary">' + statsSentence(stats, moods) + '</div>';
+    // the monthly recap opens from this button (it only opens by itself on the 1st)
+    var hasPlays = (Number(stats.total_plays) || 0) > 0 || (Number(stats.unique_songs) || 0) > 0;
+    html += '<div class="stats-summary">' + statsSentence(stats, moods) +
+        (hasPlays ? '<button type="button" id="recap-open" class="recap-open-btn" aria-haspopup="dialog">' + MoodFX.icon('sparkles') + '<span>your monthly recap</span></button>' : '') +
+        '</div>';
 
     // flashback
     if (flashback.length > 0) {
@@ -459,6 +463,7 @@ apiCallCached('/logs/stats', function(err, result) {
     render(result.data);
     // fetch per-day logs for the graph
     apiCallCached('/logs/perday', function(err2, r2) {
+        if (!err2 && r2 && Array.isArray(r2.data)) perdayLogs = r2.data;
         // each part on its own, so one that trips over your data can't stop the others
         // (before, a problem in the calendar also hid the recap button and "what we noticed")
         function safely(name, fn) { try { fn(); } catch (e) { if (window.console) console.error('stats: ' + name + ' failed', e); } }
@@ -468,5 +473,37 @@ apiCallCached('/logs/stats', function(err, result) {
             safely('recap', function() { if (window.MoodRecap) MoodRecap.show(r2.data); });
         }
         else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:var(--text-muted,#9384b8);font-size:13px;">not enough data yet</p>'; }
+    });
+});
+
+// ── the monthly recap button ───────────────────────────
+// opens the recap pop-up (recap.js). works even if recap.js hasn't loaded yet:
+// it's fetched on the first tap, with your per-day logs if they aren't here yet
+var perdayLogs;   // (no "= null": a saved copy may already have filled it in above)
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest && e.target.closest('#recap-open');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    function fail() { btn.disabled = false; MoodFX.toast('couldn’t open your recap, try again'); }
+    function withLogs(cb) {
+        if (perdayLogs) return cb(perdayLogs);
+        apiCall('/logs/perday', 'GET', null, function(err, res) {
+            if (err || !res || res.status !== 200 || !Array.isArray(res.data)) return fail();
+            perdayLogs = res.data; cb(perdayLogs);
+        });
+    }
+    function withRecap(cb) {
+        if (window.MoodRecap && MoodRecap.open) return cb();
+        var sc = document.createElement('script');
+        sc.src = 'js/recap.js';
+        sc.onload = function() { window.MoodRecap && MoodRecap.open ? cb() : fail(); };
+        sc.onerror = fail;
+        document.head.appendChild(sc);
+    }
+    withRecap(function() {
+        withLogs(function(logs) {
+            btn.disabled = false;
+            try { MoodRecap.show(logs); MoodRecap.open(); } catch (err) { if (window.console) console.error('stats: recap failed', err); fail(); }
+        });
     });
 });

@@ -697,3 +697,26 @@ main.container.stats-page {
 .stats-summary > .recap-card:last-child {
   margin-bottom: 0;
 }
+
+/* === NO GAP UNDER THE SHORTER COLUMN === */
+/* both columns end at the same line: the last box in each one grows to fill
+   the space, and in "most played" the songs spread out to match */
+@media (min-width: 769px) {
+  .stats-layout > .stats-col {
+    align-self: stretch;
+  }
+
+  .stats-col > :last-child {
+    flex-grow: 1;
+  }
+
+  .stats-col > .stats-top:last-child {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stats-col > .stats-top:last-child .top-song-row {
+    flex: 1 1 auto;
+    max-height: 72px;
+  }
+}
