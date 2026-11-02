@@ -47,7 +47,7 @@ function render(data) {
     // the monthly recap opens from this button (it only opens by itself on the 1st)
     var hasPlays = (Number(stats.total_plays) || 0) > 0 || (Number(stats.unique_songs) || 0) > 0;
     html += '<div class="stats-summary">' + statsSentence(stats, moods) +
-        (hasPlays ? '<button type="button" id="recap-open" class="recap-open-btn" aria-haspopup="dialog">' + MoodFX.icon('sparkles') + '<span>your monthly recap</span></button>' : '') +
+        (hasPlays ? '<button type="button" id="recap-open" class="recap-open-btn" aria-haspopup="dialog">' + MoodFX.icon('sparkles') + '<span><span class="rb-long">your </span>monthly recap</span></button>' : '') +
         '</div>';
 
     // flashback
@@ -93,6 +93,9 @@ function render(data) {
         '<div style="font-size:11px;color:var(--text-muted,#9384b8);margin-top:10px;">you\'re mostly a ' + peakTime + ' listener</div>' +
     '</div>';
 
+    // what you play while studying, commuting… (filled in once the per-day logs arrive)
+    html += '<div class="stats-card stats-context" id="stats-context" hidden></div>';
+
     // two-week graph - full width
     html += '<div class="stats-card stats-graph" id="mood-graph-container">' +
         '<div class="stats-card-title">the last two weeks</div>' +
@@ -133,7 +136,7 @@ function render(data) {
     var graph = layout && layout.querySelector('.stats-graph');
     if (layout && graph) {
         [['stats-col stats-col-a', ['.stats-moods', '.stats-flashback', '.stats-top']],
-         ['stats-col stats-col-b', ['.stats-time', '.stats-calendar']]].forEach(function(c) {
+         ['stats-col stats-col-b', ['.stats-time', '.stats-context', '.stats-calendar']]].forEach(function(c) {
             var col = document.createElement('div');
             col.className = c[0];
             c[1].forEach(function(sel) { var el = layout.querySelector(sel); if (el) col.appendChild(el); });
@@ -471,6 +474,7 @@ apiCallCached('/logs/stats', function(err, result) {
             safely('graph', function() { buildLineGraph(r2.data); });
             safely('calendar', function() { MoodCalendar.show(r2.data); });
             safely('recap', function() { if (window.MoodRecap) MoodRecap.show(r2.data); });
+            safely('tags', function() { drawContexts(r2.data); });
         }
         else { MoodCalendar.show([]); var c = document.getElementById('mood-graph-container'); if (c) c.innerHTML = '<div class="stats-card-title">the last two weeks</div><p style="color:var(--text-muted,#9384b8);font-size:13px;">not enough data yet</p>'; }
     });
@@ -507,3 +511,36 @@ document.addEventListener('click', function(e) {
         });
     });
 });
+
+// ── what you play while… (context tags) ────────────────
+// for each tag you've used: your main mood then, and the song you played most
+function drawContexts(logs) {
+    var box = document.getElementById('stats-context');
+    if (!box) return;
+    var by = {};
+    logs.forEach(function(l) {
+        if (!l.context) return;
+        var p = Math.max(1, Number(l.play_count) || 0);
+        var c = by[l.context] || (by[l.context] = { plays: 0, moods: {}, songs: {} });
+        c.plays += p;
+        c.moods[l.mood] = (c.moods[l.mood] || 0) + p;
+        var k = l.song_id;
+        if (!c.songs[k]) c.songs[k] = { title: l.title, plays: 0 };
+        c.songs[k].plays += p;
+    });
+    var tags = Object.keys(by).sort(function(a, b) { return by[b].plays - by[a].plays; }).slice(0, 6);
+    if (!tags.length) { box.hidden = true; return; }
+    var top = function(o, f) { return Object.keys(o).sort(function(a, b) { return (f ? o[b][f] : o[b]) - (f ? o[a][f] : o[a]); })[0]; };
+    var icons = {};
+    MoodFX.CONTEXTS.forEach(function(c) { icons[c[0]] = c[1]; });
+    box.hidden = false;
+    box.innerHTML = '<div class="stats-card-title">what you play while…</div>' +
+        tags.map(function(t) {
+            var c = by[t], mood = top(c.moods), song = c.songs[top(c.songs, 'plays')];
+            return '<div class="ctx-row">' +
+                '<span class="ctx-row-tag">' + MoodFX.icon(icons[t] || 'note') + MoodFX.esc(t) + '</span>' +
+                '<span class="ctx-row-mood" style="--mc:' + getMoodColor(mood) + '">' + MoodFX.esc(mood) + '</span>' +
+                '<span class="ctx-row-song" title="' + MoodFX.esc(song.title) + '">' + MoodFX.esc(song.title) + '</span>' +
+            '</div>';
+        }).join('');
+}

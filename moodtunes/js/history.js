@@ -263,6 +263,7 @@ function renderTimeline(logs, filtered) {
                             '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                             '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
                             '<span class="date-text">' + formatPlayRange(log.first_logged, log.last_logged) + '</span>' +
+                            MoodFX.ctxBadge(log.context) +
                         '</div>' +
                     '</div>' +
                     // the buttons sit in one column on phones (see motion.css); on wider screens the wrapper is invisible
@@ -478,6 +479,8 @@ function refreshHistory() {
 
 // repeats from a loop were just counted
 window.addEventListener('moodtunes:plays-updated', refreshHistory);
+// a tag changed in a song's story
+window.addEventListener('moodtunes:logs-changed', refreshHistory);
 
 apiCallCached('/logs/perday', function(err, result) {
     if (err || !result.data) { statsGrid.innerHTML = ''; timeline.innerHTML = MoodFX.emptyState({ art: 'offline', title: 'couldn’t load your history', text: 'check your connection and try again', action: { label: 'try again', reload: true } }); return; }

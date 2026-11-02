@@ -75,6 +75,44 @@ const dailyLogsReady = upgradeToDailyLogs().then(() => {
     console.error('Log table upgrade failed:', err.message);
 });
 
+// ── context tags: what you were doing (studying, commuting, late night…) ────
+// one optional short tag per log, added automatically the first time the backend
+// starts. until the column exists, tags are simply left out
+let hasContext = false;
+const contextReady = dailyLogsReady.then(async () => {
+    const db = pool.promise();
+    const [[col]] = await db.query(
+        "SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND COLUMN_NAME = 'context'");
+    if (!col.n) {
+        await db.query('ALTER TABLE Log ADD COLUMN context VARCHAR(40) NULL');
+        console.log('Log: added context column (tags)');
+    }
+    hasContext = true;
+}).catch((err) => console.error('Log context column failed:', err.message));
+
+// a tag is a few lowercase words; anything else (or empty) means "no tag"
+function cleanContext(c) {
+    const s = String(c == null ? '' : c).toLowerCase().trim().replace(/\s+/g, ' ');
+    return /^[a-z][a-z ]{0,38}$/.test(s) ? s : null;
+}
+module.exports.cleanContext = cleanContext;
+
+module.exports.updateContext = (data, callback) => {
+    contextReady.then(() => {
+        if (!hasContext) return callback(new Error('tags are not ready'));
+        pool.query('UPDATE Log SET context = ? WHERE id = ? AND user_id = ?', [cleanContext(data.context), data.id, data.user_id], callback);
+    });
+};
+
+// the most recent row for a song + mood (used right after logging, from now playing)
+module.exports.updateContextLatest = (data, callback) => {
+    contextReady.then(() => {
+        if (!hasContext) return callback(new Error('tags are not ready'));
+        pool.query('UPDATE Log SET context = ? WHERE user_id = ? AND song_id = ? AND mood = ? ORDER BY log_date DESC, last_logged DESC LIMIT 1',
+            [cleanContext(data.context), data.user_id, data.song_id, data.mood], callback);
+    });
+};
+
 // ── grouped: one row per unique song+mood, total plays summed ───────────────
 // used by: journal recently played, playlists, discover, session recs
 
@@ -140,16 +178,21 @@ module.exports.selectRecentTwoDays = (data, callback) => {
 module.exports.recordPlay = (data, callback) => {
     const firstSec = (data.first_ms || Date.now()) / 1000;
     const lastSec  = (data.last_ms  || Date.now()) / 1000;
-    dailyLogsReady.then(() => { pool.query(
-        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, log_date, first_logged, last_logged)' +
-        ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?))' +
+    // a tag (context) is only written when one was picked, and kept otherwise
+    const ctxReady = data.context ? contextReady : dailyLogsReady;
+    ctxReady.then(() => {
+        const ctx = hasContext ? cleanContext(data.context) : null;
+        pool.query(
+        'INSERT INTO Log (user_id, song_id, title, artist, album_art, spotify_url, mood, play_count, note, log_date, first_logged, last_logged' + (ctx ? ', context' : '') + ')' +
+        ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?)' + (ctx ? ', ?' : '') + ')' +
         ' ON DUPLICATE KEY UPDATE' +
         '  first_logged = IF(VALUES(play_count) > 0, LEAST(COALESCE(first_logged, VALUES(first_logged)), VALUES(first_logged)), first_logged),' +
         '  last_logged = IF(VALUES(play_count) > 0, GREATEST(COALESCE(last_logged, VALUES(last_logged)), VALUES(last_logged)), last_logged),' +
         '  play_count = play_count + VALUES(play_count),' +
-        "  note = IF(VALUES(note) <> '', VALUES(note), note)",
+        "  note = IF(VALUES(note) <> '', VALUES(note), note)" +
+        (ctx ? ', context = VALUES(context)' : ''),
         [data.user_id, data.song_id, data.title, data.artist, data.album_art, data.spotify_url, data.mood,
-         data.plays, data.note || '', data.log_date, firstSec, lastSec],
+         data.plays, data.note || '', data.log_date, firstSec, lastSec].concat(ctx ? [ctx] : []),
         callback
     ); });
 };

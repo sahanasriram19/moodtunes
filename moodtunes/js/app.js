@@ -27,6 +27,13 @@ journalSide.className = 'journal-side';
     var page = document.querySelector('main.container');
     page.classList.add('journal-layout');
     journalSide.appendChild(document.getElementById('now-playing'));
+    // "on this day": under now playing (under the search box on phones)
+    var otd = document.createElement('section');
+    otd.id = 'on-this-day';
+    otd.className = 'otd-card';
+    otd.hidden = true;
+    otd.setAttribute('aria-label', 'on this day');
+    journalSide.appendChild(otd);
     ['.mood-section', '.search-section', '.logs-section'].forEach(function(sel) {
         var el = page.querySelector(sel);
         if (el) journalMain.appendChild(el);
@@ -298,6 +305,7 @@ function showResults(tracks) {
 
             panel.innerHTML =
                 moodPickerHTML +
+                '<div class="ctx-label">what are you doing? <span>optional</span></div>' + MoodFX.ctxPickerHTML('') +
                 '<div style="font-size:12px;color:#888;margin-bottom:8px;">add a note to look back on? <span style="color:#555;">— you can always add one later</span></div>' +
                 '<textarea id="search-note-input" class="note-textarea" style="height:64px;" placeholder="e.g. first time hearing this, reminds me of..."></textarea>' +
                 '<div class="note-btn-row" style="margin-top:10px;">' +
@@ -319,6 +327,15 @@ function showResults(tracks) {
                 });
             });
 
+            // what you're doing (optional): one tag, tap again to clear
+            var context = '';
+            panel.querySelector('.ctx-picker').addEventListener('click', function(e) {
+                var c = e.target.closest('.ctx-chip');
+                if (!c) return;
+                e.stopPropagation();
+                context = MoodFX.ctxPickerToggle(this, c);
+            });
+
             if (selectedMood) document.getElementById('search-note-input').focus();
 
             // the song is logged (and its play counted) once it's opened in spotify.
@@ -327,7 +344,7 @@ function showResults(tracks) {
                 var mood = selectedMood;
                 openSpotify(track.external_urls.spotify, { onOpen: function() {
                     panel.remove();
-                    logSong(track.id, track.name, artists, art, track.external_urls.spotify, mood, note);
+                    logSong(track.id, track.name, artists, art, track.external_urls.spotify, mood, note, context);
                 } });
             }
 
@@ -347,12 +364,13 @@ function showResults(tracks) {
 }
 
 // ── log song ───────────────────────────────────────────
-function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note) {
-    apiCall('/logs', 'POST', { song_id: songId, title: title, artist: artist, album_art: albumArt, spotify_url: spotifyUrl, mood: mood, note: note || '', tz_offset: tzOffset() }, function(err) {
+function logSong(songId, title, artist, albumArt, spotifyUrl, mood, note, context) {
+    apiCall('/logs', 'POST', { song_id: songId, title: title, artist: artist, album_art: albumArt, spotify_url: spotifyUrl, mood: mood, note: note || '', context: context || '', tz_offset: tzOffset() }, function(err) {
         if (err) { console.error('log error:', err); MoodFX.toast('couldn’t log that song, try again'); return; }
         searchResults.innerHTML = '';
         songSearch.value = '';
         MoodFX.toast('logged “' + title + '” as ' + mood, mood);
+        window.dispatchEvent(new CustomEvent('moodtunes:logs-changed'));
         loadLogs(songId);
     });
 }
@@ -408,6 +426,7 @@ function loadLogs(highlightSongId) {
                                 '<span class="mood-badge">' + MoodFX.esc(log.mood) + '</span>' +
                                 '<span class="plays-text">' + playsLabel(log.play_count) + '</span>' +
                                 '<span class="date-text">' + formatPlayRange(log.first_logged, log.last_logged) + '</span>' +
+                                MoodFX.ctxBadge(log.context) +
                             '</div>' +
                         '</div>' +
                         '<button class="play-btn log-play-btn" data-id="' + log.id + '" data-song-id="' + log.song_id + '" data-mood="' + MoodFX.esc(log.mood) + '" data-title="' + MoodFX.esc(log.title) + '" data-artist="' + MoodFX.esc(log.artist) + '" data-art="' + MoodFX.esc(log.album_art) + '" data-url="' + MoodFX.esc(log.spotify_url) + '">▶</button>';
@@ -675,6 +694,9 @@ MoodFX.whenActive(function() { loadInbox(true); });
 // boot — sessions only start when you click the button
 // but if YOU started one this browser session, restore it across tab switches
 loadLogs();
+MoodFX.onThisDay(document.getElementById('on-this-day'));
+// a tag changed in a song's story: show it on the journal too
+window.addEventListener('moodtunes:logs-changed', function(e) { if (e.detail) loadLogs(); });
 
 var nowPlayingCard = MoodFX.nowPlaying(document.getElementById('now-playing'), {
     compact: true,

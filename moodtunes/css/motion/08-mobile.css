@@ -1830,6 +1830,7 @@
       "summary"
       "moods"
       "time"
+      "context"
       "flashback"
       "top"
       "calendar"
@@ -1960,5 +1961,56 @@
   /* custom dates: the dropdown takes the whole row */
   html body .hist-filter .hf-row:has(.hf-date) select.hf-range {
     flex: 0 0 auto;
+  }
+}
+
+/* ==================================================================
+   stats page: the recap button beside the sentence, smaller on phones
+   ================================================================== */
+
+@media (max-width: 520px) {
+  html body .stats-summary > .recap-open-btn {
+    align-self: start;
+    margin-top: 2px;
+    padding: 7px 11px;
+    font-size: 12.5px;
+    gap: 5px;
+  }
+
+  html body .stats-summary > .recap-open-btn .rb-long {
+    display: none;
+  }
+}
+
+/* ==================================================================
+   journal: the "what are you doing?" tags in one row you can swipe
+   ================================================================== */
+
+@media (max-width: 768px) {
+  .search-note-panel .ctx-picker {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-right: -4px;
+    padding-bottom: 2px;
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+
+  .search-note-panel .ctx-picker::-webkit-scrollbar {
+    display: none;
+  }
+
+  .search-note-panel .ctx-chip {
+    flex-shrink: 0;
+  }
+
+  /* on this day: three covers across on phones */
+  .otd-songs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .otd-songs .otd-song:nth-child(n + 4) {
+    display: none;
   }
 }

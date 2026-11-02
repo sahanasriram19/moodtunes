@@ -973,3 +973,539 @@ summary:focus-visible {
   font-size: 10.5px;
   opacity: 0.75;
 }
+
+/* === CONTEXT TAGS: WHAT YOU WERE DOING === */
+/* the pill on a song */
+.ctx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary, #fff) 8%, transparent);
+  color: color-mix(in srgb, var(--text-primary, #fff) 72%, transparent);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.ctx-badge .mt-icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* the tags to pick from (logging, now playing, a song's story) */
+.ctx-label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.ctx-label span {
+  color: #555;
+}
+
+.ctx-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ctx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-primary, #fff) 18%, transparent);
+  background: transparent;
+  color: color-mix(in srgb, var(--text-primary, #fff) 78%, transparent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ctx-chip .mt-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.ctx-chip:hover {
+  border-color: color-mix(in srgb, var(--text-primary, #fff) 40%, transparent);
+}
+
+.ctx-chip.on {
+  background: var(--text-primary, #fff);
+  border-color: var(--text-primary, #fff);
+  color: var(--bg-page, #120a20);
+}
+
+:root[data-theme="light"] .ctx-label { color: #666; }
+:root[data-theme="light"] .ctx-label span { color: #999; }
+
+/* now playing: "doing?" under the moods right after a one-tap log */
+.np-ctx {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  animation: recap-fade 0.25s ease;
+}
+
+.np-ctx .ctx-picker {
+  flex: 1;
+  margin: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 88%, transparent);
+}
+
+.np-ctx .ctx-picker::-webkit-scrollbar {
+  display: none;
+}
+
+.np-ctx .ctx-chip {
+  flex-shrink: 0;
+  padding: 3px 9px 3px 7px;
+}
+
+.np-ctx .np-logas {
+  padding-top: 5px;
+}
+
+/* the narrow side column on wide screens: the tags wrap onto a few lines */
+@media (min-width: 1100px) {
+  .journal-side .np-ctx {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .journal-side .np-ctx .ctx-picker {
+    flex-wrap: wrap;
+    overflow: visible;
+    mask-image: none;
+  }
+}
+
+/* stats: what you play while… */
+.ctx-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.ctx-row + .ctx-row {
+  border-top: 1px solid color-mix(in srgb, var(--text-primary, #fff) 7%, transparent);
+}
+
+.ctx-row-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary, #fff);
+  white-space: nowrap;
+}
+
+.ctx-row-tag .mt-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.8;
+}
+
+.ctx-row-mood {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  background: color-mix(in srgb, var(--mc) 22%, transparent);
+  color: color-mix(in srgb, var(--mc) 60%, var(--text-primary, #fff));
+}
+
+.ctx-row-song {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--text-muted, #a99cc9);
+  font-size: 12px;
+}
+
+:root[data-theme="light"] .ctx-row-mood {
+  color: color-mix(in srgb, var(--mc) 50%, #1a1a1a);
+}
+
+/* === SONG STORIES === */
+/* tap a cover to see every mood, note and tag a song has had */
+.log-card .song-art,
+.otd-art {
+  cursor: pointer;
+}
+
+#story-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(8, 4, 18, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: recap-fade 0.2s ease;
+}
+
+#story-modal.closing {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.story-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  background: var(--glass, var(--bg-card, #1d1233));
+  border: 1px solid var(--glass-edge, var(--border, rgba(255, 255, 255, 0.1)));
+  color: var(--text-primary, #fff);
+  animation: recap-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme="light"] .story-dialog {
+  background: #fff;
+  border-color: #e6e3ea;
+}
+
+:root[data-theme="warm"] .story-dialog {
+  background: var(--warm-box, #1a1410);
+}
+
+.story-loading,
+.story-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0;
+  color: var(--text-muted, #a99cc9);
+  font-size: 13px;
+}
+
+.story-loading .mt-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.story-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 40px;
+}
+
+.story-art {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--text-primary, #fff) 8%, transparent);
+}
+
+.story-headtext {
+  flex: 1;
+  min-width: 0;
+}
+
+.story-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.story-artist {
+  font-size: 13px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.story-sub {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--text-muted, #a99cc9);
+}
+
+.story-play {
+  flex-shrink: 0;
+}
+
+/* just ▶ here (the "play next" button added beside every ▶ would squeeze the title) */
+.story-head .queue-btn {
+  display: none !important;
+}
+
+.story-split {
+  display: flex;
+  height: 8px;
+  gap: 2px;
+  margin: 16px 0 8px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.story-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11.5px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.story-legend i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
+.story-line {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.story-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border-left: 2px solid color-mix(in srgb, var(--text-primary, #fff) 12%, transparent);
+}
+
+.story-entry {
+  position: relative;
+  padding: 0 0 14px 16px;
+}
+
+.story-entry::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mc);
+}
+
+.story-entry-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 12.5px;
+}
+
+.story-date {
+  font-weight: 600;
+}
+
+.story-mood {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: color-mix(in srgb, var(--mc) 65%, var(--text-primary, #fff));
+}
+
+.story-mood .mt-icon {
+  width: 13px;
+  height: 13px;
+}
+
+:root[data-theme="light"] .story-mood {
+  color: color-mix(in srgb, var(--mc) 50%, #1a1a1a);
+}
+
+.story-plays {
+  color: var(--text-muted, #a99cc9);
+  font-size: 11.5px;
+}
+
+.story-note {
+  margin: 5px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-secondary, #c9bde6);
+  overflow-wrap: anywhere;
+}
+
+.story-ctx {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.story-ctx-edit {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted, #a99cc9);
+  font: inherit;
+  font-size: 11.5px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.story-entry .ctx-picker {
+  margin: 8px 0 0;
+}
+
+/* === ON THIS DAY (journal) === */
+.otd-card {
+  --mc: var(--mood, #9b6fc2);
+  margin: 0 0 28px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--mc) 32%, transparent);
+  background:
+    radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--mc) 20%, transparent), transparent 65%),
+    var(--glass, var(--bg-card, #1d1233));
+}
+
+.otd-card[hidden] {
+  display: none;
+}
+
+:root[data-theme="light"] .otd-card {
+  background:
+    radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--mc) 14%, transparent), transparent 65%),
+    #fff;
+}
+
+:root[data-theme="warm"] .otd-card {
+  background:
+    radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--mc) 18%, transparent), transparent 65%),
+    var(--warm-box, #1a1410);
+}
+
+.otd-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.otd-head .mt-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--mc);
+}
+
+.otd-label {
+  font-weight: 700;
+  color: color-mix(in srgb, var(--mc) 60%, var(--text-primary, #fff));
+}
+
+:root[data-theme="light"] .otd-label {
+  color: color-mix(in srgb, var(--mc) 55%, #1a1a1a);
+}
+
+.otd-when {
+  margin-left: auto;
+  color: var(--text-muted, #a99cc9);
+}
+
+.otd-line {
+  margin: 8px 0 12px;
+  font-size: 14px;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.otd-mood {
+  color: color-mix(in srgb, var(--mc) 60%, var(--text-primary, #fff));
+}
+
+:root[data-theme="light"] .otd-mood {
+  color: color-mix(in srgb, var(--mc) 55%, #1a1a1a);
+}
+
+.otd-songs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.otd-song {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11.5px;
+}
+
+.otd-art {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  margin-bottom: 4px;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--text-primary, #fff) 8%, transparent);
+  color: var(--text-muted, #a99cc9);
+  transition: transform 0.2s;
+}
+
+.otd-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.otd-art:hover {
+  transform: translateY(-2px);
+}
+
+.otd-title,
+.otd-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.otd-title {
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+}
+
+.otd-artist {
+  color: var(--text-muted, #a99cc9);
+}
+
+.otd-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--text-secondary, #c9bde6);
+}
+
+.journal-layout .otd-card {
+  order: 2;
+}

@@ -12,6 +12,8 @@ router.post('/',                 jwt.verifyToken, log.logSong);
 router.post('/from-spotify',     jwt.verifyToken, require('../controllers/spotifyExtrasController').logFromSpotify);
 router.post('/play',             jwt.verifyToken, log.playSong);
 router.post('/sync-loops',       jwt.verifyToken, log.syncLoops);
+router.put('/:id/context',       jwt.verifyToken, log.updateContext);
+router.put('/latest/:song_id/:mood/context', jwt.verifyToken, log.updateContextLatest);
 router.put('/:id',               jwt.verifyToken, log.updateNote);
 router.put('/latest/:song_id/:mood', jwt.verifyToken, log.updateNoteLatest);
 router.delete('/:id',            jwt.verifyToken, log.deleteLog);

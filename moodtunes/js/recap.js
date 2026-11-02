@@ -143,8 +143,8 @@ function show(logs) {
         if (sentence) sentence.insertAdjacentElement('afterend', btn);
         else if (content) content.insertBefore(btn, content.firstChild);
         btn.addEventListener('click', function() { open(monthKeys[0]); });
+        btn.innerHTML = MoodFX.icon('sparkles') + '<span><span class="rb-long">your </span>monthly recap</span>';
     }
-    btn.innerHTML = MoodFX.icon('sparkles') + '<span>your monthly recap</span>';
 }
 
 // the recap in a pop-up. monthKey: which month to open on (defaults to the newest)

@@ -69,6 +69,7 @@ module.exports.logSong = (req, res, next) => {
         album_art:   req.body.album_art,
         spotify_url: req.body.spotify_url,
         note:        req.body.note || '',
+        context:     req.body.context || null,
         plays:       req.body.played === false ? 0 : 1,
         log_date:    localDate(tzFrom(req))
     }, (err, result) => {
@@ -298,6 +299,22 @@ module.exports.liveLoopTick = (userId, item, progressMs, callback) => {
                 });
             });
         });
+    });
+};
+
+// PUT /api/logs/:id/context { context } — set (or clear, with "") a log's tag
+module.exports.updateContext = (req, res) => {
+    model.updateContext({ user_id: res.locals.userId, id: req.params.id, context: req.body && req.body.context }, (err) => {
+        if (err) return res.status(500).json({ message: 'Internal server error' });
+        res.status(200).json({ message: 'tag saved', context: model.cleanContext(req.body && req.body.context) });
+    });
+};
+
+// PUT /api/logs/latest/:song_id/:mood/context { context } — the song's latest log in that mood
+module.exports.updateContextLatest = (req, res) => {
+    model.updateContextLatest({ user_id: res.locals.userId, song_id: req.params.song_id, mood: req.params.mood, context: req.body && req.body.context }, (err) => {
+        if (err) return res.status(500).json({ message: 'Internal server error' });
+        res.status(200).json({ message: 'tag saved', context: model.cleanContext(req.body && req.body.context) });
     });
 };
 

@@ -638,6 +638,10 @@ main.container.stats-page {
   grid-area: calendar;
 }
 
+.stats-context {
+  grid-area: context;
+}
+
 .stats-col {
   display: flex;
   flex-direction: column;
@@ -719,4 +723,31 @@ main.container.stats-page {
     flex: 1 1 auto;
     max-height: 72px;
   }
+}
+
+/* === THE RECAP BUTTON: TOP RIGHT, LEVEL WITH THE SENTENCE === */
+html body .stats-layout > .stats-summary {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  align-items: center;
+}
+
+html body .stats-summary > .stats-sentence {
+  grid-column: 1;
+  min-width: 0;
+  margin: 0;
+  white-space: normal;
+}
+
+.stats-summary > .recap-open-btn {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.stats-summary > .insights-card {
+  grid-column: 1 / -1;
+  margin-top: 18px;
 }
