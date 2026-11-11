@@ -2051,3 +2051,21 @@
   .note-line .log-note { font-size: 11px !important; }
   .she-note { font-size: 12px !important; }
 }
+
+/* phones, history/journal cards: edit note sits level with the note, and the mood row moves up */
+@media (max-width: 768px) {
+  :is(#timeline, #logs-list, #playlist-block) .log-card .song-info > .note-line {
+    align-items: center;
+    row-gap: 2px;
+  }
+  :is(#timeline, #logs-list, #playlist-block) .log-card .edit-note-btn,
+  :is(#timeline, #logs-list, #playlist-block) .log-card .add-note-btn {
+    padding: 0 !important;
+    line-height: 15px !important;
+    position: relative;
+    top: -2px;
+  }
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-meta {
+    margin-top: 0 !important;
+  }
+}
