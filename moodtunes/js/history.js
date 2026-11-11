@@ -181,7 +181,7 @@ function drawFilterBar() {
             return '<button type="button" class="hf-mood' + (filter.mood === m ? ' on' : '') + '" data-mood="' + MoodFX.esc(m) + '" aria-pressed="' + (filter.mood === m) + '" style="--mc:' + MoodFX.color(m) + ';--mc-ink:' + MoodFX.ink(MoodFX.color(m)) + '">' +
                 MoodFX.icon(MoodFX.moodIcon(m)) + '<span>' + MoodFX.esc(m) + '</span></button>';
         }).join('');
-    var ranges = [['note', 'with note'], ['all', 'all time'], ['7', 'last 7 days'], ['30', 'last 30 days'], ['month', 'this month'], ['custom', 'pick dates']];
+    var ranges = [['all', 'all time'], ['note', 'with note'], ['7', 'last 7 days'], ['30', 'last 30 days'], ['month', 'this month'], ['custom', 'pick dates']];
     filterBar.innerHTML =
         '<div class="hf-moods">' + chips + '</div>' +
         '<div class="hf-row">' +
