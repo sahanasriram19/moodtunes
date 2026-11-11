@@ -176,18 +176,17 @@ function drawFilterBar() {
         return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
     });
     if (filter.mood && moods.indexOf(filter.mood) === -1) filter.mood = '';
-    var chips = '<button type="button" class="hf-mood hf-note' + (filter.note ? ' on' : '') + '" aria-pressed="' + !!filter.note + '" style="--mc:#b471ff;--mc-ink:#fff"><span>with note</span></button>' +
-        '<button type="button" class="hf-mood' + (!filter.mood ? ' on' : '') + '" data-mood="" aria-pressed="' + !filter.mood + '">all moods</button>' +
+    var chips = '<button type="button" class="hf-mood' + (!filter.mood ? ' on' : '') + '" data-mood="" aria-pressed="' + !filter.mood + '">all moods</button>' +
         moods.map(function(m) {
             return '<button type="button" class="hf-mood' + (filter.mood === m ? ' on' : '') + '" data-mood="' + MoodFX.esc(m) + '" aria-pressed="' + (filter.mood === m) + '" style="--mc:' + MoodFX.color(m) + ';--mc-ink:' + MoodFX.ink(MoodFX.color(m)) + '">' +
                 MoodFX.icon(MoodFX.moodIcon(m)) + '<span>' + MoodFX.esc(m) + '</span></button>';
         }).join('');
-    var ranges = [['all', 'all time'], ['7', 'last 7 days'], ['30', 'last 30 days'], ['month', 'this month'], ['custom', 'pick dates']];
+    var ranges = [['note', 'with note'], ['all', 'all time'], ['7', 'last 7 days'], ['30', 'last 30 days'], ['month', 'this month'], ['custom', 'pick dates']];
     filterBar.innerHTML =
         '<div class="hf-moods">' + chips + '</div>' +
         '<div class="hf-row">' +
             '<select class="hf-range" aria-label="date range">' + ranges.map(function(r) {
-                return '<option value="' + r[0] + '"' + (filter.range === r[0] ? ' selected' : '') + '>' + r[1] + '</option>';
+                return '<option value="' + r[0] + '"' + ((r[0] === 'note' ? filter.note : (!filter.note && filter.range === r[0])) ? ' selected' : '') + '>' + r[1] + '</option>';
             }).join('') + '</select>' +
             (filter.range === 'custom'
                 ? '<label class="hf-date"><span>from</span><input type="date" class="hf-from" value="' + MoodFX.esc(filter.from) + '" /></label>' +
@@ -208,14 +207,12 @@ function applyFilter() {
 }
 
 filterBar.addEventListener('click', function(e) {
-    var nb = e.target.closest('.hf-note');
-    if (nb) { filter.note = !filter.note; return applyFilter(); }
     var m = e.target.closest('.hf-mood');
     if (m) { filter.mood = m.dataset.mood; return applyFilter(); }
     if (e.target.closest('.hf-clear')) { filter = { mood: '', range: 'all', from: '', to: '', note: false }; return applyFilter(); }
 });
 filterBar.addEventListener('change', function(e) {
-    if (e.target.matches('.hf-range')) { filter.range = e.target.value; if (filter.range !== 'custom') { filter.from = ''; filter.to = ''; } return applyFilter(); }
+    if (e.target.matches('.hf-range')) { filter.note = e.target.value === 'note'; filter.range = filter.note ? 'all' : e.target.value; if (filter.range !== 'custom') { filter.from = ''; filter.to = ''; } return applyFilter(); }
     if (e.target.matches('.hf-from')) { filter.from = e.target.value; return applyFilter(); }
     if (e.target.matches('.hf-to')) { filter.to = e.target.value; return applyFilter(); }
 });
