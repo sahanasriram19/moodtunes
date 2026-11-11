@@ -2036,3 +2036,10 @@
     height: 10px;
   }
 }
+/* === "on this day": phones show it on the stats page, tablets and laptops on the journal page === */
+@media (max-width: 768px) {
+  #on-this-day { display: none !important; }
+}
+@media (min-width: 769px) {
+  .stats-otd { display: none !important; }
+}

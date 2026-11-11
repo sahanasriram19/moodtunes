@@ -24,6 +24,16 @@ module.exports.dailyLogsStatus = 'upgrading';
 
 async function upgradeToDailyLogs() {
     const db = pool.promise();
+    // fast path: once the upgrade has run, every later start needs just this ONE query
+    // (it used to run a chain of checks plus a full-table UPDATE on every boot, which
+    // slowed down every wake-up of the server)
+    const [[state]] = await db.query(
+        "SELECT" +
+        " (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND COLUMN_NAME = 'log_date') AS has_col," +
+        " (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND INDEX_NAME = 'unique_user_song_day') AS has_new," +
+        " (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND INDEX_NAME = 'unique_user_song_mood') AS has_old");
+    if (state.has_col && state.has_new && !state.has_old) return;
+
     // (LOWER() because some MySQL hosts store table names in lower case)
     const [[col]] = await db.query(
         "SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'log' AND COLUMN_NAME = 'log_date'");
@@ -237,8 +247,12 @@ pool.query(
         if (err) return console.error('PlayLaunch table setup failed:', err.message);
         // live repeat counting (see liveLoopTick in logController): repeats counted the
         // moment the song restarts, waiting to be matched up with spotify's history
-        pool.query('ALTER TABLE PlayLaunch ADD COLUMN live_pending INT NOT NULL DEFAULT 0', (e) => {
-            if (e && !/duplicate column/i.test(e.message)) console.error('PlayLaunch.live_pending setup failed:', e.message);
+        // only alter when the column is missing (an ALTER on every start is slow on TiDB)
+        pool.query("SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'playlaunch' AND COLUMN_NAME = 'live_pending'", (e0, rows) => {
+            if (!e0 && rows && rows[0] && rows[0].n) return;
+            pool.query('ALTER TABLE PlayLaunch ADD COLUMN live_pending INT NOT NULL DEFAULT 0', (e) => {
+                if (e && !/duplicate column/i.test(e.message)) console.error('PlayLaunch.live_pending setup failed:', e.message);
+            });
         });
     }
 );

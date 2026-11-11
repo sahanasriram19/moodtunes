@@ -9,7 +9,7 @@
 //
 // bump VERSION only if you want to force-clear everyone's saved copies
 
-var VERSION = 'v3';   // v3: motion.css split into css/motion/
+var VERSION = 'v4';   // v3: motion.css split into css/motion/
 var CACHE = 'moodtunes-' + VERSION;
 var FONT_CACHE = 'moodtunes-fonts';
 

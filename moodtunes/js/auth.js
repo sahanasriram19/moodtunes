@@ -17,6 +17,28 @@ document.getElementById('register-tab').addEventListener('click', function() {
     document.getElementById('login-form').style.display = 'none';
 });
 
+// ── waking the server ──────────────────────────────────
+// the free server sleeps when nobody has used it for a while. while it wakes up (up
+// to a minute or so) requests fail with a network error or a 502/503/504, so instead
+// of giving up straight away we keep trying and say what's happening
+fetch(BACKEND_URL.replace(/\/api$/, '') + '/api/health', { cache: 'no-store' }).catch(function() {});   // start waking it as the page opens
+
+function wakeFetch(url, options, onWaiting) {
+    var started = Date.now();
+    return new Promise(function(resolve, reject) {
+        (function attempt() {
+            fetch(url, options).then(function(r) {
+                if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error('waking');
+                resolve(r);
+            }).catch(function() {
+                if (Date.now() - started > 100000) return reject(new Error('timeout'));
+                if (onWaiting) onWaiting();
+                setTimeout(attempt, 2500);
+            });
+        })();
+    });
+}
+
 // ── notices (after deleting an account or changing a password) ──
 (function() {
     var q = new URLSearchParams(location.search);
@@ -85,11 +107,11 @@ document.getElementById('login-btn').addEventListener('click', function() {
 
     if (!username || !password) { errorEl.textContent = 'please fill in all fields'; return; }
 
-    fetch(BACKEND_URL + '/auth/login', {
+    wakeFetch(BACKEND_URL + '/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username, password: password })
-    })
+    }, function() { errorEl.textContent = 'waking up the server, this can take up to a minute…'; })
     .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
     .then(function(result) {
         if (result.status === 200) {
@@ -113,11 +135,11 @@ document.getElementById('register-btn').addEventListener('click', function() {
 
     if (!username || !email || !password) { errorEl.textContent = 'please fill in all fields'; return; }
 
-    fetch(BACKEND_URL + '/auth/register', {
+    wakeFetch(BACKEND_URL + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username, email: email, password: password })
-    })
+    }, function() { errorEl.textContent = 'waking up the server, this can take up to a minute…'; })
     .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
     .then(function(result) {
         if (result.status === 200) {

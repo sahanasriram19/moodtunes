@@ -97,6 +97,9 @@ function render(data) {
     html += '<div class="stats-card stats-context" id="stats-context" hidden></div>';
 
     // two-week graph - full width
+    // "on this day": shown on phones only (the journal page has it on tablets and laptops)
+    html += '<section id="stats-otd" class="otd-card stats-otd" aria-label="on this day" hidden></section>';
+
     html += '<div class="stats-card stats-graph" id="mood-graph-container">' +
         '<div class="stats-card-title">the last two weeks</div>' +
         MoodFX.skeleton('block') +
@@ -132,10 +135,11 @@ function render(data) {
     // gap on the other): moods, a month ago and top songs on the left, when you
     // listen and the calendar on the right, and the two-week graph across the bottom.
     // on phones the columns step aside (display: contents) and it's one list again
+    MoodFX.onThisDay(document.getElementById('stats-otd'));
     var layout = document.querySelector('#stats-content .stats-layout');
     var graph = layout && layout.querySelector('.stats-graph');
     if (layout && graph) {
-        [['stats-col stats-col-a', ['.stats-moods', '.stats-flashback', '.stats-top']],
+        [['stats-col stats-col-a', ['.stats-otd', '.stats-moods', '.stats-flashback', '.stats-top']],
          ['stats-col stats-col-b', ['.stats-time', '.stats-context', '.stats-calendar']]].forEach(function(c) {
             var col = document.createElement('div');
             col.className = c[0];

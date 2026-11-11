@@ -1083,7 +1083,7 @@ summary:focus-visible {
 }
 
 /* the narrow side column on wide screens: the tags wrap onto a few lines */
-@media (min-width: 1100px) {
+@media (min-width: 900px) {
   .journal-side .np-ctx {
     flex-direction: column;
     gap: 6px;

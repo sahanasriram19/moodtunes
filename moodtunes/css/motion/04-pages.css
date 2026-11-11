@@ -780,12 +780,12 @@
   order: 4;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 900px) {
   .container.journal-layout {
     max-width: 1180px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    column-gap: 56px;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 32px;
     align-items: start;
   }
 
@@ -929,7 +929,7 @@
 }
 
 /* the side column scrolls with the page now that "not in your journal yet" has its own scroller */
-@media (min-width: 1100px) {
+@media (min-width: 900px) {
   .journal-side {
     position: static;
     max-height: none;
@@ -1440,7 +1440,7 @@
 
 /* now playing in the narrow side column: slightly smaller mood buttons, so they
    take two lines instead of three */
-@media (min-width: 1100px) {
+@media (min-width: 900px) {
   .journal-side .np-moods {
     gap: 5px;
   }
@@ -1469,5 +1469,12 @@
     font-size: 11.5px;
     padding: 3px 9px 3px 7px;
     gap: 4px;
+  }
+}
+/* wide laptops and big screens: the roomier side column and gap */
+@media (min-width: 1200px) {
+  .container.journal-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    column-gap: 56px;
   }
 }

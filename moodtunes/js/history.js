@@ -130,7 +130,7 @@ function renderFlashback(logs) {
 // date range (all time, last 7 / 30 days, this month, or your own from-to dates).
 // the choice is kept while you move around the app (for this visit)
 var FILTER_KEY = 'moodtunes_history_filter';
-var filter = { mood: '', range: 'all', from: '', to: '' };
+var filter = { mood: '', range: 'all', from: '', to: '', note: false };
 try { var savedFilter = JSON.parse(sessionStorage.getItem(FILTER_KEY) || 'null'); if (savedFilter) filter = Object.assign(filter, savedFilter); } catch (e) {}
 
 function localDay(d) {
@@ -154,11 +154,12 @@ function filteredLogs() {
     var days = filterDays();
     return allLogs.filter(function(log) {
         if (filter.mood && log.mood !== filter.mood) return false;
+        if (filter.note && !(log.note && String(log.note).trim())) return false;
         if (days) { var d = logDay(log); if (d < days[0] || d > days[1]) return false; }
         return true;
     });
 }
-function filterActive() { return !!(filter.mood || filterDays()); }
+function filterActive() { return !!(filter.mood || filter.note || filterDays()); }
 
 var filterBar = document.createElement('div');
 filterBar.className = 'hist-filter';
@@ -175,7 +176,8 @@ function drawFilterBar() {
         return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
     });
     if (filter.mood && moods.indexOf(filter.mood) === -1) filter.mood = '';
-    var chips = '<button type="button" class="hf-mood' + (!filter.mood ? ' on' : '') + '" data-mood="" aria-pressed="' + !filter.mood + '">all moods</button>' +
+    var chips = '<button type="button" class="hf-mood hf-note' + (filter.note ? ' on' : '') + '" aria-pressed="' + !!filter.note + '" style="--mc:#b471ff;--mc-ink:#fff"><span>with note</span></button>' +
+        '<button type="button" class="hf-mood' + (!filter.mood ? ' on' : '') + '" data-mood="" aria-pressed="' + !filter.mood + '">all moods</button>' +
         moods.map(function(m) {
             return '<button type="button" class="hf-mood' + (filter.mood === m ? ' on' : '') + '" data-mood="' + MoodFX.esc(m) + '" aria-pressed="' + (filter.mood === m) + '" style="--mc:' + MoodFX.color(m) + ';--mc-ink:' + MoodFX.ink(MoodFX.color(m)) + '">' +
                 MoodFX.icon(MoodFX.moodIcon(m)) + '<span>' + MoodFX.esc(m) + '</span></button>';
@@ -206,9 +208,11 @@ function applyFilter() {
 }
 
 filterBar.addEventListener('click', function(e) {
+    var nb = e.target.closest('.hf-note');
+    if (nb) { filter.note = !filter.note; return applyFilter(); }
     var m = e.target.closest('.hf-mood');
     if (m) { filter.mood = m.dataset.mood; return applyFilter(); }
-    if (e.target.closest('.hf-clear')) { filter = { mood: '', range: 'all', from: '', to: '' }; return applyFilter(); }
+    if (e.target.closest('.hf-clear')) { filter = { mood: '', range: 'all', from: '', to: '', note: false }; return applyFilter(); }
 });
 filterBar.addEventListener('change', function(e) {
     if (e.target.matches('.hf-range')) { filter.range = e.target.value; if (filter.range !== 'custom') { filter.from = ''; filter.to = ''; } return applyFilter(); }
@@ -221,7 +225,7 @@ window.addEventListener('moodtunes:moods-changed', function() { if (allLogs.leng
 function renderTimeline(logs, filtered) {
     timeline.innerHTML = '';
     if (logs.length === 0 && filtered && allLogs.length) {
-        timeline.innerHTML = MoodFX.emptyState({ art: 'search', title: 'nothing matches', text: 'no songs for this mood and these dates. try another mood or a wider date range', action: { label: 'clear filters', click: '.hf-clear' } });
+        timeline.innerHTML = MoodFX.emptyState({ art: 'search', title: 'nothing matches', text: 'no songs match these filters. try another mood, a wider date range, or turn off "with note"', action: { label: 'clear filters', click: '.hf-clear' } });
         return;
     }
     if (logs.length === 0) {
