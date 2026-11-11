@@ -2043,3 +2043,11 @@
 @media (min-width: 769px) {
   .stats-otd { display: none !important; }
 }
+
+/* phones: note text a touch smaller */
+@media (max-width: 768px) {
+  :is(#timeline, #logs-list, #playlist-block) .log-card .log-note,
+  .title-row .log-note,
+  .note-line .log-note { font-size: 11px !important; }
+  .she-note { font-size: 12px !important; }
+}
